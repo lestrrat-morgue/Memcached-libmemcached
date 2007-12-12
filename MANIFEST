@@ -1,0 +1,13 @@
+Changes
+MANIFEST
+Makefile.PL
+README
+lib/Memcached/libmemcached.pm
+lib/Memcached/libmemcached.xs
+lib/Memcached/typemap
+ppport.h
+t/00-load.t
+t/01-object.t
+t/02-feature.t
+t/pod-coverage.t
+t/pod.t
