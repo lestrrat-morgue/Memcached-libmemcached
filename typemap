@@ -1,0 +1,54 @@
+###############################################################################
+##
+##    Typemap for Memcached::libmemcached objects
+##
+##    Copyright (c) 2007 Tim Bunce
+##    All rights reserved.
+##
+##    This typemap is designed specifically to make it easier to handle
+##    Perl-style blessed objects in XS.  In particular, it takes care of
+##    blessing the object into the correct class (even for derived classes).
+##   
+###############################################################################
+## vi:et:sw=4 ts=4
+
+TYPEMAP
+
+Memcached_libmemcached_return   T_RETURN
+Memcached_libmemcached_servers  T_PTROBJ_SPECIAL
+Memcached_libmemcached          T_PTROBJ_SPECIAL
+
+INPUT
+T_RETURN
+    $var = ($type)SvIV($arg)
+
+OUTPUT
+T_RETURN
+    sv_setiv($arg, (IV)$var);
+
+INPUT
+T_PTROBJ_SPECIAL
+    if (!SvOK($arg)) {  /* undef         */
+        $var = NULL;    /* treat as null */
+    }
+    else if (sv_derived_from($arg, \"${(my $ntt=$ntype)=~s/_/::/g;\$ntt}\")) {
+        if (SvROK($arg)) {
+            IV tmp = SvIV((SV*)SvRV($arg));
+            $var = INT2PTR($type, tmp);
+        }
+        else { /* must be class name - treat as null (handy for constructors) */
+            $var = NULL;
+        }
+    }
+    else
+	croak(\"$var is not of type ${(my $ntt=$ntype)=~s/_/::/g;\$ntt}\");
+    warn(\"\t%s setting %s %s=0x%p/%ld\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var, (long)$var);
+
+OUTPUT
+T_PTROBJ_SPECIAL
+    if (!$var)          /* null             */
+        SvOK_off($arg); /* return as undef  */
+    else
+        sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/_/::/g;\$ntt}\", (void*)$var);
+    warn(\"\t%s returned %ld\", \"${func_name}\", (long)$var);
+

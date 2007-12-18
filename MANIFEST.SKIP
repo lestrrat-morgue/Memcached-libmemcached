@@ -1,0 +1,9 @@
+\B\.svn\b
+^MANIFEST\.
+^Makefile$
+~$
+\.old$
+^blib/
+^tmp/
+^old/
+^Memcached-libmemcached-\d

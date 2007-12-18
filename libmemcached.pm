@@ -5,7 +5,7 @@ use strict;
 
 =head1 NAME
 
-Memcached::libmemcached - The great new Memcached::libmemcached!
+Memcached::libmemcached - Thin fast interface to the libmemcached client API
 
 =head1 VERSION
 
@@ -19,10 +19,6 @@ require XSLoader;
 XSLoader::load('Memcached::libmemcached', $VERSION);
 
 =head1 SYNOPSIS
-
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
 
     use Memcached::libmemcached;
 
@@ -38,21 +34,7 @@ if you don't export anything, such as for a purely object-oriented module.
 
 =head2 new
 
-Creates a new Memcached::libmemcached object.  Takes the following optional parameters:
-
-=over 4
-
-=item value
-
-If you pass a single numeric value, it will be stored in the 'value' slot
-of the object hash.
-
-=item key/value pair
-
-A generic input method which takes an unlimited number of key/value pairs
-and stores them in the object hash.  Performs no validation.
-
-=back
+Creates a new Memcached::libmemcached object.  ...
 
 =cut
 
