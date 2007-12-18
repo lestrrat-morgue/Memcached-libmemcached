@@ -1,0 +1,329 @@
+/*
+*/
+
+#include "common.h"
+
+static char *memcached_stat_keys[] = {
+  "pid",
+  "uptime",
+  "time",
+  "version",
+  "pointer_size",
+  "rusage_user",
+  "rusage_system",
+  "curr_items",
+  "total_items",
+  "bytes",
+  "curr_connections",
+  "total_connections",
+  "connection_structures",
+  "cmd_get",
+  "cmd_set",
+  "get_hits",
+  "get_misses",
+  "evictions",
+  "bytes_read",
+  "bytes_written",
+  "limit_maxbytes",
+  "threads",
+  NULL
+};
+
+
+static void set_data(memcached_stat_st *stat, char *key, char *value)
+{
+  if (!memcmp("pid", key, strlen("pid")))
+  {
+    stat->pid= strtol(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("uptime", key, strlen("uptime")))
+  {
+    stat->uptime= strtol(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("time", key, strlen("time")))
+  {
+    stat->time= strtol(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("version", key, strlen("version")))
+  {
+    memcpy(stat->version, value, strlen(value));
+    stat->version[strlen(value)]= 0;
+  }
+  else if (!memcmp("pointer_size", key, strlen("pointer_size")))
+  {
+    stat->pointer_size= strtol(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("rusage_user", key, strlen("rusage_user")))
+  {
+    char *walk_ptr;
+    for (walk_ptr= value; (!ispunct(*walk_ptr)); walk_ptr++);
+    *walk_ptr= 0;
+    walk_ptr++;
+    stat->rusage_user_seconds= strtol(value, (char **)NULL, 10);
+    stat->rusage_user_microseconds= strtol(walk_ptr, (char **)NULL, 10);
+  }
+  else if (!memcmp("rusage_system", key, strlen("rusage_system")))
+  {
+    char *walk_ptr;
+    for (walk_ptr= value; (!ispunct(*walk_ptr)); walk_ptr++);
+    *walk_ptr= 0;
+    walk_ptr++;
+    stat->rusage_system_seconds= strtol(value, (char **)NULL, 10);
+    stat->rusage_system_microseconds= strtol(walk_ptr, (char **)NULL, 10);
+  }
+  else if (!memcmp("curr_items", key, strlen("curr_items")))
+  {
+    stat->curr_items= strtol(value, (char **)NULL, 10); 
+  }
+  else if (!memcmp("total_items", key, strlen("total_items")))
+  {
+    stat->total_items= strtol(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("bytes", key, strlen("bytes")))
+  {
+    //stat->bytes= strtoll(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("curr_connections", key, strlen("curr_connections")))
+  {
+    //stat->curr_connections= strtoll(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("total_connections", key, strlen("total_connections")))
+  {
+    //stat->total_connections= strtoll(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("connection_structures", key, strlen("connection_structures")))
+  {
+    stat->connection_structures= strtol(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("cmd_get", key, strlen("cmd_get")))
+  {
+    stat->cmd_get= strtoll(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("cmd_set", key, strlen("cmd_set")))
+  {
+    stat->cmd_set= strtoll(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("get_hits", key, strlen("get_hits")))
+  {
+    stat->get_hits= strtoll(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("get_misses", key, strlen("get_misses")))
+  {
+    stat->get_misses= (uint64_t)strtoll(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("evictions", key, strlen("evictions")))
+  {
+    stat->evictions= (uint64_t)strtoll(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("bytes_read", key, strlen("bytes_read")))
+  {
+    stat->bytes_read= strtoll(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("bytes_written", key, strlen("bytes_written")))
+  {
+    stat->bytes_written= strtoll(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("limit_maxbytes", key, strlen("limit_maxbytes")))
+  {
+    stat->limit_maxbytes= strtol(value, (char **)NULL, 10);
+  }
+  else if (!memcmp("threads", key, strlen("threads")))
+  {
+    stat->threads= strtol(key, (char **)NULL, 10);
+  }
+  else
+  {
+    fprintf(stderr, "Unknown key %s\n", key);
+  }
+}
+
+char *memcached_stat_get_value(memcached_st *ptr, memcached_stat_st *stat, 
+                               char *key, memcached_return *error)
+{
+  char buffer[SMALL_STRING_LEN];
+  *error= MEMCACHED_SUCCESS;
+
+  if (!memcmp("pid", key, strlen("pid")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u", stat->pid);
+  else if (!memcmp("uptime", key, strlen("uptime")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u", stat->uptime);
+  else if (!memcmp("time", key, strlen("time")))
+    snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->time);
+  else if (!memcmp("version", key, strlen("version")))
+    snprintf(buffer, SMALL_STRING_LEN,"%s", stat->version);
+  else if (!memcmp("pointer_size", key, strlen("pointer_size")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u", stat->pointer_size);
+  else if (!memcmp("rusage_user", key, strlen("rusage_user")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u.%u", stat->rusage_user_seconds, stat->rusage_user_microseconds);
+  else if (!memcmp("rusage_system", key, strlen("rusage_system")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u.%u", stat->rusage_system_seconds, stat->rusage_system_microseconds);
+  else if (!memcmp("curr_items", key, strlen("curr_items")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u", stat->curr_items);
+  else if (!memcmp("total_items", key, strlen("total_items")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u", stat->total_items);
+  else if (!memcmp("bytes", key, strlen("bytes")))
+    snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->bytes);
+  else if (!memcmp("curr_connections", key, strlen("curr_connections")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u", stat->curr_connections);
+  else if (!memcmp("total_connections", key, strlen("total_connections")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u", stat->total_connections);
+  else if (!memcmp("connection_structures", key, strlen("connection_structures")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u", stat->connection_structures);
+  else if (!memcmp("cmd_get", key, strlen("cmd_get")))
+    snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->cmd_get);
+  else if (!memcmp("cmd_set", key, strlen("cmd_set")))
+    snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->cmd_set);
+  else if (!memcmp("get_hits", key, strlen("get_hits")))
+    snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->get_hits);
+  else if (!memcmp("get_misses", key, strlen("get_misses")))
+    snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->get_misses);
+  else if (!memcmp("evictions", key, strlen("evictions")))
+    snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->evictions);
+  else if (!memcmp("bytes_read", key, strlen("bytes_read")))
+    snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->bytes_read);
+  else if (!memcmp("bytes_written", key, strlen("bytes_written")))
+    snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->bytes_written);
+  else if (!memcmp("limit_maxbytes", key, strlen("limit_maxbytes")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u", stat->limit_maxbytes);
+  else if (!memcmp("threads", key, strlen("threads")))
+    snprintf(buffer, SMALL_STRING_LEN,"%u", stat->threads);
+  else
+  {
+    *error= MEMCACHED_NOTFOUND;
+    return NULL;
+  }
+
+  return strdup(buffer);
+}
+
+static memcached_return memcached_stats_fetch(memcached_st *ptr,
+                                              memcached_stat_st *stat,
+                                              char *args,
+                                              unsigned int server_key)
+{
+  memcached_return rc;
+  char buffer[MEMCACHED_DEFAULT_COMMAND_SIZE];
+  size_t send_length;
+
+  if (args)
+    send_length= snprintf(buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, 
+                          "stats %s\r\n", args);
+  else
+    send_length= snprintf(buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, 
+                          "stats\r\n");
+
+  if (send_length >= MEMCACHED_DEFAULT_COMMAND_SIZE)
+    return MEMCACHED_WRITE_FAILURE;
+
+  rc= memcached_do(ptr, server_key, buffer, send_length, 1);
+  if (rc != MEMCACHED_SUCCESS)
+      goto error;
+
+  while (1)
+  {
+    rc= memcached_response(ptr, buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, server_key);
+
+    if (rc == MEMCACHED_STAT)
+    {
+      char *string_ptr, *end_ptr;
+      char *key, *value;
+
+      string_ptr= buffer;
+      string_ptr+= 5; /* Move past STAT */
+      for (end_ptr= string_ptr; isgraph(*end_ptr); end_ptr++);
+      key= string_ptr;
+      key[(size_t)(end_ptr-string_ptr)]= 0;
+
+      string_ptr= end_ptr + 1;
+      for (end_ptr= string_ptr; !(isspace(*end_ptr)); end_ptr++);
+      value= string_ptr;
+      value[(size_t)(end_ptr-string_ptr)]= 0;
+      string_ptr= end_ptr + 2;
+      set_data(stat, key, value);
+    }
+    else
+      break;
+  }
+
+error:
+  if (rc == MEMCACHED_END)
+    return MEMCACHED_SUCCESS;
+  else
+    return rc;
+}
+
+memcached_stat_st *memcached_stat(memcached_st *ptr, char *args, memcached_return *error)
+{
+  unsigned int x;
+  memcached_return rc;
+  memcached_stat_st *stats;
+
+  stats= (memcached_stat_st *)malloc(sizeof(memcached_stat_st)*(ptr->number_of_hosts));
+  if (!stats)
+  {
+    *error= MEMCACHED_MEMORY_ALLOCATION_FAILURE;
+    free(stats);
+    return NULL;
+  }
+  memset(stats, 0, sizeof(memcached_stat_st)*(ptr->number_of_hosts));
+
+  rc= MEMCACHED_SUCCESS;
+  for (x= 0; x < ptr->number_of_hosts; x++)
+  {
+    memcached_return temp_return;
+
+    temp_return= memcached_stats_fetch(ptr, stats + x, args, x);
+    if (temp_return != MEMCACHED_SUCCESS)
+      rc= MEMCACHED_SOME_ERRORS;
+  }
+
+  *error= rc;
+  return stats;
+}
+
+memcached_return memcached_stat_servername(memcached_stat_st *stat, char *args, 
+                                           char *hostname, unsigned int port)
+{
+  memcached_return rc;
+  memcached_st memc;
+
+  memcached_create(&memc);
+
+  memcached_server_add(&memc, hostname, port);
+
+  rc= memcached_stats_fetch(&memc, stat, args, 0);
+
+  memcached_free(&memc);
+
+  return rc;
+}
+
+/* 
+  We make a copy of the keys since at some point in the not so distant future
+  we will add support for "found" keys.
+*/
+char ** memcached_stat_get_keys(memcached_st *ptr, memcached_stat_st *stat, 
+                                memcached_return *error)
+{
+  char **list;
+  size_t length= sizeof(memcached_stat_keys);
+  list= (char **)malloc(length);
+
+  if (!list)
+  {
+    *error= MEMCACHED_MEMORY_ALLOCATION_FAILURE;
+    return NULL;
+  }
+  memset(list, 0, sizeof(memcached_stat_keys));
+
+  memcpy(list, memcached_stat_keys, sizeof(memcached_stat_keys));
+
+  *error= MEMCACHED_SUCCESS;
+
+  return list;
+}
+
+void memcached_stat_free(memcached_st *ptr, memcached_stat_st *stat)
+{
+  free(stat);
+}

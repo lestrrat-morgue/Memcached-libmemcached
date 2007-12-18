@@ -1,0 +1,120 @@
+0.12 Tue Dec 11 15:20:55 PST 2007
+  * Updates for consistent hashing
+  * IPV6 support
+  * Static allocation for hostname (performance)
+  * Fixed bug where in non-block mode all data might not have been sent on
+    close().
+  * Refactor of memcached_get() to use common code.
+  * Change in value fetch, MEMCACHED_END is now returned when keys are no
+    longer in the pipe.
+  * Fixed bug where key could be out of range of characters
+  * Added _by_key() methods to allow partitioning of values to particular
+    servers.
+  * MEMCACHED_DEFAILT_TIMEOUT is now set to a non -1 value.
+  * Performance improvements in get operations.
+
+0.11 Mon Nov 26 01:05:52 PST 2007
+  * Added option to memcache_behavior_set() so that poll() can be timed out.
+  * Fixed memory leak in case of using memcached_fetch_result() where no
+    value was returned.
+  * Bug fixed in memcached_connect() which would cause servers that 
+    did not need to be enabled to be enabled (performance issue).
+  * Rewrote bounds checking code for get calls.
+  * "make test" now starts its own memcached servers.
+  * Added Hseih hash (MEMCACHED_HASH_HSIEH), which is showing about 7%
+    performance over standard hash.
+
+0.10 Tue Nov 20 23:22:31 PST 2007
+  * Added append binary test.
+  * Added MEMCACHED_BEHAVIOR_CACHE_LOOKUPS behavior so that you can save on
+    multiple DNS lookups.
+  * Added CAS support, though this is optional and must be enabled during
+    runtime.
+  * Added the utility memerror to create human readable error strings
+    from memcached errors (aka convert ints to strings)
+  * Fixed type in MEMCACHED_HOST_LOOKUP_FAILURE
+  * Fixed bug where hostname might not be null terminated
+  * Moved to using gethostbyname_r() on Linux to solve thread safety issue
+  * Added -rpath support for pkg-config
+  * Documentation fix for hash setting using memcached_behavior_set()
+
+0.9 Thu Nov 15 07:44:00 PST 2007
+  * fix for when no servers are definied.
+  * different buffers are now kept for different connections to
+    speed up async efforts
+  * Modified increment/decrement functions to return uint64_t values
+  * Fixed bug in cases where zero length keys were provided
+  * Thread cleanup issue in memslap
+  * No hostname lookup on reconnect
+  * Fix for flag settings (was doing hex by accident!)
+  * Support for 1.2.4 server additions "prepend" and "append" added.
+  * Added memcached_version()... not sure if I will make this public 
+    or not.
+
+0.8 Mon Nov  5 10:40:41 PST 2007
+  * Adding support for CRC hash method 
+  * Adding support for UNIX sockets
+  * Added additional HASHing methods of FNV1_64,FNV1A_64, FNV1_32, FNV1A_32
+  * Added pkgconfig support (PKG_CHECK_MODULES)
+  * Fixed conflict with defined type in MySQL
+  * Added memcached_result_st structure and functions to manipulate it.
+
+0.7 Tue Oct 30 09:24:05 PDT 2007
+  * Poved to poll() from select()
+  * Fixes in internal string class for allocation of large numbers of
+    strings.
+  * memcached_mget() function now sends keys as it parses them instead of
+    building strings as it goes.
+  * Propper flush now for making sure we get all IO sent even when in
+    non-block mode.
+  * Added --enable-debug rule for configure
+  * All asserts() removed (hey this is going into production!)
+
+
+0.6 Wed Oct 17 08:41:35 PDT 2007
+  * get value returns are now null terminated (request by Cal Heldenbrand) 
+  * Fixed connections for more hosts then two.
+  * Rewrite of the read/write IO systems to handle different sorts of host
+    failures.
+  * Added man pages for all functions and tools
+  * Raised buffer size for readinng/writing to 16K
+  * You can now optionally set the socket size for recv/send via 
+    memached_behavior_set/get.
+
+0.5 Tue Oct  9 00:22:25 PDT 2007
+ * Ruby maintainer mentioned TCP_NODELAY patch he had added. Added this to C
+   library as well. (Eric Hodel drbrain@segment7.net)
+  * Added support script for set_benchmark
+  * Updated memslap to allow testing of TCP_NODELAY
+  * Updated memslap to support --flush (aka dump memcache servers before
+    testing)
+  * Fixed bug in multiple hosts not being activated
+  * Added environmental variable MEMCACHED_SERVERS which can be used to 
+    set the servers list.
+  * fixed memcached_stat method (and now memstat works)
+  * server connect now happens on demand.
+  * Help for all command line applications
+
+0.4 Wed Oct  3 10:28:50 PDT 2007
+  * Added buffered IO to write calls for keys
+  * Added buffered IO for reads
+  * memstat was broken (bad if/else on connect)
+  * New non-blocking IO (not default yet). Mucho faster
+  * Refactor of test system.
+  * memslap crash solved
+
+0.3 Mon Oct  1 06:37:52 PDT 2007
+  * Jeff Fisher <guppy@techmonkeys.org> provided a spec file
+  * Added "make rpm" around dist file
+  * Added support for Solaris
+  * Added support for DTrace
+  * Fixed read to be recv and write to be send
+  * Bug fix where memstat would core if no server was found
+  * Added memslap tool (load generator)
+  * Numerous bug fixes in library
+  * Added calls to library for creating host lists (see
+    text cases to understand how to use this).
+
+0.2 Thu Sep 27 03:46:57 PDT 2007
+  * First public version
+
