@@ -42,6 +42,31 @@ Creates a new Memcached::libmemcached object.  ...
 # Defined in the XS code
 #}
 
+=head2 set 
+
+An object method which increments the 'value' slot of the the object hash,
+if it exists.  Called like this:
+
+  my $thing= {
+      'candy' => 'chocolate',
+      'drink' => 'milk', 
+      'stuff' => ['abc', 'efg', 'hij'] };
+
+  $obj->set('xyz', $thing); # set object in memcached, keyed by 'xyz' 
+
+
+=cut
+
+=head2 get 
+
+An object method which increments the 'value' slot of the the object hash,
+if it exists.  Called like this:
+
+  $obj->get('xyz'); # retreive object from memcached, keyed by 'xyz' 
+
+
+=cut
+
 =head2 increment
 
 An object method which increments the 'value' slot of the the object hash,
@@ -49,6 +74,20 @@ if it exists.  Called like this:
 
   my $obj = Memcached::libmemcached->new(5);
   $obj->increment(); # now equal to 6
+
+  $obj->increment(10); # now equal to 16
+
+=cut
+
+=head2 decrement 
+
+An object method which decrements the 'value' slot of the the object hash,
+if it exists.  Called like this:
+
+  my $obj = Memcached::libmemcached->new(5);
+  $obj->decrement(); # now equal to 4 
+
+  $obj->decrement(2); # now equal to 2 
 
 =cut
 
