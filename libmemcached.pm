@@ -20,80 +20,175 @@ XSLoader::load('Memcached::libmemcached', $VERSION);
 
 =head1 SYNOPSIS
 
-    use Memcached::libmemcached;
+  use Memcached::libmemcached;
 
-    my $foo = Memcached::libmemcached->new();
-    ...
+  my $memc = Memcached::libmemcached->create();
+  $memc->server_push($servers);
 
 =head1 EXPORT
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
 
-=head1 FUNCTIONS
+=head1 METHODS
 
-=head2 new
+=head2 Conventions
 
-Creates a new Memcached::libmemcached object.  ...
+Memcached::libmemcached is a very thin wrapper around the libmemcached library.
+The libmemcached library documentation (which is bundled with
+Memcached::libmemcached) serves as the primary reference for the functionality.
 
-=cut
+This documentation aims to provide just a summary of the methods, along with
+any issues specific to this perl interface.
 
-#sub new {
-# Defined in the XS code
-#}
+=head3 Classes
 
-=head2 set 
+The functions in the libmemcached library have been grouped into classes in
+this perl interface based on the type of the first argument:
 
-An object method which increments the 'value' slot of the the object hash,
-if it exists.  Called like this:
+  Type                  Class
+  -------------------   ----------------
+  memcached_st          Memcached::libmemcached
+  memcached_server_st   Memcached::libmemcached::servers
+  memcached_result_st   Memcached::libmemcached::result
 
-  my $thing= {
-      'candy' => 'chocolate',
-      'drink' => 'milk', 
-      'stuff' => ['abc', 'efg', 'hij'] };
+Currently all the classes are documented here.
+Some documentation may be broken out into other files later.
 
-  $obj->set('xyz', $thing); # set object in memcached, keyed by 'xyz' 
+=head3 Arguments
 
+For structure pointer arguments, undef is mapped to null on input and null is
+mapped to undef on output. (Also, as a slightly bizarre special case, on input a
+string matching the class name, or any class derived from it, is treated as null.
+That's how static method calls like Memcached::libmemcached->create work.)
 
-=cut
+=head2 Return
 
-=head2 get 
+Most of the methods return an integer status value. This is shown as
+memcached_return in the libmemcached documentation. 
 
-An object method which increments the 'value' slot of the the object hash,
-if it exists.  Called like this:
-
-  $obj->get('xyz'); # retreive object from memcached, keyed by 'xyz' 
-
-
-=cut
-
-=head2 increment
-
-An object method which increments the 'value' slot of the the object hash,
-if it exists.  Called like this:
-
-  my $obj = Memcached::libmemcached->new(5);
-  $obj->increment(); # now equal to 6
-
-  $obj->increment(10); # now equal to 16
+TODO: make a dual-var with integer and string parts (via typemap)
 
 =cut
 
-=head2 decrement 
 
-An object method which decrements the 'value' slot of the the object hash,
-if it exists.  Called like this:
+=head2 Methods For Managing Server Lists
 
-  my $obj = Memcached::libmemcached->new(5);
-  $obj->decrement(); # now equal to 4 
+=head3 XXX
 
-  $obj->decrement(2); # now equal to 2 
+fill out docs for Memcached::libmemcached::servers methods
 
 =cut
 
-#sub function2 {
-# Defined in the XS code
-#}
+
+=head2 Methods For Managing libmemcached Objects
+
+=head3 create
+
+  my $memc = Memcached::libmemcached->create();
+
+Creates and returns a new Memcached::libmemcached object.
+See L<Memcached::libmemcached::memcached_create>.
+
+=head3 server_push
+
+  $memc->server_push($server_list_object);
+
+Adds a list of servers to the libmemcached object.
+See L<Memcached::libmemcached::memcached_create>.
+
+=head3 behavior_set
+
+  $memc->behavior_set($option_key, $option_value);
+
+Changes the value of a particular option.
+See L<Memcached::libmemcached::memcached_behavior>.
+
+=head3 behavior_get
+
+  $memc->behavior_get($option_key);
+
+Get the value of a particular option.
+See L<Memcached::libmemcached::memcached_behavior>.
+
+=head3 verbosity
+
+  $memc->verbosity($verbosity)
+
+Modifies the "verbosity" of the associated memcached servers.
+See L<Memcached::libmemcached::memcached_verbosity>.
+
+=head3 flush
+
+  $memc->flush($expiration);
+
+Wipe clean the contents of associated memcached servers.
+See L<Memcached::libmemcached::memcached_flush>.
+
+=head3 quit
+
+  $memc->quit();
+
+Disconnect from all currently connected servers and reset state.
+Not normally called explicitly.
+See L<Memcached::libmemcached::memcached_quit>.
+
+=cut
+
+
+=head2 Methods for Setting Values in memcached
+
+XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_set.pod
+
+=cut
+
+
+=head2 Methods for Incrementing and Decrementing Values from memcached
+
+=head3 increment
+
+  $return = $memc->increment( $key, $offset, $new_value_out );
+
+Increments the value associated with $key by $offset and returns the new value in $new_value_out.
+See also L<Memcached::libmemcached::memcached_auto>.
+
+=head3 decrement 
+
+  $memc->decrement( $key, $offset, $new_value_out );
+
+Decrements the value associated with $key by $offset and returns the new value in $new_value_out.
+See also L<Memcached::libmemcached::memcached_auto>.
+
+=cut
+
+
+=head2 Methods for Fetching Values from memcached
+
+XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_get.pod
+
+=cut
+
+
+=head2 Methods for Managing Results from memcached
+
+XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_result_st.pod
+
+=cut
+
+
+=head2 Methods for Deleting Values from memcached
+
+XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_delete.pod
+
+=cut
+
+
+=head2 Methods for Accessing Statistics from memcached
+
+XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_stats.pod
+
+=cut
+
+
+
 
 =head1 AUTHOR
 

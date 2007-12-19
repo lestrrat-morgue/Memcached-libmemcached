@@ -15,8 +15,13 @@
 TYPEMAP
 
 Memcached_libmemcached_return   T_RETURN
+Memcached_libmemcached_behavior T_IV
 Memcached_libmemcached_servers  T_PTROBJ_SPECIAL
 Memcached_libmemcached          T_PTROBJ_SPECIAL
+
+# XXX need to at least document this as an issue
+# Could also check at build time if this perl has 64bit ints and use UV if so
+uint64_t                        T_NV
 
 INPUT
 T_RETURN

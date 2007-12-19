@@ -53,6 +53,7 @@ exit 0;
 
 sub run {
     my ($cmd) = @_;
+    warn "$cmd\n";
     system($cmd) == 0
         or die "Error running $cmd\n";
 }
@@ -63,5 +64,18 @@ sub build_libmemcached {
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
     run("cd $lmcd_src && ./configure --prefix=$lmcd_inst");
     run("cd $lmcd_src && CFLAGS=-g LDFLAGS=-g make install");
+    sync_libmemcached_pod();
+}
+
+sub sync_libmemcached_pod {
+    return unless -d ".svn";
+    # we duplicate the libmemcached pod in svn so that the docs can be read on search.cpan.org
+    my $perl_pod_dir = "lib/Memcached/libmemcached";
+    my @src_pod = <$lmcd_src/docs/memcached_*.pod>;
+    for my $src_pod (@src_pod) {
+        (my $dst_pod = $src_pod) =~ s!$lmcd_src/docs!$perl_pod_dir!;
+        run("cp $src_pod $dst_pod && svn add -q $dst_pod");
+    }
+    # XXX svn rm any $perl_pod_dir/memcached_*.pod that weren't in @src_pod
 }
 

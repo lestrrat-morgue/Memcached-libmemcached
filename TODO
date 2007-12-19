@@ -1,27 +1,26 @@
-General Ideas:
+General:
 
-Should libmemcached source be bundled and built with this extension (like DBD::SQLite)?
 
 Makefile.PL:
-    find libmemcached/memcached.h
-    warn and exit(0) if can't find libmemcached/memcached.h (or can't build bundled copy)
     extract list of constants (#defined and enums)
         use those to write constant() sub for libmemcached.xs
         and list of exportable constants (which can be written to
         Memcached::libmemcached::Constants.pm and loaded by Memcached::libmemcached)
 
 Structure:
-    Use classes for each type of struct
-        Memcached::libmemcached::{st,stat_st,result,string,server}
-    Use PREFIX memcached_ in .xs so method names don't have memcached_ prefix.
-    Use typemap like http://search.cpan.org/src/GOZER/mod_perl-1.30/Apache/typemap
-    to let xsubpp write as much of the code as possible.
     Clever typemap code should be able to default undef <foo>_length parameter values
         to the length of the corresponding <foo> argument.
     Aim to be at least thread-safe and ideally thread-hot.
+    Make return type a dual-var like $! with integer and string message parts.
 
 Tests:
     Need running memcached(s) to perform tests
     Write a t/launch.pm that starts N memcached servers on localhost
     and returns their access details (ie ports).
     Use launch.pm in test scripts.
+
+
+Feedback to Brian re API
+    behaviour_get/_set isn't clean API
+        memcached_return memcached_behavior_set(ptr, flag, int_arg, *ptr_arg)
+        memcached_return memcached_behavior_get(ptr, flag, *int_arg, **ptr_arg)
