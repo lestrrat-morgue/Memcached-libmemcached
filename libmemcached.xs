@@ -26,7 +26,7 @@ typedef memcached_st*        Memcached_libmemcached;
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached::servers  PREFIX=memcached_
 
 Memcached_libmemcached_servers
-memcached_servers_parse(void *self, char *server_strings)
+memcached_servers_parse(Memcached_libmemcached_servers ptr, char *server_strings)
     C_ARGS: /* self is not used  */
         server_strings
 
@@ -40,9 +40,18 @@ memcached_server_list_append(ptr, hostname, port, error)
     Memcached_libmemcached_servers ptr
     char *hostname
     unsigned int port
-    Memcached_libmemcached_return &error = NO_INIT
+    Memcached_libmemcached_return &error = MEMCACHED_MAXIMUM_RETURN;
+    POSTCALL:
+        /* memcached_server_list_append is likely to have realloc'd */
+        /* so ptr no longer points to valid memory. So update it    */
+        /* to match the RETVAL  */
+        sv_setiv(SvRV(ST(0)), PTR2IV(RETVAL));
+        /* we also need to avoid creating a new blessed in for the  */
+        /* return value, so we just copy the (now updated) existing */
+        /* reference using a RETVAL line in the OUTPUT section...   */
     OUTPUT:
         error
+        RETVAL ST(0) = sv_mortalcopy(ST(0)); /* return copy of first arg */
 
 
 void

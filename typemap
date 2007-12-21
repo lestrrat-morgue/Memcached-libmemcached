@@ -25,11 +25,17 @@ uint64_t                        T_NV
 
 INPUT
 T_RETURN
-    $var = ($type)SvIV($arg)
+        $var = ($type)SvIV($arg)
 
 OUTPUT
 T_RETURN
-    sv_setiv($arg, (IV)$var);
+        /* setup return value as a dualvar with int err code and string error message */
+        (void)SvUPGRADE($arg, SVt_PVNV);
+        sv_setpv($arg, memcached_strerror(NULL, $var));
+        SvIVX($arg) = $var;
+        SvIOK_on($arg);
+        warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, SvPV_nolen($arg));
+
 
 INPUT
 T_PTROBJ_SPECIAL
@@ -47,7 +53,7 @@ T_PTROBJ_SPECIAL
     }
     else
 	croak(\"$var is not of type ${(my $ntt=$ntype)=~s/_/::/g;\$ntt}\");
-    warn(\"\t%s setting %s %s=0x%p/%ld\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var, (long)$var);
+    warn(\"\t=> %s(%s %s = 0x%p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
 OUTPUT
 T_PTROBJ_SPECIAL
@@ -55,5 +61,5 @@ T_PTROBJ_SPECIAL
         SvOK_off($arg); /* return as undef  */
     else
         sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/_/::/g;\$ntt}\", (void*)$var);
-    warn(\"\t%s returned %ld\", \"${func_name}\", (long)$var);
+    warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
