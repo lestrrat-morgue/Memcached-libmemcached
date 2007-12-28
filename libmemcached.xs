@@ -44,14 +44,15 @@ memcached_server_list_append(ptr, hostname, port, error)
     POSTCALL:
         /* memcached_server_list_append is likely to have realloc'd */
         /* so ptr no longer points to valid memory. So update it    */
-        /* to match the RETVAL  */
-        sv_setiv(SvRV(ST(0)), PTR2IV(RETVAL));
+        /* to match the RETVAL, but only if RETVAL true (no error)  */
+        if (RETVAL)
+            sv_setiv(SvRV(ST(0)), PTR2IV(RETVAL));
         /* we also need to avoid creating a new blessed in for the  */
         /* return value, so we just copy the (now updated) existing */
         /* reference using a RETVAL line in the OUTPUT section...   */
     OUTPUT:
         error
-        RETVAL ST(0) = sv_mortalcopy(ST(0)); /* return copy of first arg */
+        RETVAL ST(0) = (RETVAL) ? sv_mortalcopy(ST(0)) : sv_newmortal(); /* return copy of first arg */
 
 
 void

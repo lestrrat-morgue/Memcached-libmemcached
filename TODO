@@ -1,5 +1,8 @@
 General:
 
+add dual-var tests
+test return from _append
+
 
 Makefile.PL:
     extract list of constants (#defined and enums)
