@@ -95,6 +95,32 @@ See L<Memcached::libmemcached::memcached_create>.
 Adds a list of servers to the libmemcached object.
 See L<Memcached::libmemcached::memcached_create>.
 
+=head3 server_count
+
+  $server_count= $memc->server_count();
+
+Provides a count of the current number of servers
+being used
+
+=head3 server_list
+
+  $server_list= $memc->server_list();
+
+Provides a (Tim: an array?) list of all defined hosts
+See L<Memcached::libmemcached::servers> object.
+
+=head3 server_add
+
+  $memc->server_add($hostname, $port);
+
+Pushes a single memcached server into the memcached object
+
+=head3 server_add_unix_socket
+
+  $memc->server_add_unix_socket($socket);
+
+Pushes a single UNIX socket into the memcached object
+
 =head3 behavior_set
 
   $memc->behavior_set($option_key, $option_value);

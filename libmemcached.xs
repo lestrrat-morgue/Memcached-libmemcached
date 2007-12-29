@@ -65,8 +65,6 @@ memcached_server_list_free(Memcached_libmemcached_servers ptr)
         sv_setiv((SV*)SvRV(ST(0)), 0);
 
 
-
-
 =head2 Methods For Managing libmemcached Objects
 
 =cut
@@ -84,6 +82,22 @@ memcached_increment(Memcached_libmemcached ptr, char *key, size_t length(key), u
 
 Memcached_libmemcached_return
 memcached_decrement(Memcached_libmemcached ptr, char *key, size_t length(key), unsigned int offset, uint64_t &value=NO_INIT)
+
+
+unsigned int
+memcached_server_count(Memcached_libmemcached ptr)
+
+Memcached_libmemcached_servers
+memcached_server_list(Memcached_libmemcached ptr)
+
+Memcached_libmemcached_return
+memcached_server_add(Memcached_libmemcached ptr, char *hostname, unsigned int port)
+
+Memcached_libmemcached_return
+memcached_server_add_unix_socket (Memcached_libmemcached ptr, char *socket)
+
+Memcached_libmemcached_return
+memcached_server_push(Memcached_libmemcached ptr, Memcached_libmemcached_servers list)
 
 void
 memcached_free(Memcached_libmemcached ptr)
