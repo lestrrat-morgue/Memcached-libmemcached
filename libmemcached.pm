@@ -15,6 +15,14 @@ Version 0.01
 
 our $VERSION = '0.01';
 
+use base qw(Exporter);
+
+use Memcached::libmemcached::API;
+our @EXPORT_OK = (
+    libmemcached_functions(),
+);
+our %EXPORT_TAGS = (ALL => [ libmemcached_functions() ]);
+
 require XSLoader;
 XSLoader::load('Memcached::libmemcached', $VERSION);
 

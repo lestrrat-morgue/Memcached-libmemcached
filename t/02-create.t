@@ -1,17 +1,30 @@
+# tests for functions documented in memcached_create.pod
+# XXX memcached_clone needs more testing for non-undef args
 
-use Test::More tests => 6;
+use Test::More tests => 4;
 
 BEGIN {
-use_ok( 'Memcached::libmemcached' );
+use_ok( 'Memcached::libmemcached', qw(
+    memcached_create
+    memcached_free
+    memcached_clone
+),
+#   other functions used by the tests
+qw(
+));
 }
 
-my $server_list = Memcached::libmemcached::servers->servers_parse("localhost:1234");
-ok ref $server_list, 'should return a ref';
+my ($memc, $memc2);
 
-my $memc = Memcached::libmemcached->create();
-ok $memc, 'should return a true value';
-ok ref $memc, 'should return a ref';
+ok $memc = memcached_create(undef);
 
-$memc->server_push($server_list);
+ok $memc2 = memcached_clone(undef, undef);
 
-# $memc->free(); # causes code dump
+memcached_free($memc2);
+
+memcached_free($memc);
+
+print "duplicate memcached_free\n";
+memcached_free($memc);
+
+ok 1;
