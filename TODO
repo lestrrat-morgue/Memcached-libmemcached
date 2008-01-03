@@ -2,6 +2,10 @@ General:
 
 add dual-var tests
 test return from _append
+remove memcached_server_list_append - deprecated
+Resolve memory management: to DESTROY or not to DESTROY, that is the question!
+    Given the relatively small number of objects involved
+    we could use a hash (or pointer table) to track what's been freed already.
 
 
 Makefile.PL:
@@ -22,8 +26,3 @@ Tests:
     and returns their access details (ie ports).
     Use launch.pm in test scripts.
 
-
-Feedback to Brian re API
-    behaviour_get/_set isn't clean API
-        memcached_return memcached_behavior_set(ptr, flag, int_arg, *ptr_arg)
-        memcached_return memcached_behavior_get(ptr, flag, *int_arg, **ptr_arg)

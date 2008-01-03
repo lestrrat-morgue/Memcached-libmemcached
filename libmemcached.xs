@@ -35,34 +35,25 @@ unsigned int
 memcached_server_list_count(Memcached_libmemcached_servers ptr);
 
 
-Memcached_libmemcached_servers
-memcached_server_list_append(ptr, hostname, port, error)
-    Memcached_libmemcached_servers ptr
-    char *hostname
-    unsigned int port
-    Memcached_libmemcached_return &error = MEMCACHED_MAXIMUM_RETURN;
-    POSTCALL:
-        /* memcached_server_list_append is likely to have realloc'd */
-        /* so ptr no longer points to valid memory. So update it    */
-        /* to match the RETVAL, but only if RETVAL true (no error)  */
-        if (RETVAL)
-            sv_setiv(SvRV(ST(0)), PTR2IV(RETVAL));
-        /* we also need to avoid creating a new blessed in for the  */
-        /* return value, so we just copy the (now updated) existing */
-        /* reference using a RETVAL line in the OUTPUT section...   */
-    OUTPUT:
-        error
-        RETVAL ST(0) = (RETVAL) ? sv_mortalcopy(ST(0)) : sv_newmortal(); /* return copy of first arg */
+void
+memcached_server_list_append(...)
+    PPCODE:
+    croak("memcached_server_list_append is deprecated");
 
 
 void
 memcached_server_list_free(Memcached_libmemcached_servers ptr)
     ALIAS:
-        DESTROY = 1
+        __DESTROY = 1
     POSTCALL:
-        /* avoid duplicate free errors - XXX hack */
         warn("memcached_server_list_free");
-        sv_setiv((SV*)SvRV(ST(0)), 0);
+        if (ptr) {
+            /* avoid duplicate free errors for the same SV.     */
+            /* doesn't prevent duplicate free from diferent SVs */
+            sv_setiv((SV*)SvRV(ST(0)), 0);
+            if (ix == 1 && !PL_dirty)
+                warn("DESTROY caled without prior server_list_free");
+        }
 
 
 =head2 Methods For Managing libmemcached Objects
@@ -102,11 +93,16 @@ memcached_server_push(Memcached_libmemcached ptr, Memcached_libmemcached_servers
 void
 memcached_free(Memcached_libmemcached ptr)
     ALIAS:
-        DESTROY = 1
+        __DESTROY = 1
     POSTCALL:
-        /* avoid duplicate free errors - XXX hack */
         warn("memcached_free");
-        sv_setiv((SV*)SvRV(ST(0)), 0);
+        if (ptr) {
+            /* avoid duplicate free errors for the same SV.     */
+            /* doesn't prevent duplicate free from diferent SVs */
+            sv_setiv((SV*)SvRV(ST(0)), 0);
+            if (ix == 1 && !PL_dirty)
+                warn("DESTROY caled without prior free");
+        }
 
 
 

@@ -12,6 +12,8 @@ my $memc = Memcached::libmemcached->create();
 ok $memc, 'should return a true value';
 ok ref $memc, 'should return a ref';
 
+is $memc->server_count, 0, 'should have 0 elements';
+
 $memc->server_push($server_list);
 
 is $memc->server_count, 1, 'should have 1 element';

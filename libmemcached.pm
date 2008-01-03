@@ -99,15 +99,15 @@ See L<Memcached::libmemcached::memcached_create>.
 
   $server_count= $memc->server_count();
 
-Provides a count of the current number of servers
-being used
+Returns a count of the current number of servers
+associated with $memc.
 
 =head3 server_list
 
   $server_list= $memc->server_list();
 
-Provides a (Tim: an array?) list of all defined hosts
-See L<Memcached::libmemcached::servers> object.
+Returns the L<Memcached::libmemcached::servers> object associated with $memc.
+(Don't call 
 
 =head3 server_add
 
