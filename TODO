@@ -1,28 +1,26 @@
 General:
 
-add dual-var tests
-test return from _append
-remove memcached_server_list_append - deprecated
 Resolve memory management: to DESTROY or not to DESTROY, that is the question!
-    Given the relatively small number of objects involved
-    we could use a hash (or pointer table) to track what's been freed already.
-
+    Use SV memory to hold structure
+    To bless or not? Type safety (bless?, check size of scalar)
+    memcached_clone usage and examples
 
 Makefile.PL:
-    extract list of constants (#defined and enums)
-        use those to write constant() sub for libmemcached.xs
-        and list of exportable constants (which can be written to
-        Memcached::libmemcached::Constants.pm and loaded by Memcached::libmemcached)
+    parse memcached.h to extract MEMCACHED_SUCCESS etc
+        then use ExtUtils::Constant to generate the code for constant()
+        Also write list of constants to a file for including in EXPORT_OK & _TAGS
 
 Structure:
     Clever typemap code should be able to default undef <foo>_length parameter values
         to the length of the corresponding <foo> argument.
     Aim to be at least thread-safe and ideally thread-hot.
     Make return type a dual-var like $! with integer and string message parts.
+        add tests for it
 
 Tests:
-    Need running memcached(s) to perform tests
+    Need running memcached(s) to perform some tests
     Write a t/launch.pm that starts N memcached servers on localhost
     and returns their access details (ie ports).
     Use launch.pm in test scripts.
+    Remember that we're not trying to test libmemcached itself!
 

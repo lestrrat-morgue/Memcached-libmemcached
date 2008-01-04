@@ -30,13 +30,11 @@ XSLoader::load('Memcached::libmemcached', $VERSION);
 
   use Memcached::libmemcached;
 
-  my $memc = Memcached::libmemcached->create();
-  $memc->server_push($servers);
 
 =head1 EXPORT
 
 
-=head1 METHODS
+=head1 FUNCTIONS
 
 =head2 Conventions
 
@@ -47,26 +45,16 @@ Memcached::libmemcached) serves as the primary reference for the functionality.
 This documentation aims to provide just a summary of the methods, along with
 any issues specific to this perl interface.
 
-=head3 Classes
+=head3 Terminology
 
-The functions in the libmemcached library have been grouped into classes in
-this perl interface based on the type of the first argument:
-
-  Type                  Class
-  -------------------   ----------------
-  memcached_st          Memcached::libmemcached
-  memcached_server_st   Memcached::libmemcached::servers
-  memcached_result_st   Memcached::libmemcached::result
-
-Currently all the classes are documented here.
-Some documentation may be broken out into other files later.
+The term "memcache" is used to refer to the C<memcached_st> structure at the
+heart of the libmemcached library. The examples use $memc to represent this
+structure.
 
 =head3 Arguments
 
 For structure pointer arguments, undef is mapped to null on input and null is
-mapped to undef on output. (Also, as a slightly bizarre special case, on input a
-string matching the class name, or any class derived from it, is treated as null.
-That's how static method calls like Memcached::libmemcached->create work.)
+mapped to undef on output.
 
 =head2 Return
 
@@ -78,88 +66,108 @@ TODO: make a dual-var with integer and string parts (via typemap)
 =cut
 
 
-=head2 Methods For Managing Server Lists
+=head2 Functions For Managing Server Lists
 
 =head3 XXX
 
-fill out docs for Memcached::libmemcached::servers methods
 
 =cut
 
 
-=head2 Methods For Managing libmemcached Objects
+=head2 Functions For Managing Memcaches
 
-=head3 create
+=head3 memcached_create
 
-  my $memc = Memcached::libmemcached->create();
+  my $memc = memcached_create();
 
-Creates and returns a new Memcached::libmemcached object.
+Creates and returns a 'memcache' that represents the state of
+communication with a set of memcached servers.
 See L<Memcached::libmemcached::memcached_create>.
 
-=head3 server_push
+=head3 memcached_clone
 
-  $memc->server_push($server_list_object);
+  my $memc = memcached_clone(undef, undef);
+
+XXX Not currently recommended for use.
+See L<Memcached::libmemcached::memcached_create>.
+
+=head3 memcached_free
+
+  memcached_free($memc);
+
+Frees the memory associated with $memc.
+Your application will leak memory unless you call this.
+After calling it $memc must not be used.
+See L<Memcached::libmemcached::memcached_create>.
+
+=head3 memcached_server_push
+
+  memcached_server_push($memc, $server_list_object);
 
 Adds a list of servers to the libmemcached object.
-See L<Memcached::libmemcached::memcached_create>.
+See L<Memcached::libmemcached::memcached_servers>.
 
-=head3 server_count
+=head3 memcached_server_count
 
-  $server_count= $memc->server_count();
+  $server_count= memcached_server_count($memc);
 
-Returns a count of the current number of servers
+Returns a count of the number of servers
 associated with $memc.
+See L<Memcached::libmemcached::memcached_servers>.
 
-=head3 server_list
+=head3 memcached_server_list
 
-  $server_list= $memc->server_list();
+  $server_list= memcached_server_list($memc);
 
-Returns the L<Memcached::libmemcached::servers> object associated with $memc.
-(Don't call 
+Returns the server list structure associated with $memc.
+XXX Not currently recommended for use.
+See L<Memcached::libmemcached::memcached_servers>.
 
-=head3 server_add
+=head3 memcached_server_add
 
-  $memc->server_add($hostname, $port);
+  memcached_server_add($memc, $hostname, $port);
 
-Pushes a single memcached server into the memcached object
+Adds details of a single memcached server (accessed via TCP/IP) to $memc.
+See L<Memcached::libmemcached::memcached_servers>.
 
-=head3 server_add_unix_socket
+=head3 memcached_server_add_unix_socket
 
-  $memc->server_add_unix_socket($socket);
+  memcached_server_add_unix_socket($memc, $socket_path);
 
-Pushes a single UNIX socket into the memcached object
+Adds details of a single memcached server (accessed via a UNIX domain socket) to $memc.
+See L<Memcached::libmemcached::memcached_servers>.
 
-=head3 behavior_set
+=head3 memcached_behavior_set
 
-  $memc->behavior_set($option_key, $option_value);
+  memcached_behavior_set($memc, $option_key, $option_value);
 
 Changes the value of a particular option.
 See L<Memcached::libmemcached::memcached_behavior>.
 
-=head3 behavior_get
+=head3 memcached_behavior_get
 
-  $memc->behavior_get($option_key);
+  memcached_behavior_get($memc, $option_key);
 
 Get the value of a particular option.
 See L<Memcached::libmemcached::memcached_behavior>.
 
-=head3 verbosity
+=head3 memcached_verbosity
 
-  $memc->verbosity($verbosity)
+  memcached_verbosity($memc, $verbosity)
 
 Modifies the "verbosity" of the associated memcached servers.
 See L<Memcached::libmemcached::memcached_verbosity>.
 
-=head3 flush
+=head3 memcached_flush
 
-  $memc->flush($expiration);
+  memcached_flush($memc, $expiration);
 
 Wipe clean the contents of associated memcached servers.
 See L<Memcached::libmemcached::memcached_flush>.
 
-=head3 quit
+=head3 memcached_quit
 
-  $memc->quit();
+  memcached_quit($memc);
 
 Disconnect from all currently connected servers and reset state.
 Not normally called explicitly.
@@ -168,25 +176,25 @@ See L<Memcached::libmemcached::memcached_quit>.
 =cut
 
 
-=head2 Methods for Setting Values in memcached
+=head2 Functions for Setting Values in memcached
 
 XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_set.pod
 
 =cut
 
 
-=head2 Methods for Incrementing and Decrementing Values from memcached
+=head2 Functions for Incrementing and Decrementing Values from memcached
 
-=head3 increment
+=head3 memcached_increment
 
-  $return = $memc->increment( $key, $offset, $new_value_out );
+  $return = memcached_increment( $key, $offset, $new_value_out );
 
 Increments the value associated with $key by $offset and returns the new value in $new_value_out.
 See also L<Memcached::libmemcached::memcached_auto>.
 
-=head3 decrement 
+=head3 memcached_decrement 
 
-  $memc->decrement( $key, $offset, $new_value_out );
+  memcached_decrement( $key, $offset, $new_value_out );
 
 Decrements the value associated with $key by $offset and returns the new value in $new_value_out.
 See also L<Memcached::libmemcached::memcached_auto>.
@@ -194,28 +202,28 @@ See also L<Memcached::libmemcached::memcached_auto>.
 =cut
 
 
-=head2 Methods for Fetching Values from memcached
+=head2 Functions for Fetching Values from memcached
 
 XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_get.pod
 
 =cut
 
 
-=head2 Methods for Managing Results from memcached
+=head2 Functions for Managing Results from memcached
 
 XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_result_st.pod
 
 =cut
 
 
-=head2 Methods for Deleting Values from memcached
+=head2 Functions for Deleting Values from memcached
 
 XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_delete.pod
 
 =cut
 
 
-=head2 Methods for Accessing Statistics from memcached
+=head2 Functions for Accessing Statistics from memcached
 
 XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_stats.pod
 
