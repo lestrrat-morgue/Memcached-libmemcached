@@ -61,12 +61,16 @@ sub run {
 }
 
 sub build_libmemcached {
-    extract_libmemcached_api();
     return if -d "$lmcd_inst/lib"; # XXX assume it built ok. use 'make realclean' to rm
     mkdir $lmcd_inst unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
-    run("cd $lmcd_src && ./configure --prefix=$lmcd_inst");
-    run("cd $lmcd_src && CFLAGS=-g LDFLAGS=-g make install");
+    my $configure_args;
+    if (-d ".svn") {    # XXX make a Makefile.PL argument/option
+        $configure_args = '--enable-debug';
+        warn "libmemcached configure $configure_args";
+    }
+    run("cd $lmcd_src && ./configure $configure_args --prefix=$lmcd_inst");
+    run("cd $lmcd_src && make install");
     sync_libmemcached_pod();
     extract_libmemcached_api();
 }

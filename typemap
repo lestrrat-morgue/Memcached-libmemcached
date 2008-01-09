@@ -20,12 +20,11 @@ Memcached__libmemcached__behavior       T_IV
 
 # XXX need to at least document this as an issue
 # Could also check at build time if this perl has 64bit ints and use UV if so
-uint64_t                        T_NV
+uint64_t                                T_NV
 
 # --- complex types ---
 # XXX memory management may be reworked to store structure in scalars
-Memcached__libmemcached__server_list    T_PTROBJ_SPECIAL
-Memcached__libmemcached                 T_PTROBJ_SPECIAL
+Memcached__libmemcached                 T_PTROBJ_RVIV
 
 
 INPUT
@@ -43,28 +42,28 @@ T_RETURN
 
 
 INPUT
-T_PTROBJ_SPECIAL
-    if (!SvOK($arg)) {  /* undef         */
-        $var = NULL;    /* treat as null */
-    }
-    else if (sv_derived_from($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\")) {
-        if (SvROK($arg)) {
-            IV tmp = SvIV((SV*)SvRV($arg));
-            $var = INT2PTR($type, tmp);
+T_PTROBJ_RVIV
+        if (!SvOK($arg)) {  /* undef         */
+            $var = NULL;    /* treat as null */
         }
-        else { /* must be class name - treat as null (handy for constructors) */
-            $var = NULL;
+        else if (sv_derived_from($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\")) {
+            if (SvROK($arg) && SvOK(SvRV($arg))) {
+                IV tmp = SvIV((SV*)SvRV($arg));
+                $var = INT2PTR($type, tmp);
+            }
+            else { /* already freed */
+                $var = NULL;
+            }
         }
-    }
-    else
-        croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\");
-    warn(\"\t=> %s(%s %s = 0x%p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
+        else
+            croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\");
+        warn(\"\t=> %s(%s %s = 0x%p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
 OUTPUT
-T_PTROBJ_SPECIAL
-    if (!$var)          /* null             */
-        SvOK_off($arg); /* return as undef  */
-    else
-        sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", (void*)$var);
-    warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
+T_PTROBJ_RVIV
+        if (!$var)          /* if null */
+            SvOK_off($arg); /* then return as undef instead of reaf to undef */
+        else
+            sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", $var);
+        warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 

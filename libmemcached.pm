@@ -31,9 +31,6 @@ XSLoader::load('Memcached::libmemcached', $VERSION);
   use Memcached::libmemcached;
 
 
-=head1 EXPORT
-
-
 =head1 FUNCTIONS
 
 =head2 Conventions
