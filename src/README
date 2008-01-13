@@ -1,0 +1,11 @@
+This directory contains the source code for libmemcached that we will build and link to.
+
+In future it may also contain source to memcached so we can be sure to have one available for running tests.
+
+TO UPGRADE TO A NEW libmemcached RELEASE:
+
+tar xvfz libmemcached-X.YY.tar.gz
+rm -rf libmemcached
+svn_load_dirs.pl -v https://perl-libmemcached.googlecode.com/svn/trunk/src libmemcached libmemcached-X.YY
+svn update
+rm -rf libmemcached-X.YY
