@@ -61,6 +61,10 @@ sub run {
 }
 
 sub build_libmemcached {
+    sync_libmemcached_pod();
+    extract_libmemcached_functions();
+    extract_libmemcached_constants();
+
     return if -d "$lmcd_inst/lib"; # XXX assume it built ok. use 'make realclean' to rm
     mkdir $lmcd_inst unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
@@ -71,9 +75,6 @@ sub build_libmemcached {
     }
     run("cd $lmcd_src && ./configure $configure_args --prefix=$lmcd_inst");
     run("cd $lmcd_src && make install");
-    sync_libmemcached_pod();
-    extract_libmemcached_functions();
-    extract_libmemcached_constants();
 }
 
 sub sync_libmemcached_pod {
@@ -121,10 +122,25 @@ sub extract_libmemcached_constants {
     # find all MEMCACHED_* constants (#define and enum)
     warn "Reading memcached.h to find all constants\n";
     open my $fh, "<$lmcd_src/include/memcached.h" or die "Can't open $lmcd_src/include/memcached.h: $!";
+    my $in_enum = 0;
+    my @const;
     while (<$fh>) {
-        next unless /# \s* define \s+ (MEMCACHED_\w+)/
-                 or /^ \s* (MEMCACHED_\w+)/;
-        $libmemcached_const{$1} = 1;
+        if ($in_enum) {
+            if (m/^ \s* } \s* (\w+)/x) {
+                $libmemcached_const{$_} = $1 for @const;
+                @const = ();
+                $in_enum = 0;
+            }
+            elsif (m/^ \s* (MEMCACHED_\w+)/x) {
+                push @const, $1;
+            }
+        }
+        elsif (m/^ \s* typedef \s+ enum /x) {
+            $in_enum = 1;
+        }
+        elsif (m/\# \s* define \s+ (MEMCACHED_\w+)/x) {
+            $libmemcached_const{$1} = 1;
+        }
     }
 
     # write 

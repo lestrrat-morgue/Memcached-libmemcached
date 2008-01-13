@@ -20,8 +20,9 @@ use base qw(Exporter);
 use Memcached::libmemcached::API;
 our @EXPORT_OK = (
     libmemcached_functions(),
+    libmemcached_constants(),
 );
-our %EXPORT_TAGS = (ALL => [ libmemcached_functions() ]);
+our %EXPORT_TAGS = libmemcached_tags();
 
 require XSLoader;
 XSLoader::load('Memcached::libmemcached', $VERSION);
@@ -31,15 +32,27 @@ XSLoader::load('Memcached::libmemcached', $VERSION);
   use Memcached::libmemcached;
 
 
+=head1 EXPORTS
+
+All the public functions in libmemcached are available for import.
+
+All the public constants and enums in libmemcached are available for import.
+
+Exporter tags are defined for each enum. This allows you to import groups of
+constants easily. For example, to import all the contants for
+memcached_behavior_set() and memcached_behavior_get(), you can use:
+
+  use Memcached::libmemcached qw(:memcached_behavior).
+
 =head1 FUNCTIONS
 
 =head2 Conventions
 
-Memcached::libmemcached is a very thin wrapper around the libmemcached library.
-The libmemcached library documentation (which is bundled with
-Memcached::libmemcached) serves as the primary reference for the functionality.
+Memcached::libmemcached is a very thin, highly efficient, wrapper around the
+libmemcached library.  The libmemcached library documentation (which is bundled
+with Memcached::libmemcached) serves as the primary reference for the functionality.
 
-This documentation aims to provide just a summary of the methods, along with
+This documentation aims to provide just a summary of the functions, along with
 any issues specific to this perl interface.
 
 =head3 Terminology
