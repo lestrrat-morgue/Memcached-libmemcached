@@ -175,6 +175,13 @@ See L<Memcached::libmemcached::memcached_quit>.
 
 =head2 Functions for Setting Values in memcached
 
+=head3 memcached_set
+
+  memcached_set($key, $value, $expiration, $flags)
+
+Set a value "$value" keyed by "$key" in memcached. $expiration and 
+$flags are optional, defaulted both to 0
+
 XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_set.pod
 
 =cut
