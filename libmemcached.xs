@@ -64,6 +64,21 @@ memcached_free(Memcached__libmemcached ptr)
 
 =head2 Methods for Setting Values in memcached
 
+Memcached__libmemcached__return
+memcached_set(ptr, key, expiration= 0, flags= 0)
+    Memcached__libmemcached ptr
+    char *key
+    time_t expiration
+    uint16_t flags
+  CODE:
+    {
+      size_t key_length = strlen(key);
+      RETVAL = memcached_set(ptr, key, key_length, expiration, flags);
+    }
+  OUTPUT:
+    RETVAL
+
+
 =cut
 
 
