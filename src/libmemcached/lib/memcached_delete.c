@@ -42,23 +42,19 @@ memcached_return memcached_delete_by_key(memcached_st *ptr,
     goto error;
   }
 
-  if ((ptr->flags & MEM_NO_BLOCK))
-    to_write= 0;
-  else
-    to_write= 1;
+  to_write= (ptr->flags & MEM_BUFFER_REQUESTS) ? 0 : 1;
 
   rc= memcached_do(ptr, server_key, buffer, send_length, to_write);
   if (rc != MEMCACHED_SUCCESS)
     goto error;
 
-  if ((ptr->flags & MEM_NO_BLOCK))
+  if ((ptr->flags & MEM_BUFFER_REQUESTS))
   {
-    rc= MEMCACHED_SUCCESS;
-    memcached_server_response_increment(ptr, server_key);
+    rc= MEMCACHED_BUFFERED;
   }
   else
   {
-    rc= memcached_response(ptr, buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, server_key);
+    rc= memcached_response(ptr, buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, NULL, server_key);
     if (rc == MEMCACHED_DELETED)
       rc= MEMCACHED_SUCCESS;
   }

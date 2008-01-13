@@ -2103,7 +2103,7 @@ MEMCACHED_LIBRARY_NAME=libmemcached
 
 #release versioning
 MEMCACHED_MAJOR_VERSION=0
-MEMCACHED_MINOR_VERSION=12
+MEMCACHED_MINOR_VERSION=13
 MEMCACHED_MICRO_VERSION=0
 
 #API version
@@ -2111,7 +2111,7 @@ MEMCACHED_API_VERSION=1.0
 
 
 #shared library versioning
-MEMCACHED_LIBRARY_VERSION=2:2:1
+MEMCACHED_LIBRARY_VERSION=2:0:0
 #                         | | |
 #                  +------+ | +---+
 #                  |        |     |
@@ -19634,6 +19634,67 @@ _ACEOF
 
 fi
 
+{ echo "$as_me:$LINENO: checking whether time.h and sys/time.h may both be included" >&5
+echo $ECHO_N "checking whether time.h and sys/time.h may both be included... $ECHO_C" >&6; }
+if test "${ac_cv_header_time+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <sys/types.h>
+#include <sys/time.h>
+#include <time.h>
+
+int
+main ()
+{
+if ((struct tm *) 0)
+return 0;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  ac_cv_header_time=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_header_time=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_header_time" >&5
+echo "${ECHO_T}$ac_cv_header_time" >&6; }
+if test $ac_cv_header_time = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define TIME_WITH_SYS_TIME 1
+_ACEOF
+
+fi
+
 { echo "$as_me:$LINENO: checking for size_t" >&5
 echo $ECHO_N "checking for size_t... $ECHO_C" >&6; }
 if test "${ac_cv_type_size_t+set}" = set; then
@@ -19694,6 +19755,89 @@ else
 cat >>confdefs.h <<_ACEOF
 #define size_t unsigned int
 _ACEOF
+
+fi
+
+{ echo "$as_me:$LINENO: checking for library containing getopt_long" >&5
+echo $ECHO_N "checking for library containing getopt_long... $ECHO_C" >&6; }
+if test "${ac_cv_search_getopt_long+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char getopt_long ();
+int
+main ()
+{
+return getopt_long ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' gnugetopt; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  ac_cv_search_getopt_long=$ac_res
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext
+  if test "${ac_cv_search_getopt_long+set}" = set; then
+  break
+fi
+done
+if test "${ac_cv_search_getopt_long+set}" = set; then
+  :
+else
+  ac_cv_search_getopt_long=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_search_getopt_long" >&5
+echo "${ECHO_T}$ac_cv_search_getopt_long" >&6; }
+ac_res=$ac_cv_search_getopt_long
+if test "$ac_res" != no; then
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
 
 fi
 

@@ -17,7 +17,7 @@ unsigned int execute_set(memcached_st *memc, pairs_st *pairs, unsigned int numbe
     rc= memcached_set(memc, pairs[x].key, pairs[x].key_length,
                       pairs[x].value, pairs[x].value_length,
                       0, 0);
-    if (rc != MEMCACHED_SUCCESS)
+    if (rc != MEMCACHED_SUCCESS && rc != MEMCACHED_BUFFERED)
       fprintf(stderr, "Failured on insert of %.*s\n", 
               (unsigned int)pairs[x].key_length, pairs[x].key);
     else
@@ -42,7 +42,7 @@ unsigned int execute_get(memcached_st *memc, pairs_st *pairs, unsigned int numbe
   {
     char *value;
     size_t value_length;
-    uint16_t flags;
+    uint32_t flags;
     unsigned int fetch_key;
 
     fetch_key= random() % number_of;

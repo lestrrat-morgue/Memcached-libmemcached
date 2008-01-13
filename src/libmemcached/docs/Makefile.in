@@ -218,6 +218,7 @@ man_MANS = libmemcached.3\
 	memcached_delete.3\
 	memcached_delete_by_key.3\
 	memcached_fetch.3\
+	memcached_fetch_execute.3\
 	memcached_fetch_result.3\
 	memcached_free.3\
 	memcached_get.3\
@@ -441,8 +442,6 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean-am: clean-generic clean-libtool mostlyclean-am
 
-distclean: distclean-am
-	-rm -f Makefile
 distclean-am: clean-am distclean-generic
 
 dvi: dvi-am
@@ -584,6 +583,9 @@ memcached_get_by_key.3: memcached_get.pod
 memcached_fetch_result.3: memcached_get.pod
 	pod2man -c "libmemcached" -r "" -s 3 memcached_get.pod > memcached_fetch_result.3
 
+memcached_fetch_execute.3: memcached_get.pod
+	pod2man -c "libmemcached" -r "" -s 3 memcached_get.pod > memcached_fetch_execute.3
+
 memcached_mget.3: memcached_get.pod
 	pod2man -c "libmemcached" -r "" -s 3 memcached_get.pod > memcached_mget.3
 
@@ -696,8 +698,13 @@ memflush.1: memflush.pod
 	pod2man -c "libmemcached" -r "" -s 1 memflush.pod > memflush.1
 
 clean:
-	rm *.1
-	rm *.3
+	rm -f *.1
+	rm -f *.3
+
+distclean:
+	rm -f *.1
+	rm -f *.3
+	rm -f Makefile
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

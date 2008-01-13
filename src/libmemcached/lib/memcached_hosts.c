@@ -13,9 +13,6 @@ static void rebalance_wheel(memcached_st *ptr)
   unsigned int x;
   unsigned int y;
   unsigned int latch;
-  unsigned int range;
-
-  range= (MEMCACHED_WHEEL_SIZE / ptr->number_of_hosts);
 
   /* Seed the Wheel */
   memset(ptr->wheel, 0, sizeof(unsigned int) * MEMCACHED_WHEEL_SIZE);
@@ -38,7 +35,7 @@ static void host_reset(memcached_server_st *host, char *hostname, unsigned int p
                        memcached_connection type)
 {
   memset(host,  0, sizeof(memcached_server_st));
-  memcpy(host->hostname, hostname, strlen(hostname));
+  strncpy(host->hostname, hostname, MEMCACHED_MAX_HOST_LENGTH - 1);
   host->port= port;
   host->fd= -1;
   host->type= type;
@@ -148,8 +145,8 @@ memcached_server_st *memcached_server_list_append(memcached_server_st *ptr,
   unsigned int count;
   memcached_server_st *new_host_list;
 
-  if (!hostname)
-    return ptr;
+  if (hostname == NULL || error == NULL)
+    return NULL;
 
   if (!port)
     port= MEMCACHED_DEFAULT_PORT; 

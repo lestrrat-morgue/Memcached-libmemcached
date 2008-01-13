@@ -7,7 +7,7 @@ MEMCACHED_LIBRARY_NAME=libmemcached
 
 #release versioning
 MEMCACHED_MAJOR_VERSION=0
-MEMCACHED_MINOR_VERSION=12
+MEMCACHED_MINOR_VERSION=13
 MEMCACHED_MICRO_VERSION=0
 
 #API version
@@ -15,7 +15,7 @@ MEMCACHED_API_VERSION=1.0
 AC_SUBST(MEMCACHED_API_VERSION)
 
 #shared library versioning
-MEMCACHED_LIBRARY_VERSION=2:2:1
+MEMCACHED_LIBRARY_VERSION=2:0:0
 #                         | | |
 #                  +------+ | +---+
 #                  |        |     |
@@ -68,5 +68,7 @@ else
 fi
 
 AC_C_CONST
+AC_HEADER_TIME
 AC_TYPE_SIZE_T
+AC_SEARCH_LIBS(getopt_long, gnugetopt)
 AC_OUTPUT(Makefile src/Makefile tests/Makefile docs/Makefile lib/Makefile include/Makefile support/Makefile support/libmemcached.pc support/libmemcached.spec)

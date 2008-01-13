@@ -11,7 +11,7 @@
 #define __MEMCACHED_H__
 
 #include <stdlib.h>
-#include <stdint.h>
+#include <inttypes.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 
@@ -69,6 +69,7 @@ typedef enum {
   MEMCACHED_NO_KEY_PROVIDED,
   MEMCACHED_FETCH_NOTFINISHED,
   MEMCACHED_TIMEOUT,
+  MEMCACHED_BUFFERED,
   MEMCACHED_MAXIMUM_RETURN, /* Always add new error code before */
 } memcached_return;
 
@@ -88,6 +89,8 @@ typedef enum {
   MEMCACHED_BEHAVIOR_SUPPORT_CAS,
   MEMCACHED_BEHAVIOR_POLL_TIMEOUT,
   MEMCACHED_BEHAVIOR_DISTRIBUTION,
+  MEMCACHED_BEHAVIOR_BUFFER_REQUESTS,
+  MEMCACHED_BEHAVIOR_USER_DATA,
 } memcached_behavior;
 
 typedef enum {
@@ -119,7 +122,6 @@ struct memcached_server_st {
   char hostname[MEMCACHED_MAX_HOST_LENGTH];
   unsigned int port;
   int fd;
-  unsigned int stack_responses;
   unsigned int cursor_active;
   char write_buffer[MEMCACHED_MAX_BUFFER];
   size_t write_buffer_offset;
@@ -179,8 +181,9 @@ struct memcached_result_st {
   char key[MEMCACHED_MAX_KEY];
   size_t key_length;
   memcached_string_st value;
-  uint16_t flags;
+  uint32_t flags;
   uint64_t cas;
+  /* Add result callback function */
 };
 
 struct memcached_st {
@@ -194,12 +197,15 @@ struct memcached_st {
   int send_size;
   int recv_size;
   int32_t poll_timeout;
-  memcached_string_st result_buffer;
+  memcached_result_st result;
   memcached_hash hash;
   memcached_server_distribution distribution;
+  void *user_data;
   unsigned int wheel[MEMCACHED_WHEEL_SIZE];
+#ifdef NOT_USED /* Future Use */
   uint8_t replicas;
-  memcached_return warning; /* Future Use */
+  memcached_return warning;
+#endif
 };
 
 /* Public API */
@@ -232,42 +238,42 @@ unsigned long long memcached_behavior_get(memcached_st *ptr, memcached_behavior 
 memcached_return memcached_set(memcached_st *ptr, char *key, size_t key_length, 
                                char *value, size_t value_length, 
                                time_t expiration,
-                               uint16_t  flags);
+                               uint32_t  flags);
 memcached_return memcached_add(memcached_st *ptr, char *key, size_t key_length,
                                char *value, size_t value_length, 
                                time_t expiration,
-                               uint16_t  flags);
+                               uint32_t  flags);
 memcached_return memcached_replace(memcached_st *ptr, char *key, size_t key_length,
                                    char *value, size_t value_length, 
                                    time_t expiration,
-                                   uint16_t  flags);
+                                   uint32_t  flags);
 memcached_return memcached_append(memcached_st *ptr, 
                                   char *key, size_t key_length,
                                   char *value, size_t value_length, 
                                   time_t expiration,
-                                  uint16_t flags);
+                                  uint32_t flags);
 memcached_return memcached_prepend(memcached_st *ptr, 
                                    char *key, size_t key_length,
                                    char *value, size_t value_length, 
                                    time_t expiration,
-                                   uint16_t flags);
+                                   uint32_t flags);
 memcached_return memcached_cas(memcached_st *ptr, 
                                char *key, size_t key_length,
                                char *value, size_t value_length, 
                                time_t expiration,
-                               uint16_t flags,
+                               uint32_t flags,
                                uint64_t cas);
 
 /* Get functions */
 char *memcached_get(memcached_st *ptr, char *key, size_t key_length,
                     size_t *value_length, 
-                    uint16_t *flags,
+                    uint32_t *flags,
                     memcached_return *error);
 memcached_return memcached_mget(memcached_st *ptr, 
                                 char **keys, size_t *key_length, 
                                 unsigned int number_of_keys);
 char *memcached_fetch(memcached_st *ptr, char *key, size_t *key_length, 
-                      size_t *value_length, uint16_t *flags, 
+                      size_t *value_length, uint32_t *flags, 
                       memcached_return *error);
 memcached_result_st *memcached_fetch_result(memcached_st *ptr, 
                                             memcached_result_st *result,
@@ -278,7 +284,7 @@ memcached_result_st *memcached_fetch_result(memcached_st *ptr,
 #define memcached_server_name(A,B) (B).hostname
 #define memcached_server_port(A,B) (B).port
 #define memcached_server_list(A) (A)->hosts
-#define memcached_server_response_count(A,B) (A)->hosts[B].stack_responses
+#define memcached_server_response_count(A,B) (A)->hosts[B].cursor_active
 
 memcached_return memcached_server_add_udp(memcached_st *ptr, 
                                           char *hostname,
@@ -305,7 +311,7 @@ char *memcached_get_by_key(memcached_st *ptr,
                            char *master_key, size_t master_key_length, 
                            char *key, size_t key_length, 
                            size_t *value_length, 
-                           uint16_t *flags,
+                           uint32_t *flags,
                            memcached_return *error);
 
 memcached_return memcached_mget_by_key(memcached_st *ptr, 
@@ -318,63 +324,80 @@ memcached_return memcached_set_by_key(memcached_st *ptr,
                                       char *key, size_t key_length, 
                                       char *value, size_t value_length, 
                                       time_t expiration,
-                                      uint16_t flags);
+                                      uint32_t flags);
 
 memcached_return memcached_add_by_key(memcached_st *ptr, 
                                       char *master_key, size_t master_key_length,
                                       char *key, size_t key_length,
                                       char *value, size_t value_length, 
                                       time_t expiration,
-                                      uint16_t flags);
+                                      uint32_t flags);
 
 memcached_return memcached_replace_by_key(memcached_st *ptr, 
                                           char *master_key, size_t master_key_length,
                                           char *key, size_t key_length,
                                           char *value, size_t value_length, 
                                           time_t expiration,
-                                          uint16_t flags);
+                                          uint32_t flags);
 
 memcached_return memcached_prepend_by_key(memcached_st *ptr, 
                                           char *master_key, size_t master_key_length,
                                           char *key, size_t key_length,
                                           char *value, size_t value_length, 
                                           time_t expiration,
-                                          uint16_t flags);
+                                          uint32_t flags);
 
 memcached_return memcached_append_by_key(memcached_st *ptr, 
                                          char *master_key, size_t master_key_length,
                                          char *key, size_t key_length,
                                          char *value, size_t value_length, 
                                          time_t expiration,
-                                         uint16_t flags);
+                                         uint32_t flags);
 
 memcached_return memcached_cas_by_key(memcached_st *ptr, 
                                       char *master_key, size_t master_key_length,
                                       char *key, size_t key_length,
                                       char *value, size_t value_length, 
                                       time_t expiration,
-                                      uint16_t flags,
+                                      uint32_t flags,
                                       uint64_t cas);
 memcached_return memcached_delete_by_key(memcached_st *ptr, 
                                          char *master_key, size_t master_key_length,
                                          char *key, size_t key_length,
                                          time_t expiration);
 
+memcached_return memcached_mdelete(memcached_st *ptr, 
+                                   char **key, size_t *key_length,
+                                   unsigned int number_of_keys,
+                                   time_t expiration);
+
+memcached_return memcached_mdelete_by_key(memcached_st *ptr, 
+                                          char *master_key, size_t master_key_length,
+                                          char **key, size_t *key_length,
+                                          unsigned int number_of_keys,
+                                          time_t expiration);
+
+memcached_return memcached_fetch_execute(memcached_st *ptr, 
+                                             unsigned int (*callback[])(memcached_st *ptr, memcached_result_st *result, void *context),
+                                             void *context,
+                                             unsigned int number_of_callbacks
+                                             );
+
 /* Result Struct */
 void memcached_result_free(memcached_result_st *result);
 memcached_result_st *memcached_result_create(memcached_st *ptr, 
                                              memcached_result_st *result);
-#define memcached_result_key_value(A) A->key
-#define memcached_result_key_length(A) A->key_length
+#define memcached_result_key_value(A) (A)->key
+#define memcached_result_key_length(A) (A)->key_length
 #ifdef FIX
-#define memcached_result_value(A) memcached_string_value(A->value)
-#define memcached_result_length(A) memcached_string_length(A->value)
+#define memcached_result_value(A) memcached_string_value((A)->value)
+#define memcached_result_length(A) memcached_string_length((A)->value)
 #else
 char *memcached_result_value(memcached_result_st *ptr);
 size_t memcached_result_length(memcached_result_st *ptr);
 #endif
-#define memcached_result_flags(A) A->flags
-#define memcached_result_cas(A) A->cas
+#define memcached_result_flags(A) (A)->flags
+#define memcached_result_cas(A) (A)->cas
 
 
 #ifndef __WATCHPOINT_H__

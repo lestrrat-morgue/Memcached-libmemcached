@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdint.h>
+#include <inttypes.h>
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -16,14 +16,15 @@ void options_parse(int argc, char *argv[]);
 
 static int opt_verbose= 0;
 static int opt_displayflag= 0;
-static char *opt_servers;
+static char *opt_servers= NULL;
+static char *opt_hash= NULL;
 
 int main(int argc, char *argv[])
 {
   memcached_st *memc;
   char *string;
   size_t string_length;
-  uint16_t flags;
+  uint32_t flags;
   memcached_return rc;
   memcached_server_st *servers;
 
@@ -40,6 +41,7 @@ int main(int argc, char *argv[])
   }
 
   memc= memcached_create(NULL);
+  process_hash_option(memc, opt_hash);
 
   servers= memcached_servers_parse(opt_servers);
 
@@ -80,7 +82,10 @@ int main(int argc, char *argv[])
 
   memcached_free(memc);
 
-  free(opt_servers);
+  if (opt_servers)
+    free(opt_servers);
+  if (opt_hash)
+    free(opt_hash);
 
   return 0;
 }
@@ -104,6 +109,7 @@ void options_parse(int argc, char *argv[])
       {"debug", no_argument, &opt_verbose, OPT_DEBUG},
       {"servers", required_argument, NULL, OPT_SERVERS},
       {"flag", no_argument, &opt_displayflag, OPT_FLAG},
+      {"hash", required_argument, NULL, OPT_HASH},
       {0, 0, 0, 0},
     };
 
@@ -129,6 +135,9 @@ void options_parse(int argc, char *argv[])
       break;
     case OPT_SERVERS: /* --servers or -s */
       opt_servers= strdup(optarg);
+      break;
+    case OPT_HASH:
+      opt_hash= strdup(optarg);
       break;
     case '?':
       /* getopt_long already printed an error message. */

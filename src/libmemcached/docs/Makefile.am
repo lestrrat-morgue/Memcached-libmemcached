@@ -46,6 +46,7 @@ man_MANS = libmemcached.3\
 	memcached_delete.3\
 	memcached_delete_by_key.3\
 	memcached_fetch.3\
+	memcached_fetch_execute.3\
 	memcached_fetch_result.3\
 	memcached_free.3\
 	memcached_get.3\
@@ -149,6 +150,9 @@ memcached_get_by_key.3: memcached_get.pod
 
 memcached_fetch_result.3: memcached_get.pod
 	pod2man -c "libmemcached" -r "" -s 3 memcached_get.pod > memcached_fetch_result.3
+
+memcached_fetch_execute.3: memcached_get.pod
+	pod2man -c "libmemcached" -r "" -s 3 memcached_get.pod > memcached_fetch_execute.3
 
 memcached_mget.3: memcached_get.pod
 	pod2man -c "libmemcached" -r "" -s 3 memcached_get.pod > memcached_mget.3
@@ -262,5 +266,10 @@ memflush.1: memflush.pod
 	pod2man -c "libmemcached" -r "" -s 1 memflush.pod > memflush.1
 
 clean:
-	rm *.1
-	rm *.3
+	rm -f *.1
+	rm -f *.3
+
+distclean:
+	rm -f *.1
+	rm -f *.3
+	rm -f Makefile

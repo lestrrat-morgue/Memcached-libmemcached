@@ -9,9 +9,6 @@ memcached_return memcached_do(memcached_st *ptr, unsigned int server_key, char *
   WATCHPOINT_ASSERT(command_length);
   WATCHPOINT_ASSERT(command);
 
-  if (ptr->hosts[server_key].cursor_active)
-    (void)memcached_finish_server(ptr, server_key);
-
   if ((rc= memcached_connect(ptr, server_key)) != MEMCACHED_SUCCESS)
     return rc;
 
@@ -19,6 +16,8 @@ memcached_return memcached_do(memcached_st *ptr, unsigned int server_key, char *
 
   if (sent_length == -1 || sent_length != command_length)
     rc= MEMCACHED_WRITE_FAILURE;
+  else
+    memcached_server_response_increment(ptr, server_key);
 
   return rc;
 }

@@ -10,7 +10,6 @@ static memcached_return set_hostinfo(memcached_server_st *server)
   sprintf(str_port, "%u", server->port);
 
   memset(&hints, 0, sizeof(hints));
-  hints.ai_family= AF_INET;
   hints.ai_socktype= SOCK_STREAM;
   hints.ai_protocol= 0;
 
@@ -77,7 +76,7 @@ static memcached_return udp_connect(memcached_st *ptr, unsigned int server_key)
   if (ptr->hosts[server_key].fd == -1)
   {
     /* Old connection junk still is in the structure */
-    WATCHPOINT_ASSERT(ptr->hosts[server_key].stack_responses == 0);
+    WATCHPOINT_ASSERT(ptr->hosts[server_key].cursor_active == 0);
 
     /*
       If we have not allocated the hosts object.
@@ -110,9 +109,10 @@ static memcached_return tcp_connect(memcached_st *ptr, unsigned int server_key)
 {
   if (ptr->hosts[server_key].fd == -1)
   {
-    /* Old connection junk still is in the structure */
-    WATCHPOINT_ASSERT(ptr->hosts[server_key].stack_responses == 0);
     struct addrinfo *use;
+
+    /* Old connection junk still is in the structure */
+    WATCHPOINT_ASSERT(ptr->hosts[server_key].cursor_active == 0);
 
     if (ptr->hosts[server_key].sockaddr_inited == MEMCACHED_NOT_ALLOCATED || 
         (!(ptr->flags & MEM_USE_CACHE_LOOKUPS)))
@@ -140,11 +140,23 @@ static memcached_return tcp_connect(memcached_st *ptr, unsigned int server_key)
     {
       int error;
       struct linger linger;
+      struct timeval waittime;
+
+      waittime.tv_sec= 10;
+      waittime.tv_usec= 0;
 
       linger.l_onoff= 1; 
       linger.l_linger= MEMCACHED_DEFAULT_TIMEOUT; 
       error= setsockopt(ptr->hosts[server_key].fd, SOL_SOCKET, SO_LINGER, 
                         &linger, (socklen_t)sizeof(struct linger));
+      WATCHPOINT_ASSERT(error == 0);
+
+      error= setsockopt(ptr->hosts[server_key].fd, SOL_SOCKET, SO_SNDTIMEO, 
+                        &waittime, (socklen_t)sizeof(struct timeval));
+      WATCHPOINT_ASSERT(error == 0);
+
+      error= setsockopt(ptr->hosts[server_key].fd, SOL_SOCKET, SO_RCVTIMEO, 
+                        &waittime, (socklen_t)sizeof(struct timeval));
       WATCHPOINT_ASSERT(error == 0);
     }
 
@@ -206,12 +218,14 @@ test_connect:
       default:
         ptr->cached_errno= errno;
         WATCHPOINT_ERRNO(ptr->cached_errno);
+        close(ptr->hosts[server_key].fd);
+        ptr->hosts[server_key].fd= -1;
         return MEMCACHED_ERRNO;
       }
       ptr->connected++;
     }
 
-    WATCHPOINT_ASSERT(ptr->hosts[server_key].stack_responses == 0);
+    WATCHPOINT_ASSERT(ptr->hosts[server_key].cursor_active == 0);
   }
 
   return MEMCACHED_SUCCESS;

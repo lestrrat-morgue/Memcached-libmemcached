@@ -57,7 +57,7 @@ void memcached_io_preread(memcached_st *ptr)
 
   for (x= 0; x < ptr->number_of_hosts; x++)
   {
-    if (ptr->hosts[x].cursor_active &&
+    if (memcached_server_response_count(ptr, x) &&
         ptr->hosts[x].read_data_length < MEMCACHED_MAX_BUFFER )
     {
       size_t data_read;
@@ -83,6 +83,7 @@ ssize_t memcached_io_read(memcached_st *ptr, unsigned  int server_key,
 
   while (length)
   {
+    uint8_t found_eof= 0;
     if (!ptr->hosts[server_key].read_buffer_length)
     {
       size_t data_read;
@@ -118,7 +119,13 @@ ssize_t memcached_io_read(memcached_st *ptr, unsigned  int server_key,
         }
         else if (data_read)
           break;
-        /* If zero, just keep looping */
+        /* If zero, just keep looping unless testing, then assert() */
+        else
+        {
+          WATCHPOINT_ASSERT(0);
+          found_eof= 1;
+          break;
+        }
       }
 
       ptr->hosts[server_key].read_data_length= data_read;
@@ -146,6 +153,9 @@ ssize_t memcached_io_read(memcached_st *ptr, unsigned  int server_key,
       ptr->hosts[server_key].read_buffer_length--;
       buffer_ptr++;
     }
+
+    if (found_eof)
+      break;
   }
 
   return (size_t)(buffer_ptr - buffer);

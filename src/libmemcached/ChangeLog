@@ -1,3 +1,25 @@
+0.13 Sun Jan 13 06:51:50 PST 2008
+  * MEMCACHED_BEHAVIOR_USER_DATA added to store user pointer.
+  * Fix for failure to connect to invalidate socket.
+  * Patch from Marc Rossi to add --hash option for memcp, memrm, and memcat.
+  * Kevin's patch for fixing EOF issues during a read.
+  * Toru Maesaka patch for stats mismatch
+  * Fix for when CRC return 0
+  * Fixed uint16_t issues around flags. Turns out the documentation on the
+    protocol was wrong.
+  * Lingering socket fixes for FreeBSD.
+  * Patches from Kevin Dalley for FreeBSD 4.0
+  * Added multi delete functions.
+  * All get key returns have C style null termination
+  * If memcached_server_list_append is passed NULLs instead of pointers it
+    returns NULL.  
+  * Added memcached_fetch_execute() method
+  * Found a bug where memcached_fetch() was not null terminating the result
+    value.
+  * memcached_behavior() now has the ability to set "buffering" so that
+    data is not automatically flushed.
+  * Behavior change, buffered commands now return MEMCACHED_BUFFERED
+
 0.12 Tue Dec 11 15:20:55 PST 2007
   * Updates for consistent hashing
   * IPV6 support

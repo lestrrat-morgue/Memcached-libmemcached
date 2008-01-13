@@ -6,7 +6,7 @@
 */
 char *memcached_get(memcached_st *ptr, char *key, size_t key_length, 
                     size_t *value_length, 
-                    uint16_t *flags,
+                    uint32_t *flags,
                     memcached_return *error)
 {
   return memcached_get_by_key(ptr, NULL, 0, key, key_length, value_length, 
@@ -17,10 +17,13 @@ char *memcached_get_by_key(memcached_st *ptr,
                            char *master_key, size_t master_key_length, 
                            char *key, size_t key_length, 
                            size_t *value_length, 
-                           uint16_t *flags,
+                           uint32_t *flags,
                            memcached_return *error)
 {
   char *value;
+  size_t dummy_length;
+  uint32_t dummy_flags;
+  memcached_return dummy_error;
 
   /* Request the key */
   *error= memcached_mget_by_key(ptr, 
@@ -30,7 +33,6 @@ char *memcached_get_by_key(memcached_st *ptr,
 
   value= memcached_fetch(ptr, NULL, NULL, 
                          value_length, flags, error);
-
   /* This is for historical reasons */
   if (*error == MEMCACHED_END)
     *error= MEMCACHED_NOTFOUND;
@@ -38,7 +40,9 @@ char *memcached_get_by_key(memcached_st *ptr,
   if (value == NULL)
     return NULL;
 
-  memcached_finish(ptr);
+  (void)memcached_fetch(ptr, NULL, NULL, 
+                        &dummy_length, &dummy_flags, 
+                        &dummy_error);
 
   return value;
 }
@@ -76,10 +80,28 @@ memcached_return memcached_mget_by_key(memcached_st *ptr,
     get_command_length= 5;
   }
 
-  memcached_finish(ptr);
-
   if (master_key && master_key_length)
     master_server_key= memcached_generate_hash(ptr, master_key, master_key_length);
+
+  /* 
+    Here is where we pay for the non-block API. We need to remove any data sitting
+    in the queue before we start our get.
+
+    It might be optimum to bounce the connection if count > some number.
+  */
+  for (x= 0; x < ptr->number_of_hosts; x++)
+  {
+    if (memcached_server_response_count(ptr, x))
+    {
+      char buffer[MEMCACHED_DEFAULT_COMMAND_SIZE];
+
+      if (ptr->flags & MEM_NO_BLOCK)
+        (void)memcached_io_write(ptr, x, NULL, 0, 1);
+
+      while(memcached_server_response_count(ptr, x))
+        (void)memcached_response(ptr, buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, &ptr->result, x);
+    }
+  }
 
   /* 
     If a server fails we warn about errors and start all over with sending keys
@@ -94,28 +116,33 @@ memcached_return memcached_mget_by_key(memcached_st *ptr,
     else
       server_key= memcached_generate_hash(ptr, keys[x], key_length[x]);
 
-    if (ptr->hosts[server_key].cursor_active == 0)
+    if (memcached_server_response_count(ptr, server_key) == 0)
     {
       rc= memcached_connect(ptr, server_key);
+
+      if (rc != MEMCACHED_SUCCESS)
+        continue;
 
       if ((memcached_io_write(ptr, server_key, get_command, get_command_length, 0)) == -1)
       {
         rc= MEMCACHED_SOME_ERRORS;
         continue;
       }
-      ptr->hosts[server_key].cursor_active= 1;
+      WATCHPOINT_ASSERT(ptr->hosts[server_key].cursor_active == 0);
+      memcached_server_response_increment(ptr, server_key);
+      WATCHPOINT_ASSERT(ptr->hosts[server_key].cursor_active == 1);
     }
 
     if ((memcached_io_write(ptr, server_key, keys[x], key_length[x], 0)) == -1)
     {
-      ptr->hosts[server_key].cursor_active= 0;
+      memcached_server_response_reset(ptr, server_key);
       rc= MEMCACHED_SOME_ERRORS;
       continue;
     }
 
     if ((memcached_io_write(ptr, server_key, " ", 1, 0)) == -1)
     {
-      ptr->hosts[server_key].cursor_active= 0;
+      memcached_server_response_reset(ptr, server_key);
       rc= MEMCACHED_SOME_ERRORS;
       continue;
     }
@@ -126,9 +153,9 @@ memcached_return memcached_mget_by_key(memcached_st *ptr,
   */
   for (x= 0; x < ptr->number_of_hosts; x++)
   {
-    if (ptr->hosts[x].cursor_active == 1)
+    if (memcached_server_response_count(ptr, x))
     {
-      /* We need to doo something about non-connnected hosts in the future */
+      /* We need to do something about non-connnected hosts in the future */
       if ((memcached_io_write(ptr, x, "\r\n", 2, 1)) == -1)
       {
         rc= MEMCACHED_SOME_ERRORS;

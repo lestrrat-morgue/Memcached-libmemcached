@@ -24,8 +24,9 @@ void options_parse(int argc, char *argv[]);
 
 static int opt_verbose= 0;
 static char *opt_servers= NULL;
+static char *opt_hash= NULL;
 static int opt_method= OPT_SET;
-static uint16_t opt_flags= 0;
+static uint32_t opt_flags= 0;
 static time_t opt_expires= 0;
 
 int main(int argc, char *argv[])
@@ -37,6 +38,7 @@ int main(int argc, char *argv[])
   options_parse(argc, argv);
 
   memc= memcached_create(NULL);
+  process_hash_option(memc, opt_hash);
 
   if (!opt_servers)
   {
@@ -131,7 +133,10 @@ int main(int argc, char *argv[])
 
   memcached_free(memc);
 
-  free(opt_servers);
+  if (opt_servers)
+    free(opt_servers);
+  if (opt_hash)
+    free(opt_hash);
 
   return 0;
 }
@@ -158,6 +163,7 @@ void options_parse(int argc, char *argv[])
       {"set",  no_argument, NULL, OPT_SET},
       {"add",  no_argument, NULL, OPT_ADD},
       {"replace",  no_argument, NULL, OPT_REPLACE},
+      {"hash", required_argument, NULL, OPT_HASH},
       {0, 0, 0, 0},
     };
 
@@ -187,7 +193,7 @@ void options_parse(int argc, char *argv[])
       opt_servers= strdup(optarg);
       break;
     case OPT_FLAG: /* --flag */
-      opt_flags= (uint16_t)strtol(optarg, (char **)NULL, 16);
+      opt_flags= (uint32_t)strtol(optarg, (char **)NULL, 16);
       break;
     case OPT_EXPIRE: /* --expire */
       opt_expires= (time_t)strtoll(optarg, (char **)NULL, 10);
@@ -200,6 +206,8 @@ void options_parse(int argc, char *argv[])
       break;
     case OPT_ADD:
       opt_method= OPT_ADD;
+    case OPT_HASH:
+      opt_hash= strdup(optarg);
       break;
     case '?':
       /* getopt_long already printed an error message. */
