@@ -14,8 +14,6 @@ typedef memcached_return     Memcached__libmemcached__return;
 typedef memcached_behavior   Memcached__libmemcached__behavior;
 typedef memcached_st*        Memcached__libmemcached;
 
-#include "const-c.inc"
-
 /* ====================================================================================== */
 
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached
@@ -63,6 +61,18 @@ memcached_free(Memcached__libmemcached ptr)
     POSTCALL:
         if (ptr)    /* mark as undef to avoid duplicate free */
             SvOK_off((SV*)SvRV(ST(0)));
+
+UV
+memcached_behavior_get(Memcached__libmemcached ptr, Memcached__libmemcached__behavior flag)
+
+Memcached__libmemcached__return
+memcached_behavior_set(Memcached__libmemcached ptr, Memcached__libmemcached__behavior flag, void *data)
+    INIT:
+        data = (SvTRUE(ST(2))) ? 1 : 0;
+        if (data && strNE(SvPV_nolen(ST(2)),"1")) {
+            warn("memcached_behavior_set currently only supports boolean behaviors");
+        }   
+
 
 
 =head2 Functions for Setting Values in memcached

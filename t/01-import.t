@@ -3,7 +3,7 @@
 # XXX memcached_clone needs more testing for non-undef args
 
 use Carp;
-use Test::More tests => 15;
+use Test::More tests => 16;
 
 BEGIN { use_ok( 'Memcached::libmemcached' ) }
 
@@ -29,8 +29,9 @@ Memcached::libmemcached->import( ':memcached_hash' );
 ok  exists &MEMCACHED_HASH_MD5, 'should import MEMCACHED_HASH_MD5 by :memcached_hash tag';
 ok  exists &MEMCACHED_HASH_CRC, 'should import MEMCACHED_HASH_CRC by :memcached_hash tag';
 
-ok defined MEMCACHED_HASH_MD5;
-ok defined MEMCACHED_HASH_CRC;
+ok MEMCACHED_HASH_MD5;
+ok MEMCACHED_HASH_CRC;
+cmp_ok MEMCACHED_HASH_MD5(), '!=', MEMCACHED_HASH_CRC();
 
 ok 1;
 

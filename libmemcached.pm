@@ -15,6 +15,7 @@ Version 0.01
 
 our $VERSION = '0.01';
 
+use Carp;
 use base qw(Exporter);
 
 use Memcached::libmemcached::API;
