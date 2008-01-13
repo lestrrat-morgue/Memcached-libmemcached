@@ -14,10 +14,13 @@ typedef memcached_return     Memcached__libmemcached__return;
 typedef memcached_behavior   Memcached__libmemcached__behavior;
 typedef memcached_st*        Memcached__libmemcached;
 
+#include "const-c.inc"
 
 /* ====================================================================================== */
 
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached
+
+INCLUDE: const-xs.inc
 
 
 =head2 Functions For Managing libmemcached Objects

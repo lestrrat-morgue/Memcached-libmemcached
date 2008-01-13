@@ -2,6 +2,8 @@ use strict;
 use warnings;
 
 use ExtUtils::MakeMaker;
+use ExtUtils::Constant qw (WriteConstants);
+
 use Data::Dumper;
 use Cwd qw(abs_path);
 
@@ -143,7 +145,7 @@ sub extract_libmemcached_constants {
         }
     }
 
-    # write 
+    # write raw hash of const names
     my $const_pm = "lib/Memcached/libmemcached/const_hash.pl";
     warn "Writing $const_pm\n";
     open my $const_pm_fh, ">$const_pm" or die "Can't open $const_pm: $!";
@@ -156,5 +158,11 @@ sub extract_libmemcached_constants {
     my $loaded = require $const_pm;
     die "$const_pm didn't return a HASH reference ($loaded)"
         unless ref $loaded eq 'HASH';
+
+    # write constants for XS, see ExtUtils::Constant
+    WriteConstants(
+        NAME => 'Memcached::libmemcached',
+        NAMES => [ keys %libmemcached_const ],
+    );
 }
 
