@@ -234,6 +234,20 @@ XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_stats.po
 =cut
 
 
+=head2 Miscellaneous Functions
+
+=head3 memcached_strerror
+
+  $string = memcached_strerror($memc, $return_code)
+
+memcached_strerror() takes a C<memcached_return> value and returns a string describing the error.
+The string should be treated as read-only (it may be so in future versions).
+See also L<Memcached::libmemcached::memcached_strerror>.
+
+=cut
+
+
+
 
 
 =head1 AUTHOR

@@ -1,9 +1,12 @@
+
 # tests for functions documented in memcached_servers.pod
 
 use Test::More tests => 10;
 
 BEGIN {
-use_ok( 'Memcached::libmemcached', qw(
+use_ok( 'Memcached::libmemcached',
+#   functions explicitly tested by this file
+qw(
     memcached_server_count
     memcached_server_list
     memcached_server_add

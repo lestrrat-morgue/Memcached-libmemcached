@@ -1,10 +1,5 @@
 General:
 
-Resolve memory management: to DESTROY or not to DESTROY, that is the question!
-    Use SV memory to hold structure
-    To bless or not? Type safety (bless?, check size of scalar)
-    memcached_clone usage and examples
-
 Makefile.PL:
     parse memcached.h to extract MEMCACHED_SUCCESS etc
         then use ExtUtils::Constant to generate the code for constant()
@@ -24,3 +19,15 @@ Tests:
     Use launch.pm in test scripts.
     Remember that we're not trying to test libmemcached itself!
 
+Compatibility:
+    Use flags field in a way compatible with Cache::Memcached?
+        use constant F_STORABLE => 1;
+        use constant F_COMPRESS => 2;
+       +use constant F_UTF8     => 4; <= new patch from sugi@nemui.org
+    We should certainly support UTF8 and using the same flag bit is sane
+    (will reduce migration problems).
+
+    Should we support automatic storable/compress or leave those to higher level code?
+    Could support generic get & set key and get & set value callback hooks.
+    Like BerkeleyDB filters: http://search.cpan.org/~pmqs/BerkeleyDB/BerkeleyDB.pod#DBM_Filters
+    Write Cache::Memcached emulation and run its test suite.

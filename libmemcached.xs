@@ -20,7 +20,7 @@ typedef memcached_st*        Memcached__libmemcached;
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached
 
 
-=head2 Methods For Managing libmemcached Objects
+=head2 Functions For Managing libmemcached Objects
 
 =cut
 
@@ -62,7 +62,7 @@ memcached_free(Memcached__libmemcached ptr)
             SvOK_off((SV*)SvRV(ST(0)));
 
 
-=head2 Methods for Setting Values in memcached
+=head2 Functions for Setting Values in memcached
 
 Memcached__libmemcached__return
 memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), time_t expiration= 0, uint16_t flags= 0)
@@ -71,28 +71,34 @@ memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *
 =cut
 
 
-=head2 Methods for Incrementing and Decrementing Values from memcached
+=head2 Functions for Incrementing and Decrementing Values from memcached
 
 =cut
 
 
-=head2 Methods for Fetching Values from memcached
+=head2 Functions for Fetching Values from memcached
 
 =cut
 
 
-=head2 Methods for Managing Results from memcached
+=head2 Functions for Managing Results from memcached
 
 =cut
 
 
-=head2 Methods for Deleting Values from memcached
+=head2 Functions for Deleting Values from memcached
 
 =cut
 
 
-=head2 Methods for Accessing Statistics from memcached
+=head2 Functions for Accessing Statistics from memcached
 
 =cut
 
 
+=head2 Miscellaneous Functions
+
+=cut
+
+char *
+memcached_strerror(Memcached__libmemcached ptr, Memcached__libmemcached__return rc)
