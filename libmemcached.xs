@@ -67,6 +67,10 @@ memcached_behavior_get(Memcached__libmemcached ptr, memcached_behavior flag)
 memcached_return
 memcached_behavior_set(Memcached__libmemcached ptr, memcached_behavior flag, void *data)
     INIT:
+        /* catch any special cases */
+        if (flag == MEMCACHED_BEHAVIOR_USER_DATA) {
+            XSRETURN_IV(MEMCACHED_FAILURE);
+        }
         data = (SvTRUE(ST(2))) ? (void*)1 : (void*)0;
         if (data && strNE(SvPV_nolen(ST(2)),"1")) {
             warn("memcached_behavior_set currently only supports boolean behaviors");

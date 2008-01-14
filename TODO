@@ -4,6 +4,7 @@ Structure:
     Aim to be at least thread-safe and ideally thread-hot.
     Add MEMCACHED_BEHAVIOR_USER_DATA structure
         hold last memcached_return value
+        will also hold PrintError & RaiseError flags
     Add memcached_perl_err($memc) to return last memcached_return value
 
 Errors:
@@ -13,6 +14,9 @@ Errors:
 
 Tests:
     Fail better is memcached not running
+
+Add wrapper around memcached_fetch that fetches all into a hash ref
+(allow an optional existing hash ref to be passed).
 
 Compatibility:
     Use flags field in a way compatible with Cache::Memcached?
