@@ -2,15 +2,17 @@ General:
 
 Structure:
     Aim to be at least thread-safe and ideally thread-hot.
-    Make return type a dual-var like $! with integer and string message parts.
-        add tests for it
+    Add MEMCACHED_BEHAVIOR_USER_DATA structure
+        hold last memcached_return value
+    Add memcached_perl_err($memc) to return last memcached_return value
 
 Errors:
     Is success true or false?
+    Make return type a dual-var like $! with integer and string message parts.
+        add tests for it
 
 Tests:
-    Need running memcached(s) to perform some tests
-    Remember that we're not trying to test libmemcached itself!
+    Fail better is memcached not running
 
 Compatibility:
     Use flags field in a way compatible with Cache::Memcached?
@@ -19,7 +21,6 @@ Compatibility:
        +use constant F_UTF8     => 4; <= new patch from sugi@nemui.org
     We should certainly support UTF8 and using the same flag bit is sane
     (will reduce migration problems).
-
     Should we support automatic storable/compress or leave those to higher level code?
     Could support generic get & set key and get & set value callback hooks.
     Like BerkeleyDB filters: http://search.cpan.org/~pmqs/BerkeleyDB/BerkeleyDB.pod#DBM_Filters

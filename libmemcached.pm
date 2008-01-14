@@ -64,8 +64,12 @@ structure.
 
 =head3 Arguments
 
-For structure pointer arguments, undef is mapped to null on input and null is
-mapped to undef on output.
+There are no I<length> arguments. Wherever the libmemcached documentation shows
+a length argument (input or output) the corresponding argument doesn't exist in
+the Perl API.
+
+For pointer arguments, undef is mapped to null on input and null is mapped to
+undef on output.
 
 =head2 Return
 

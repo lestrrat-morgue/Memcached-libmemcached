@@ -11,18 +11,21 @@
 TYPEMAP
 
 # --- simple types ---
-Memcached__libmemcached__return         T_RETURN
-Memcached__libmemcached__behavior       T_IV
+memcached_behavior                      T_IV
+memcached_return                        T_RETURN
 
-# lmc_data_flags_t = abstraction typedef for get/set data flags
-lmc_data_flags_t                        T_UV
+# --- generic simple types ---
 # general uint16_t
 uint16_t                                T_UV
 # XXX need to at least document this as an issue
 # Could also check at build time if this perl has 64bit ints and use UV if so
 uint64_t                                T_NV
 
-# --- complex types ---
+# --- perl api private abstraction typedefs ---
+lmc_value                               T_VALUE
+lmc_data_flags_t                        T_UV
+
+# --- complex types (incl. objects, typedef name encodes class name) ---
 # XXX memory management may be reworked to store structure in scalars
 Memcached__libmemcached                 T_PTROBJ_RVIV
 
@@ -35,8 +38,10 @@ OUTPUT
 T_RETURN
         /* setup return value as a dualvar with int err code and string error message */
         sv_setiv($arg, $var);
-        /* XXX need to decide is success is true or false! */
-        sv_setpv($arg, ($var) ? memcached_strerror(NULL, $var) : "XXX");
+        /* XXX need to decide if success is true or false! */
+        /* sv_setpv($arg, ($var) ? memcached_strerror(NULL, $var) : "XXX"); */
+        /* XXX could optimize later to reuse read-only char* from memcached_strerror */
+        sv_setpv($arg, memcached_strerror(NULL, $var));
         SvIOK_on($arg);
         if (TRACE_MEMCACHED(ptr))
             warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, SvPV_nolen($arg));
@@ -45,6 +50,16 @@ INPUT
 T_PV
         /* treat undef as null pointer (output does the inverse) */
         $var = (SvOK($arg)) ? ($type)SvPV_nolen($arg) : NULL;
+
+INPUT
+T_VALUE
+        /* treat undef as null pointer */
+        $var = (SvOK($arg)) ? ($type)SvPV_nolen($arg) : NULL;
+
+OUTPUT
+T_VALUE
+        /* assumes the existance of a value_length variable holding the length */
+        sv_setpvn((SV*)$arg, $var, value_length);
 
 
 INPUT

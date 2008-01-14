@@ -10,10 +10,9 @@
 #include <libmemcached/memcached.h>
 
 /* mapping C types to perl classes - keep typemap file in sync */
-typedef memcached_return     Memcached__libmemcached__return;
-typedef memcached_behavior   Memcached__libmemcached__behavior;
 typedef memcached_st*        Memcached__libmemcached;
 typedef uint32_t             lmc_data_flags_t;
+typedef char*                lmc_value;
 
 /* XXX quick hack for now */
 #define TRACE_MEMCACHED(ptr) \
@@ -47,10 +46,10 @@ memcached_clone(Memcached__libmemcached clone, Memcached__libmemcached source)
 unsigned int
 memcached_server_count(Memcached__libmemcached ptr)
 
-Memcached__libmemcached__return
+memcached_return
 memcached_server_add(Memcached__libmemcached ptr, char *hostname, unsigned int port=0)
 
-Memcached__libmemcached__return
+memcached_return
 memcached_server_add_unix_socket(Memcached__libmemcached ptr, char *socket)
 
 void
@@ -63,10 +62,10 @@ memcached_free(Memcached__libmemcached ptr)
             SvOK_off((SV*)SvRV(ST(0)));
 
 UV
-memcached_behavior_get(Memcached__libmemcached ptr, Memcached__libmemcached__behavior flag)
+memcached_behavior_get(Memcached__libmemcached ptr, memcached_behavior flag)
 
-Memcached__libmemcached__return
-memcached_behavior_set(Memcached__libmemcached ptr, Memcached__libmemcached__behavior flag, void *data)
+memcached_return
+memcached_behavior_set(Memcached__libmemcached ptr, memcached_behavior flag, void *data)
     INIT:
         data = (SvTRUE(ST(2))) ? (void*)1 : (void*)0;
         if (data && strNE(SvPV_nolen(ST(2)),"1")) {
@@ -79,7 +78,7 @@ memcached_behavior_set(Memcached__libmemcached ptr, Memcached__libmemcached__beh
 
 =cut
 
-Memcached__libmemcached__return
+memcached_return
 memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), time_t expiration= 0, lmc_data_flags_t flags= 0)
 
 
@@ -89,10 +88,10 @@ memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *
 
 =cut
 
-Memcached__libmemcached__return
+memcached_return
 memcached_increment(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset, uint64_t &value=NO_INIT)
 
-Memcached__libmemcached__return
+memcached_return
 memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset, uint64_t &value=NO_INIT)
 
 
@@ -103,8 +102,19 @@ memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), 
 
 =cut
 
-char *
-memcached_get(Memcached__libmemcached ptr, char *key, size_t length(key), size_t &value_length=NO_INIT, lmc_data_flags_t &flags= 0, Memcached__libmemcached__return &error)
+lmc_value
+memcached_get(Memcached__libmemcached ptr, \
+        char *key, size_t length(key), \
+        IN_OUT lmc_data_flags_t flags= 0, \
+        IN_OUT memcached_return error=0)
+    PREINIT:
+        size_t value_length=0;
+    CODE:
+        warn("memcached_get flags=%d error=%d",flags, error);
+        RETVAL = memcached_get(ptr, key, XSauto_length_of_key, &value_length, &flags, &error);
+        warn("memcached_get flags=%d error=%d",flags, error);
+    OUTPUT:
+        RETVAL
 
 
 
@@ -117,7 +127,7 @@ memcached_get(Memcached__libmemcached ptr, char *key, size_t length(key), size_t
 
 =cut
 
-Memcached__libmemcached__return
+memcached_return
 memcached_delete(Memcached__libmemcached ptr, char *key, size_t length(key), time_t expiration= 0)
 
 
@@ -132,4 +142,4 @@ memcached_delete(Memcached__libmemcached ptr, char *key, size_t length(key), tim
 =cut
 
 char *
-memcached_strerror(Memcached__libmemcached ptr, Memcached__libmemcached__return rc)
+memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
