@@ -30,6 +30,8 @@ WriteMakefile(
     },
     dist                => {
         COMPRESS => 'gzip -9f', SUFFIX => 'gz',
+        DIST_DEFAULT=> 'clean distcheck disttest tardist',
+        PREOP => '$(MAKE) -f Makefile.old distdir',
     },
     # see also MY::postamble below
     clean               => {

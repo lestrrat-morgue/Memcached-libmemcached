@@ -2,7 +2,7 @@
 
 use Test::More tests => 8;
 
-$Expoeter::Verbose = 1;
+#$Exporter::Verbose = 1;
 
 BEGIN {
 use_ok( 'Memcached::libmemcached',
@@ -25,7 +25,6 @@ my $memc = libmemcached_test_create();
 ok $memc;
 
 my $rv = memcached_behavior_get($memc, MEMCACHED_BEHAVIOR_TCP_NODELAY);
-warn $rv;
 ok defined $rv;
 ok !$rv;
 

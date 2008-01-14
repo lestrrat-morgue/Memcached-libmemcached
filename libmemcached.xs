@@ -14,6 +14,10 @@ typedef memcached_return     Memcached__libmemcached__return;
 typedef memcached_behavior   Memcached__libmemcached__behavior;
 typedef memcached_st*        Memcached__libmemcached;
 
+/* XXX quick hack for now */
+#define TRACE_MEMCACHED(ptr) \
+    getenv("PERL_MEMCACHED_TRACE")
+
 /* ====================================================================================== */
 
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached
@@ -68,7 +72,7 @@ memcached_behavior_get(Memcached__libmemcached ptr, Memcached__libmemcached__beh
 Memcached__libmemcached__return
 memcached_behavior_set(Memcached__libmemcached ptr, Memcached__libmemcached__behavior flag, void *data)
     INIT:
-        data = (SvTRUE(ST(2))) ? 1 : 0;
+        data = (SvTRUE(ST(2))) ? (void*)1 : (void*)0;
         if (data && strNE(SvPV_nolen(ST(2)),"1")) {
             warn("memcached_behavior_set currently only supports boolean behaviors");
         }   

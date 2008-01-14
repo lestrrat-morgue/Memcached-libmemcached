@@ -38,7 +38,8 @@ T_RETURN
         sv_setpv($arg, memcached_strerror(NULL, $var));
         SvIVX($arg) = $var;
         SvIOK_on($arg);
-        warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, SvPV_nolen($arg));
+        if (TRACE_MEMCACHED(ptr))
+            warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, SvPV_nolen($arg));
 
 
 INPUT
@@ -57,7 +58,8 @@ T_PTROBJ_RVIV
         }
         else
             croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\");
-        warn(\"\t=> %s(%s %s = 0x%p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
+        if (TRACE_MEMCACHED(ptr))
+            warn(\"\t=> %s(%s %s = 0x%p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
 OUTPUT
 T_PTROBJ_RVIV
@@ -65,5 +67,6 @@ T_PTROBJ_RVIV
             SvOK_off($arg); /* then return as undef instead of reaf to undef */
         else
             sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", $var);
-        warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
+        if (TRACE_MEMCACHED(ptr))
+            warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 

@@ -34,6 +34,7 @@ t/50-quit.t
 t/51-flush.t
 t/60-stats.t
 t/lib/libmemcached_test.pm
+t/api-coverage.t
 t/pod-coverage.t
 t/pod.t
 typemap
