@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use ExtUtils::MakeMaker;
+use Config;
 
 use Data::Dumper;
 use Cwd qw(abs_path);
@@ -9,12 +10,27 @@ use Cwd qw(abs_path);
 my $lmcd_src = "src/libmemcached";
 my $lmcd_inst = abs_path("src_inst");
 my @lmcd_pod = <$lmcd_src/docs/memcached_*.pod>;
+my $is_developer = (-d ".svn");
 
 my ($lmcd_h) = eval { build_libmemcached() };
 if ($@) {
     warn "Unable to build libmemcached: $@\n";
     warn "Aborted.\n";
     exit 0; # tell cpan testers that this is not a failure
+}
+
+my %opts;
+if (my $gccversion = $Config{gccversion}) {     # ask gcc to be more pedantic
+    print "Your perl was compiled with gcc (version $Config{gccversion}), okay.\n";
+    $gccversion =~ s/[^\d\.]//g; # just a number please
+    $opts{DEFINE} .= ' -W -Wall -Wpointer-arith -Wbad-function-cast';
+    $opts{DEFINE} .= ' -Wno-comment -Wno-sign-compare -Wno-cast-qual';
+    $opts{DEFINE} .= ' -Wmissing-noreturn -Wno-unused-parameter' if $gccversion ge "3.0";
+    if ($is_developer && $::opt_g) {
+        $opts{DEFINE} .= ' -DPERL_GCC_PEDANTIC -ansi -pedantic' if $gccversion ge "3.0";
+        $opts{DEFINE} .= ' -Wdisabled-optimization -Wformat'    if $gccversion ge "3.0";
+        $opts{DEFINE} .= ' -Wmissing-prototypes';
+    }
 }
 
 WriteMakefile(
@@ -37,6 +53,7 @@ WriteMakefile(
     clean               => {
         FILES => 'Memcached-libmemcached-*',
     },
+    %opts,
 );
 
 
@@ -74,7 +91,7 @@ sub build_libmemcached {
     mkdir $lmcd_inst unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
     my $configure_args;
-    if (-d ".svn") {    # XXX make a Makefile.PL argument/option
+    if ($is_developer) {    # XXX make a Makefile.PL argument/option
         $configure_args = '--enable-debug';
         warn "libmemcached configure $configure_args";
     }

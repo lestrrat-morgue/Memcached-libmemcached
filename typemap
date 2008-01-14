@@ -22,6 +22,7 @@ Memcached__libmemcached__behavior       T_IV
 # Could also check at build time if this perl has 64bit ints and use UV if so
 uint16_t                                T_UV
 uint64_t                                T_NV
+lmc_data_flags_t                        T_UV
 
 # --- complex types ---
 # XXX memory management may be reworked to store structure in scalars

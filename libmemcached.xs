@@ -13,6 +13,7 @@
 typedef memcached_return     Memcached__libmemcached__return;
 typedef memcached_behavior   Memcached__libmemcached__behavior;
 typedef memcached_st*        Memcached__libmemcached;
+typedef uint32_t             lmc_data_flags_t;
 
 /* XXX quick hack for now */
 #define TRACE_MEMCACHED(ptr) \
@@ -79,7 +80,7 @@ memcached_behavior_set(Memcached__libmemcached ptr, Memcached__libmemcached__beh
 =cut
 
 Memcached__libmemcached__return
-memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), time_t expiration= 0, uint16_t flags= 0)
+memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), time_t expiration= 0, lmc_data_flags_t flags= 0)
 
 
 
@@ -103,7 +104,7 @@ memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), 
 =cut
 
 char *
-memcached_get(Memcached__libmemcached ptr, char *key, size_t length(key), size_t &value_length=NO_INIT, uint16_t &flags= 0, Memcached__libmemcached__return &error)
+memcached_get(Memcached__libmemcached ptr, char *key, size_t length(key), size_t &value_length=NO_INIT, lmc_data_flags_t &flags= 0, Memcached__libmemcached__return &error)
 
 
 

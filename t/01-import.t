@@ -33,6 +33,15 @@ ok MEMCACHED_HASH_MD5;
 ok MEMCACHED_HASH_CRC;
 cmp_ok MEMCACHED_HASH_MD5(), '!=', MEMCACHED_HASH_CRC();
 
+if (0) { # can't do this yet
+Memcached::libmemcached->import( 'LIBMEMCACHED_MAJOR_VERSION', 'LIBMEMCACHED_MAJOR_VERSION' );
+ok my $lib_major_ver = LIBMEMCACHED_MAJOR_VERSION();
+ok my $lib_minor_ver = LIBMEMCACHED_MAJOR_VERSION();
+ok my $pm_ver  = Memcached::libmemcached->VERSION;
+like $pm_ver, qr/^$lib_major_ver+\.$lib_minor_ver\d\d$/,
+    "Memcached::libmemcached version should match X.YYZZ where X.YY is the libmemcached version ($lib_major_ver.$lib_minor_ver)";
+}
+
 ok 1;
 
 __END__
