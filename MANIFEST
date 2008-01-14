@@ -31,11 +31,11 @@ t/10-set-get.t
 t/15-auto.t
 t/20-set.t
 t/25-get.t
-t/30-result_st.t
 t/40-delete.t
 t/50-quit.t
 t/51-flush.t
 t/60-stats.t
+t/80-result_st.t
 t/lib/libmemcached_test.pm
 t/api-coverage.t
 t/pod-coverage.t
