@@ -20,6 +20,7 @@ Memcached__libmemcached__behavior       T_IV
 
 # XXX need to at least document this as an issue
 # Could also check at build time if this perl has 64bit ints and use UV if so
+uint16_t                                T_UV
 uint64_t                                T_NV
 
 # --- complex types ---

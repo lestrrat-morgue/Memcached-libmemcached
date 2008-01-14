@@ -1,6 +1,6 @@
 # tests for functions documented in memcached_XXX.pod
 
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 BEGIN {
 use_ok( 'Memcached::libmemcached',

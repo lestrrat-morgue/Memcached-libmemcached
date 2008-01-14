@@ -22,6 +22,8 @@ typedef memcached_st*        Memcached__libmemcached;
 
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached
 
+PROTOTYPES: DISABLED
+
 INCLUDE: const-xs.inc
 
 
@@ -39,13 +41,6 @@ Memcached__libmemcached
 memcached_clone(Memcached__libmemcached clone, Memcached__libmemcached source)
     INIT:
         clone = NULL; /* force null even if arg provided */
-
-
-Memcached__libmemcached__return
-memcached_increment(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset, uint64_t &value=NO_INIT)
-
-Memcached__libmemcached__return
-memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset, uint64_t &value=NO_INIT)
 
 
 unsigned int
@@ -81,30 +76,35 @@ memcached_behavior_set(Memcached__libmemcached ptr, Memcached__libmemcached__beh
 
 =head2 Functions for Setting Values in memcached
 
+=cut
+
 Memcached__libmemcached__return
 memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), time_t expiration= 0, uint16_t flags= 0)
 
 
-=cut
 
 
 =head2 Functions for Incrementing and Decrementing Values from memcached
 
-Memcached__libmemcached__return
-memcached_increment(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset=1, uint64_t *value)
-
-Memcached__libmemcached__return
-memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset=1, uint64_t *value)
-
 =cut
+
+Memcached__libmemcached__return
+memcached_increment(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset, uint64_t &value=NO_INIT)
+
+Memcached__libmemcached__return
+memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset, uint64_t &value=NO_INIT)
+
+
+
 
 
 =head2 Functions for Fetching Values from memcached
 
-char *
-memcached_get(Memcached__libmemcached ptr, char *key, size_t length(key), uint16_t flags= 0, Memcached__libmemcached__return *error)
-
 =cut
+
+char *
+memcached_get(Memcached__libmemcached ptr, char *key, size_t length(key), size_t &value_length=NO_INIT, uint16_t &flags= 0, Memcached__libmemcached__return &error)
+
 
 
 =head2 Functions for Managing Results from memcached
@@ -114,10 +114,11 @@ memcached_get(Memcached__libmemcached ptr, char *key, size_t length(key), uint16
 
 =head2 Functions for Deleting Values from memcached
 
-Memcached__libmemcached__return
-memcached_delete(Memcached_libmemcached ptr, char *key, size_t length(key), time_t expiration= 0)
-
 =cut
+
+Memcached__libmemcached__return
+memcached_delete(Memcached__libmemcached ptr, char *key, size_t length(key), time_t expiration= 0)
+
 
 
 =head2 Functions for Accessing Statistics from memcached
