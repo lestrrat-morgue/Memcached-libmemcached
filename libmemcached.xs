@@ -90,10 +90,19 @@ memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *
 
 =head2 Functions for Incrementing and Decrementing Values from memcached
 
+Memcached__libmemcached__return
+memcached_increment(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset=1, uint64_t *value)
+
+Memcached__libmemcached__return
+memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset=1, uint64_t *value)
+
 =cut
 
 
 =head2 Functions for Fetching Values from memcached
+
+char *
+memcached_get(Memcached__libmemcached ptr, char *key, size_t length(key), uint16_t flags= 0, Memcached__libmemcached__return *error)
 
 =cut
 
@@ -104,6 +113,9 @@ memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *
 
 
 =head2 Functions for Deleting Values from memcached
+
+Memcached__libmemcached__return
+memcached_delete(Memcached_libmemcached ptr, char *key, size_t length(key), time_t expiration= 0)
 
 =cut
 
