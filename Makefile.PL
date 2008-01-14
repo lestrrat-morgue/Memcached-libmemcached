@@ -39,7 +39,12 @@ WriteMakefile(
     VERSION_FROM        => 'libmemcached.pm',
     ABSTRACT_FROM       => 'libmemcached.pm',
     INC                 => "-I$lmcd_inst/include",
-    LIBS                => "-L$lmcd_inst/lib -lmemcached",
+    # We want to link to *our* private libmemcached and not one that
+    # might already be installed on the system. The LIBS config gets
+    # appended to the link command line, so if we used "-L$dir -lmemcached"
+    # then the installed lib would get preference over ours.
+    # So we explicitly refer to our static library.
+    LDFROM           => '$(OBJECT)'." $lmcd_inst/lib/libmemcached$Config{lib_ext}",
     PREREQ_PM           => {
         perl         => 5.006,
         'Test::More' => 0,
@@ -51,7 +56,7 @@ WriteMakefile(
     },
     # see also MY::postamble below
     clean               => {
-        FILES => 'Memcached-libmemcached-*',
+        FILES => 'Memcached-libmemcached-* lib/Memcached/libmemcached/*_hash.pl',
     },
     %opts,
 );
@@ -90,9 +95,9 @@ sub build_libmemcached {
     return if -d "$lmcd_inst/lib"; # XXX assume it built ok. use 'make realclean' to rm
     mkdir $lmcd_inst unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
-    my $configure_args;
+    my $configure_args = '';#'--disable-shared';
     if ($is_developer) {    # XXX make a Makefile.PL argument/option
-        $configure_args = '--enable-debug';
+        $configure_args .= ' --enable-debug';
         warn "libmemcached configure $configure_args";
     }
     run("cd $lmcd_src && ./configure $configure_args --prefix=$lmcd_inst");
