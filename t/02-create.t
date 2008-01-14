@@ -1,5 +1,8 @@
 # tests for functions documented in memcached_create.pod
 
+use strict;
+use warnings;
+
 # XXX memcached_clone needs more testing for non-undef args
 
 use Test::More tests => 5;

@@ -1,6 +1,9 @@
 
 # tests for functions documented in memcached_servers.pod
 
+use strict;
+use warnings;
+
 use Test::More tests => 10;
 
 BEGIN {

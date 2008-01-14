@@ -1,4 +1,8 @@
-# tests for functions documented in memcached_XXX.pod
+
+# tests for functions documented in memcached_set.pod
+
+use strict;
+use warnings;
 
 use Test::More tests => 3;
 

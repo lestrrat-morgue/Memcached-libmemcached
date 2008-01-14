@@ -1,4 +1,8 @@
+
 # tests for functions documented in memcached_behavior.pod
+
+use strict;
+use warnings;
 
 use Test::More tests => 8;
 

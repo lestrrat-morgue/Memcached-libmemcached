@@ -5,10 +5,6 @@
 ##    Copyright (c) 2007 Tim Bunce
 ##    All rights reserved.
 ##
-##    This typemap is designed specifically to make it easier to handle
-##    Perl-style blessed objects in XS.  In particular, it takes care of
-##    blessing the object into the correct class (even for derived classes).
-##   
 ###############################################################################
 ## vi:et:sw=4 ts=4
 
@@ -18,11 +14,13 @@ TYPEMAP
 Memcached__libmemcached__return         T_RETURN
 Memcached__libmemcached__behavior       T_IV
 
+# lmc_data_flags_t = abstraction typedef for get/set data flags
+lmc_data_flags_t                        T_UV
+# general uint16_t
+uint16_t                                T_UV
 # XXX need to at least document this as an issue
 # Could also check at build time if this perl has 64bit ints and use UV if so
-uint16_t                                T_UV
 uint64_t                                T_NV
-lmc_data_flags_t                        T_UV
 
 # --- complex types ---
 # XXX memory management may be reworked to store structure in scalars
@@ -36,12 +34,17 @@ T_RETURN
 OUTPUT
 T_RETURN
         /* setup return value as a dualvar with int err code and string error message */
-        (void)SvUPGRADE($arg, SVt_PVNV);
-        sv_setpv($arg, memcached_strerror(NULL, $var));
-        SvIVX($arg) = $var;
+        sv_setiv($arg, $var);
+        /* XXX need to decide is success is true or false! */
+        sv_setpv($arg, ($var) ? memcached_strerror(NULL, $var) : "XXX");
         SvIOK_on($arg);
         if (TRACE_MEMCACHED(ptr))
             warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, SvPV_nolen($arg));
+
+INPUT
+T_PV
+        /* treat undef as null pointer (output does the inverse) */
+        $var = (SvOK($arg)) ? ($type)SvPV_nolen($arg) : NULL;
 
 
 INPUT
