@@ -9,3 +9,5 @@ rm -rf libmemcached
 svn_load_dirs.pl -v https://perl-libmemcached.googlecode.com/svn/trunk/src libmemcached libmemcached-X.YY
 svn update
 rm -rf libmemcached-X.YY
+cd ..
+make svnmanifest

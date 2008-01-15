@@ -77,6 +77,11 @@ realclean ::
 	cd $(LMCD_SRC) && $(MAKE) distclean
 
 $(OBJECT) : $(LMCD_BUILT_LIB)
+
+svnmanifest::
+	svn list -R | grep -v '/$$' > MANIFEST
+	svn diff MANIFEST
+	svn status
 }
 }
 

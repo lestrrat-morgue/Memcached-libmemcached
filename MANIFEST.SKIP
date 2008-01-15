@@ -6,6 +6,5 @@
 ^blib/
 ^tmp/
 ^old/
-^src/
 ^src_inst/
 ^Memcached-libmemcached-\d
