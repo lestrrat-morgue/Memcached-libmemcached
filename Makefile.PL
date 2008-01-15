@@ -107,7 +107,7 @@ sub build_libmemcached {
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
     my $configure_args = '';#'--disable-shared';
     if ($is_developer) {    # XXX make a Makefile.PL argument/option
-        $configure_args .= ' --enable-debug';
+        #$configure_args .= ' --enable-debug';
         warn "libmemcached configure $configure_args";
     }
     run("cd $lmcd_src && ./configure $configure_args --prefix=$lmcd_inst");

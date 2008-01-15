@@ -4,26 +4,25 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More;
 
-BEGIN {
-use_ok( 'Memcached::libmemcached',
-#   functions explicitly tested by this file
-qw(
-  memcached_increment
-  memcached_decrement
-),
-#   other functions used by the tests
-qw(
-  memcached_set
-));
-}
+use Memcached::libmemcached
+    #   functions explicitly tested by this file
+    qw(
+        memcached_increment
+        memcached_decrement
+    ),
+    #   other functions used by the tests
+    qw(
+        memcached_set
+    );
 
 use lib 't/lib';
 use libmemcached_test;
 
 my $memc = libmemcached_test_create();
-ok $memc;
+
+plan tests => 9;
 
 my $t1= time();
 my $k1= "$0-test-key-$t1"; # can't have spaces

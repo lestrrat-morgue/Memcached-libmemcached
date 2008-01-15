@@ -46,7 +46,7 @@ T_RETURN
             SvIOK_on($arg);
         }
         if (TRACE_MEMCACHED(ptr))
-            warn(\"\t<= %s return %d %s %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
+            warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
 
 INPUT
 T_PV

@@ -13,10 +13,20 @@ Errors:
         add tests for it
 
 Tests:
-    Fail better is memcached not running
 
 Add wrapper around memcached_fetch that fetches all into a hash ref
 (allow an optional existing hash ref to be passed).
+
+CPAN:
+    Add more contextual/overview docs re status
+    Add links to libmemcached project website
+    Fix pod to be pod:
+    http://search.cpan.org/src/TIMB/Memcached-libmemcached-0.1301/lib/Memcached/libmemcached/memcached_auto.pod
+    (may need to edit somehow to add package declaration)
+    Fix VERSION in pod
+    Add return variable to all funcs that don't return memcached_return (or to _all_?)
+    Fix ACKNOWLEDGEMENTS and COPYRIGHT date (and elsewhere). Add Parrick to AUTHORS
+    Move Covnevtions etc up a doc level
 
 Compatibility:
     Use flags field in a way compatible with Cache::Memcached?

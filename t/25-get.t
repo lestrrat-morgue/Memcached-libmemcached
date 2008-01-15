@@ -5,26 +5,25 @@
 use strict;
 use warnings;
 
-use Test::More tests => 5;
+use Test::More;
 
-BEGIN {
-use_ok( 'Memcached::libmemcached',
-#   functions explicitly tested by this file
-qw(
-   memcached_mget
-   memcached_fetch
-),
-#   other functions used by the tests
-qw(
-    memcached_set
-));
-}
+use Memcached::libmemcached
+    #   functions explicitly tested by this file
+    qw(
+        memcached_mget
+        memcached_fetch
+    ),
+    #   other functions used by the tests
+    qw(
+        memcached_set
+    );
 
 use lib 't/lib';
 use libmemcached_test;
 
 my $memc = libmemcached_test_create();
-ok $memc;
+
+plan tests => 4;
 
 my ($rv, $rc, $flags);
 my $t1= time();

@@ -4,21 +4,19 @@
 use strict;
 use warnings;
 
-use Test::More tests => 6;
+use Test::More;
 
-BEGIN {
-use_ok( 'Memcached::libmemcached',
-#   functions explicitly tested by this file
-qw(
-   memcached_prepend
-   memcached_append
-),
-#   other functions used by the tests
-qw(
-  memcached_set
-  memcached_get
-));
-}
+use Memcached::libmemcached
+    #   functions explicitly tested by this file
+    qw(
+        memcached_prepend
+        memcached_append
+    ),
+    #   other functions used by the tests
+    qw(
+        memcached_set
+        memcached_get
+    );
 
 use lib 't/lib';
 use libmemcached_test;
@@ -30,7 +28,8 @@ my $flags;
 my $rc;
 
 my $memc = libmemcached_test_create();
-ok $memc;
+
+plan tests => 4;
 
 # XXX where does $orig come from? shouldn't there be a memcached_set here?
 my $orig = "middle";
