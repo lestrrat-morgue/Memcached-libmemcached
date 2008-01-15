@@ -34,6 +34,8 @@ my %data = map { ("k$_.$t1" => "v$_.$t1") } (1..3);
 is memcached_set($memc, $_, $data{$_}), 'SUCCESS'
     for keys %data;
 
+exit 0;
+
 # XXX the number_of_keys argument can be removed in a later version
 # I've left it here to (slightly) simplify the initial work
 is memcached_mget($memc, [ keys %data ], scalar keys %data), 'SUCCESS';

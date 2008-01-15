@@ -81,14 +81,6 @@ TODO: make a dual-var with integer and string parts (via typemap)
 =cut
 
 
-=head2 Functions For Managing Server Lists
-
-=head3 XXX
-
-
-=cut
-
-
 =head2 Functions For Managing Memcaches
 
 =head3 memcached_create
@@ -193,28 +185,48 @@ See L<Memcached::libmemcached::memcached_quit>.
 
 =head2 Functions for Setting Values in memcached
 
+See L<Memcached::libmemcached::memcached_set>.
+
 =head3 memcached_set
 
-  memcached_set($key, $value, $expiration, $flags)
+  memcached_set($memc, $key, $value);
+  memcached_set($memc, $key, $value, $expiration, $flags);
 
-Set a value "$value" keyed by "$key" in memcached. $expiration and 
-$flags are optional, defaulted both to 0
+Set $value as the value of $key.
+$expiration and $flags are both optional and default to 0.
 
-XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_set.pod
+=head3 memcached_append
 
-  memcached_append($key, $value, $expiration, $flags)
+  memcached_append($memc, $key, $value);
+  memcached_append($memc, $key, $value, $expiration, $flags);
 
-Append a value "$value" keyed by "$key" in memcached to existing value
-$key refers to. $expiration and $flags are optional, defaulted both to 0
+Append $value to the value of $key. $key must already exist.
+$expiration and $flags are both optional and default to 0.
 
-XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_set.pod
+=head3 memcached_prepend
 
-  memcached_prepend($key, $value, $expiration, $flags)
+  memcached_prepend($memc, $key, $value)
+  memcached_prepend($memc, $key, $value, $expiration, $flags)
 
-Pre-pend a value "$value" keyed by "$key" in memcached to existing value
-$key refers to. $expiration and $flags are optional, defaulted both to 0
+Prepend $value to the value of $key. $key must already exist.
+$expiration and $flags are both optional and default to 0.
 
-XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_set.pod
+=cut
+
+
+=head2 Functions for Fetching Values from memcached
+
+See L<Memcached::libmemcached::memcached_get>.
+
+=head3 memcached_get
+
+  $value = memcached_get($memc, $key, $flags, $rc);
+  $value = memcached_get($memc, $key);
+
+Get and return the value of $key.  Returns undef on error.
+
+Also updates $flags to the value of the flags stored with $value,
+and updates $rc with the return code.
 
 =cut
 
@@ -238,13 +250,6 @@ See also L<Memcached::libmemcached::memcached_auto>.
 =cut
 
 
-=head2 Functions for Fetching Values from memcached
-
-XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_get.pod
-
-=cut
-
-
 =head2 Functions for Managing Results from memcached
 
 XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_result_st.pod
@@ -254,7 +259,15 @@ XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_result_s
 
 =head2 Functions for Deleting Values from memcached
 
-XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_delete.pod
+See L<Memcached::libmemcached::memcached_delete>.
+
+=head3 memcached_delete
+
+  memcached_delete($memc, $key);
+  memcached_delete($memc, $key, $expiration);
+
+Delete $key. If $expiration is greater than zero then the key is deleted by
+memcached after that many seconds.
 
 =cut
 
