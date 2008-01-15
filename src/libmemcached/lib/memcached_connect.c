@@ -10,6 +10,7 @@ static memcached_return set_hostinfo(memcached_server_st *server)
   sprintf(str_port, "%u", server->port);
 
   memset(&hints, 0, sizeof(hints));
+  hints.ai_family= AF_INET; /* needed for OS X */
   hints.ai_socktype= SOCK_STREAM;
   hints.ai_protocol= 0;
 

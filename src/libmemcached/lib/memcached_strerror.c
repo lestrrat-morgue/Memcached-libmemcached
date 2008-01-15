@@ -55,7 +55,7 @@ char *memcached_strerror(memcached_st *ptr, memcached_return rc)
   case MEMCACHED_STAT:
     return "STAT VALUE";
   case MEMCACHED_ERRNO:
-    return "SYSTEM ERROR";
+    return (ptr) ? strerror(ptr->cached_errno) : "SYSTEM ERROR";
   case MEMCACHED_FAIL_UNIX_SOCKET:
     return "COULD NOT OPEN UNIX SOCKET";
   case MEMCACHED_NOT_SUPPORTED:
