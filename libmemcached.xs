@@ -115,14 +115,12 @@ memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), 
 lmc_value
 memcached_get(Memcached__libmemcached ptr, \
         char *key, size_t length(key), \
-        IN_OUT lmc_data_flags_t flags= 0, \
-        IN_OUT memcached_return error=0)
+        IN_OUT lmc_data_flags_t flags, \
+        IN_OUT memcached_return error)
     PREINIT:
         size_t value_length=0;
     CODE:
-        warn("memcached_get flags=%d error=%d",flags, error);
         RETVAL = memcached_get(ptr, key, XSauto_length_of_key, &value_length, &flags, &error);
-        warn("memcached_get flags=%d error=%d",flags, error);
     OUTPUT:
         RETVAL
 

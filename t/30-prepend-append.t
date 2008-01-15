@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 BEGIN {
 use_ok( 'Memcached::libmemcached',
@@ -15,6 +15,7 @@ qw(
 ),
 #   other functions used by the tests
 qw(
+  memcached_set
   memcached_get
 ));
 }
@@ -31,7 +32,9 @@ my $rc;
 my $memc = libmemcached_test_create();
 ok $memc;
 
-my $orig= memcached_get($memc, $k1, $flags=0, $rc=0);
+# XXX where does $orig come from? shouldn't there be a memcached_set here?
+my $orig = "middle";
+ok memcached_set($memc, $k1, $orig);
 
 ok memcached_prepend($memc, $k1, $pre);
 

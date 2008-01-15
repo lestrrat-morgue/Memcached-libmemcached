@@ -23,7 +23,7 @@ uint64_t                                T_NV
 
 # --- perl api private abstraction typedefs ---
 lmc_value                               T_VALUE
-lmc_data_flags_t                        T_UV
+lmc_data_flags_t                        T_FLAGS
 
 # --- complex types (incl. objects, typedef name encodes class name) ---
 # XXX memory management may be reworked to store structure in scalars
@@ -36,15 +36,17 @@ T_RETURN
 
 OUTPUT
 T_RETURN
-        /* setup return value as a dualvar with int err code and string error message */
-        sv_setiv($arg, $var);
-        /* XXX need to decide if success is true or false! */
-        /* sv_setpv($arg, ($var) ? memcached_strerror(NULL, $var) : "XXX"); */
-        /* XXX could optimize later to reuse read-only char* from memcached_strerror */
-        sv_setpv($arg, memcached_strerror(NULL, $var));
-        SvIOK_on($arg);
+        if (!SvREADONLY($arg)) {
+            /* setup return value as a dualvar with int err code and string error message */
+            sv_setiv($arg, $var);
+            /* XXX need to decide if success is true or false! */
+            /* sv_setpv($arg, ($var) ? memcached_strerror(NULL, $var) : "XXX"); */
+            /* XXX could optimize later to reuse read-only char* from memcached_strerror */
+            sv_setpv($arg, memcached_strerror(ptr, $var));
+            SvIOK_on($arg);
+        }
         if (TRACE_MEMCACHED(ptr))
-            warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, SvPV_nolen($arg));
+            warn(\"\t<= %s return %d %s %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
 
 INPUT
 T_PV
@@ -59,7 +61,17 @@ T_VALUE
 OUTPUT
 T_VALUE
         /* assumes the existance of a value_length variable holding the length */
-        sv_setpvn((SV*)$arg, $var, value_length);
+        if (!SvREADONLY($arg))
+            sv_setpvn((SV*)$arg, $var, value_length);
+
+INPUT
+T_FLAGS
+        $var = ($type)SvUV($arg)
+
+OUTPUT
+T_FLAGS
+        if (!SvREADONLY($arg))
+            sv_setuv($arg, (UV)$var);
 
 
 INPUT

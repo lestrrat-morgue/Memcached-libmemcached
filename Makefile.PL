@@ -9,6 +9,7 @@ use Cwd qw(abs_path);
 
 my $lmcd_src = "src/libmemcached";
 my $lmcd_inst = abs_path("src_inst");
+my $lmcd_built_lib = "$lmcd_inst/lib/libmemcached$Config{lib_ext}";
 my @lmcd_pod = <$lmcd_src/docs/memcached_*.pod>;
 my $is_developer = (-d ".svn");
 
@@ -26,8 +27,8 @@ if (my $gccversion = $Config{gccversion}) {     # ask gcc to be more pedantic
     $opts{DEFINE} .= ' -W -Wall -Wpointer-arith -Wbad-function-cast';
     $opts{DEFINE} .= ' -Wno-comment -Wno-sign-compare -Wno-cast-qual';
     $opts{DEFINE} .= ' -Wmissing-noreturn -Wno-unused-parameter' if $gccversion ge "3.0";
-    if ($is_developer && $::opt_g) {
-        $opts{DEFINE} .= ' -DPERL_GCC_PEDANTIC -ansi -pedantic' if $gccversion ge "3.0";
+    if ($is_developer) {
+        #$opts{DEFINE} .= ' -DPERL_GCC_PEDANTIC -ansi -pedantic' if $gccversion ge "3.0";
         $opts{DEFINE} .= ' -Wdisabled-optimization -Wformat'    if $gccversion ge "3.0";
         $opts{DEFINE} .= ' -Wmissing-prototypes';
     }
@@ -43,8 +44,9 @@ WriteMakefile(
     # might already be installed on the system. The LIBS config gets
     # appended to the link command line, so if we used "-L$dir -lmemcached"
     # then the installed lib would get preference over ours.
-    # So we explicitly refer to our static library.
-    LDFROM           => '$(OBJECT)'." $lmcd_inst/lib/libmemcached$Config{lib_ext}",
+    # So we explicitly refer to our static library. That also avoids the
+    # need to worry about what library might get used at runtime.
+    LDFROM           => '$(OBJECT)'." $lmcd_built_lib",
     PREREQ_PM           => {
         perl         => 5.006,
         'Test::More' => 0,
@@ -66,13 +68,16 @@ sub MY::postamble {
 return qq{
 LMCD_SRC=$lmcd_src
 LMCD_INST=$lmcd_inst
+LMCD_BUILT_LIB=$lmcd_built_lib
 }.q{
 clean ::
 
 realclean ::
 	$(RM_RF) $(LMCD_INST)
 	cd $(LMCD_SRC) && $(MAKE) distclean
-    }
+
+$(OBJECT) : $(LMCD_BUILT_LIB)
+}
 }
 
 
