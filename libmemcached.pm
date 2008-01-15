@@ -202,6 +202,20 @@ $flags are optional, defaulted both to 0
 
 XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_set.pod
 
+  memcached_append($key, $value, $expiration, $flags)
+
+Append a value "$value" keyed by "$key" in memcached to existing value
+$key refers to. $expiration and $flags are optional, defaulted both to 0
+
+XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_set.pod
+
+  memcached_prepend($key, $value, $expiration, $flags)
+
+Pre-pend a value "$value" keyed by "$key" in memcached to existing value
+$key refers to. $expiration and $flags are optional, defaulted both to 0
+
+XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_set.pod
+
 =cut
 
 

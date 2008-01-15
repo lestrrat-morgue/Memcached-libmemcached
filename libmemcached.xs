@@ -86,6 +86,12 @@ memcached_return
 memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), time_t expiration= 0, lmc_data_flags_t flags= 0)
 
 
+memcached_return
+memcached_append(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), time_t expiration= 0, lmc_data_flags_t flags=0)
+
+memcached_return
+memcached_prepend(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), time_t expiration= 0, lmc_data_flags_t flags=0)
+
 
 
 =head2 Functions for Incrementing and Decrementing Values from memcached
@@ -119,6 +125,29 @@ memcached_get(Memcached__libmemcached ptr, \
         warn("memcached_get flags=%d error=%d",flags, error);
     OUTPUT:
         RETVAL
+
+=head2 Function Patrick is trying to figure out
+/*
+memcached_return
+memcached_mget(Memcached__libmemcached ptr, char **keys, size_t *key_length, unsigned int number_of_keys)
+    PREINIT:
+      number_of_keys= items - 1;
+      int i;
+    CODE:
+        Newxz(keys, number_of_keys, char *);
+        Newxz(key_length, number_of_keys, size_t);
+
+        for (i = 0; i < number_of_keys; i++) {
+            keys[i] = SvPV(ST(i + 1), key_length[i]);
+        }
+        Safefree(keys);
+        Safefree(key_length);
+    OUTPUT:
+        RETVAL
+*/
+=cut
+
+
 
 
 
