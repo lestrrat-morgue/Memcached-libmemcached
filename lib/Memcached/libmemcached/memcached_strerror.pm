@@ -44,3 +44,4 @@ memcached(1) libmemcached(3)
 
 =cut
 
+1;

@@ -78,3 +78,4 @@ memcached(1) libmemcached(3) memcached_strerror(3)
 
 =cut
 
+1;

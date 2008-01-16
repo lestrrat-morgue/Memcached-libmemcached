@@ -167,3 +167,4 @@ memcached(1) libmemached(3) memcached_strerror(3)
 
 =cut
 
+1;

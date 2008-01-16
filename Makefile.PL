@@ -128,6 +128,7 @@ sub sync_libmemcached_pod {
         while (<$src>) {
             print $dst $_;
         }
+        print $dst "1;\n";
         close $dst or die "Error closing $dst_pod: $!";
         run("svn add -q $dst_pod");
     }
