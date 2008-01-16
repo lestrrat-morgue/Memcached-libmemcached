@@ -22,7 +22,7 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 9;
+plan tests => 8;
 
 my $t1= time();
 my $k1= "$0-test-key-$t1"; # can't have spaces

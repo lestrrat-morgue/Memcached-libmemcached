@@ -23,7 +23,7 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 6;
+plan tests => 5;
 
 my ($rv, $rc, $flags);
 my $t1= time();

@@ -24,7 +24,7 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 5;
+plan tests => 6;
 
 my $rv = memcached_behavior_get($memc, MEMCACHED_BEHAVIOR_TCP_NODELAY);
 ok defined $rv;

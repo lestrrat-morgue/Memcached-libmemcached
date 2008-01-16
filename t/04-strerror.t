@@ -22,6 +22,8 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
+plan tests => 4;
+
 is memcached_strerror($memc, 0), 'SUCCESS';
 is memcached_strerror($memc, 1), 'FAILURE';
 

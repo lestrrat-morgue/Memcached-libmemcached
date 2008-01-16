@@ -5,15 +5,15 @@ use strict;
 
 =head1 NAME
 
-Memcached::libmemcached - Thin fast interface to the libmemcached client API
+Memcached::libmemcached - Thin fast full interface to the libmemcached client API
 
 =head1 VERSION
 
-Version 0.01
+Version 0.1302
 
 =cut
 
-our $VERSION = '0.1301';
+our $VERSION = '0.1302';
 
 use Carp;
 use base qw(Exporter);
@@ -32,6 +32,74 @@ XSLoader::load('Memcached::libmemcached', $VERSION);
 
   use Memcached::libmemcached;
 
+  $memc = memcached_create();
+  memcached_server_add($memc, "localhost");
+
+  memcached_set($memc, $key, $value);
+
+  $value = memcached_get($memc, $key);
+
+=head1 DESCRIPTION
+
+Memcached::libmemcached is a very thin, highly efficient, wrapper around the
+libmemcached library.
+
+It gives full access to the rich functionality offered by libmemcached.
+libmemcached is fast, light on memory usage, thread safe, and provide full
+access to server side methods.
+
+ - Synchronous and Asynchronous support.
+ - TCP and Unix Socket protocols.
+ - A half dozen or so different hash algorithms.
+ - Implementations of the new cas, replace, and append operators.
+ - Man pages written up on entire API.
+ - Implements both modulo and consistent hashing solutions. 
+
+(At the moment Memcached::libmemcached is very new and not all the functions in
+libmemcached have perl interfaces yet. We're focussing on the core
+infrastructure and the most common functions. It's usually trivial to add
+functions - just a few lines in libmemcached.xs, a few lines of documentation,
+and a few lines of testing.  Volunteers welcome!)
+
+The libmemcached library documentation (which is bundled with this module)
+serves as the primary reference for the functionality.
+
+This documentation provides summary of the functions, along with any issues
+specific to this perl interface, and references to the documentation for the
+corresponding functions in the underlying library.
+
+For more information on libmemcached, see L<http://tangent.org/552/libmemcached.html>
+
+=head1 CONVENTIONS
+
+=head2 Terminology
+
+The term "memcache" is used to refer to the C<memcached_st> structure at the
+heart of the libmemcached library. We'll use $memc to represent this
+structure in perl code.
+
+=head2 Function Arguments
+
+There are no I<length> arguments. Wherever the libmemcached documentation shows
+a length argument (input or output) the corresponding argument doesn't exist in
+the Perl API, because it's not needed.
+
+For pointer arguments, undef is mapped to null on input and null is mapped to
+undef on output.
+
+=head2 Return Status
+
+Most of the methods return an integer status value. This is shown as
+C<memcached_return> in the libmemcached documentation. 
+
+In the perl interface this value is a I<dualvar>, like C<$!>, that has both
+integer and string components set to different values.  In a numeric context
+the value is the integer status code.  In a string content the value is the
+corresponding error string.
+
+All the functions documented below return a C<memcached_return> unless otherwise indicated.
+
+=cut
 
 =head1 EXPORTS
 
@@ -46,40 +114,6 @@ memcached_behavior_set() and memcached_behavior_get(), you can use:
   use Memcached::libmemcached qw(:memcached_behavior).
 
 =head1 FUNCTIONS
-
-=head2 Conventions
-
-Memcached::libmemcached is a very thin, highly efficient, wrapper around the
-libmemcached library.  The libmemcached library documentation (which is bundled
-with Memcached::libmemcached) serves as the primary reference for the functionality.
-
-This documentation aims to provide just a summary of the functions, along with
-any issues specific to this perl interface.
-
-=head3 Terminology
-
-The term "memcache" is used to refer to the C<memcached_st> structure at the
-heart of the libmemcached library. The examples use $memc to represent this
-structure.
-
-=head3 Arguments
-
-There are no I<length> arguments. Wherever the libmemcached documentation shows
-a length argument (input or output) the corresponding argument doesn't exist in
-the Perl API.
-
-For pointer arguments, undef is mapped to null on input and null is mapped to
-undef on output.
-
-=head2 Return
-
-Most of the methods return an integer status value. This is shown as
-memcached_return in the libmemcached documentation. 
-
-TODO: make a dual-var with integer and string parts (via typemap)
-
-=cut
-
 
 =head2 Functions For Managing Memcaches
 
@@ -100,7 +134,7 @@ See L<Memcached::libmemcached::memcached_create>.
 
 =head3 memcached_free
 
-  memcached_free($memc);
+  memcached_free($memc); # void
 
 Frees the memory associated with $memc.
 Your application will leak memory unless you call this.
@@ -274,7 +308,7 @@ memcached after that many seconds.
 
 =head2 Functions for Accessing Statistics from memcached
 
-XXX http://hg.tangent.org/libmemcached/file/4001ba159d62/docs/memcached_stats.pod
+See L<Memcached::libmemcached::memcached_stats>.
 
 =cut
 
@@ -289,15 +323,16 @@ memcached_strerror() takes a C<memcached_return> value and returns a string desc
 The string should be treated as read-only (it may be so in future versions).
 See also L<Memcached::libmemcached::memcached_strerror>.
 
+This function is rarely needed in the Perl interface because the return code is
+a I<dualvar> that already contains the error string.
+
 =cut
-
-
 
 
 
 =head1 AUTHOR
 
-Tim Bunce, C<< <Tim.Bunce@pobox.com> >>
+Tim Bunce, C<< <Tim.Bunce@pobox.com> >> with help from Patrick Galbraith.
 
 =head1 BUGS
 
@@ -311,7 +346,7 @@ your bug as I make changes.
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2007 Tim Bunce, All Rights Reserved.
+Copyright 2008 Tim Bunce, All Rights Reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
