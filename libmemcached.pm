@@ -9,11 +9,11 @@ Memcached::libmemcached - Thin fast full interface to the libmemcached client AP
 
 =head1 VERSION
 
-Version 0.1302
+Version 0.1304
 
 =cut
 
-our $VERSION = '0.1302';
+our $VERSION = '0.1304';
 
 use Carp;
 use base qw(Exporter);
@@ -333,6 +333,13 @@ a I<dualvar> that already contains the error string.
 =head1 AUTHOR
 
 Tim Bunce, C<< <Tim.Bunce@pobox.com> >> with help from Patrick Galbraith.
+
+=head1 PORTABILITY
+
+See Slaven Rezic's excellent CPAN Testers Matrix at L<http://bbbike.radzeit.de/~slaven/cpantestersmatrix.cgi?dist=Memcached-libmemcached>
+
+Along with Dave Cantrell's excellent CPAN Dependency tracker at
+L<http://cpandeps.cantrell.org.uk/?module=Memcached%3A%3Alibmemcached&perl=any+version&os=any+OS>
 
 =head1 BUGS
 

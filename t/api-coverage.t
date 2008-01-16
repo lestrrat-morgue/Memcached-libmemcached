@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 1;
+use Test::More;
 
 # t/pod-coverage shows what's been implemented but not documented
 # t/api-coverage shows what's in the libmemcached API but not documented
@@ -10,6 +10,7 @@ use Memcached::libmemcached::API;
 my $min_pc = 0.18;
 eval "use Pod::Coverage $min_pc";
 plan skip_all => "Pod::Coverage $min_pc required for testing" if $@;
+plan tests => 1;
 
 my $pc = Pod::Coverage->new(package => 'Memcached::libmemcached');
 my %covered = map { $_=>1 } $pc->covered;

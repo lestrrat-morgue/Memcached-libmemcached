@@ -112,6 +112,7 @@ sub build_libmemcached {
         warn "libmemcached configure $configure_args";
     }
     run("cd $lmcd_src && ./configure $configure_args --prefix=$lmcd_inst");
+    #run("cd $lmcd_src && make test") if $is_developer; # XXX
     run("cd $lmcd_src && make install");
 }
 
@@ -121,7 +122,14 @@ sub sync_libmemcached_pod {
     my $perl_pod_dir = "lib/Memcached/libmemcached";
     for my $src_pod (@lmcd_pod) {
         (my $dst_pod = $src_pod) =~ s!$lmcd_src/docs!$perl_pod_dir!;
-        run("cp $src_pod $dst_pod && svn add -q $dst_pod");
+        $dst_pod =~ s/\.pod/\.pm/;
+        open my $src, "<$src_pod" or die "Can't open $src_pod: $!";
+        open my $dst, ">$dst_pod" or die "Can't open $dst_pod: $!";
+        while (<$src>) {
+            print $dst $_;
+        }
+        close $dst or die "Error closing $dst_pod: $!";
+        run("svn add -q $dst_pod");
     }
     # XXX svn rm any $perl_pod_dir/memcached_*.pod that weren't in @lmcd_pod
 }

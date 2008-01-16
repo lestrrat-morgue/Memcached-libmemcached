@@ -29,9 +29,8 @@ my $rc;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 4;
+plan tests => 6;
 
-# XXX where does $orig come from? shouldn't there be a memcached_set here?
 my $orig = "middle";
 ok memcached_set($memc, $k1, $orig);
 
@@ -40,6 +39,9 @@ ok memcached_prepend($memc, $k1, $pre);
 ok memcached_append($memc, $k1, $end);
 
 my $ret= memcached_get($memc, $k1, $flags=0, $rc=0);
+is $rc, 'SUCCESS', 'memcached_get should work';
+ok defined $ret, 'memcached_get result should be defined';
 
 my $combined= $pre . $orig . $end;
 cmp_ok $ret, 'eq', $combined;
+

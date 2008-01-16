@@ -21,6 +21,7 @@ CPAN:
     Fix pod to be pod:
     http://search.cpan.org/src/TIMB/Memcached-libmemcached-0.1301/lib/Memcached/libmemcached/memcached_auto.pod
     (may need to edit somehow to add package declaration)
+    Find out how to get more info into a cpan-testers NA report.
 
 Compatibility:
     Use flags field in a way compatible with Cache::Memcached?
