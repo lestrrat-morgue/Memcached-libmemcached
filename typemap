@@ -14,6 +14,11 @@ TYPEMAP
 memcached_behavior                      T_IV
 memcached_return                        T_RETURN
 
+# --- types for mget/fetch ---
+# memcached_return*                       T_PV
+# size_t*                                 T_PV
+# memcached_result_st*                    T_PV
+
 # --- generic simple types ---
 # general uint16_t
 uint16_t                                T_UV

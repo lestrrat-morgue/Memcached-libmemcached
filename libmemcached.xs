@@ -128,10 +128,8 @@ memcached_get(Memcached__libmemcached ptr, \
 /*
 memcached_return
 memcached_mget(Memcached__libmemcached ptr, char **keys, size_t *key_length, unsigned int number_of_keys)
-    PREINIT:
-      number_of_keys= items - 1;
-      int i;
     CODE:
+        int i;
         Newxz(keys, number_of_keys, char *);
         Newxz(key_length, number_of_keys, size_t);
 
@@ -150,6 +148,12 @@ memcached_mget(Memcached__libmemcached ptr, char **keys, size_t *key_length, uns
 
 
 =head2 Functions for Managing Results from memcached
+/*
+memcached_result_st *
+memcached_fetch_result(Memcached__libmemcached ptr,\
+                       memcached_result_st *result,\
+                       memcached_return *error)
+*/
 
 =cut
 
