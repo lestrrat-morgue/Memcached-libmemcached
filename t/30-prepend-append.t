@@ -27,7 +27,7 @@ my $k1= 'abc';
 my $flags;
 my $rc;
 
-my $memc = libmemcached_test_create();
+my $memc = libmemcached_test_create({ min_version => "1.2.6" });
 
 plan tests => 6;
 

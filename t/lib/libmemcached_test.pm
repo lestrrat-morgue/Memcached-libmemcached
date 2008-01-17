@@ -19,6 +19,7 @@ use Memcached::libmemcached qw(
 );
 
 sub libmemcached_test_create {
+    my ($args) = @_;
 
     my $memc = memcached_create();
 
@@ -31,14 +32,29 @@ sub libmemcached_test_create {
 
     # XXX ideally this should be a much 'simpler/safer' command
     memcached_get($memc, "foo", my $flags=0, $rc=0);
-    if ($rc !~ /SUCCESS|NOT FOUND/) {
-        plan skip_all => "Can't talk to any memcached servers";
-        warn "Can't talk to any memcached servers ($rc)";
-        return undef;
-    }
+    plan skip_all => "Can't talk to any memcached servers"
+        if $rc !~ /SUCCESS|NOT FOUND/;
+
+    plan skip_all => "memcached server version less than $args->{min_version}"
+        if $args->{min_version}
+        && not libmemcached_version_ge($memc, $args->{min_version});
 
     return $memc;
 }
 
+
+sub libmemcached_version_ge {
+    my ($memc, $min_version) = @_;
+    my @min_version = split /\./, $min_version;
+
+    # XXX uses internal undocumented api
+    my @memcached_version = Memcached::libmemcached::_memcached_version($memc);
+
+    for (0,1,2) {
+        return 1 if $memcached_version[$_] > $min_version[$_];
+        return 0 if $memcached_version[$_] < $min_version[$_];
+    }
+    return 1; # identical versions
+}
 
 1;

@@ -7,6 +7,13 @@ use Config;
 use Data::Dumper;
 use Cwd qw(abs_path);
 
+BEGIN {
+    if ($] < 5.006) {
+        warn "Perl version $] is below minimum 5.006 required.\n";
+        exit 0;
+    }
+}
+
 my $lmcd_src = "src/libmemcached";
 my $lmcd_inst = abs_path("src_inst");
 my $lmcd_built_lib = "$lmcd_inst/lib/libmemcached$Config{lib_ext}";
@@ -103,7 +110,7 @@ sub build_libmemcached {
     extract_libmemcached_constants();
 
     return if -d "$lmcd_inst/lib"; # XXX assume it built ok. use 'make realclean' to rm
-    mkdir $lmcd_inst unless -d $lmcd_inst;
+    mkdir $lmcd_inst, 0775 unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
     my $configure_args = '';#'--disable-shared';
     if ($is_developer) {    # XXX make a Makefile.PL argument/option

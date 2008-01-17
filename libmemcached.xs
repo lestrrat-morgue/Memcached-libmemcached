@@ -174,3 +174,23 @@ memcached_delete(Memcached__libmemcached ptr, char *key, size_t length(key), tim
 
 char *
 memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
+
+SV *
+_memcached_version(Memcached__libmemcached ptr)
+    PPCODE:
+        /* memcached_version updates ptr->hosts[x].*_version for each
+         * associated memcached server that responds to the request.
+         * We use it internally as both a kind of ping and to check
+         * the min version for testing version-specific features.
+         */
+        /* XXX internal undocumented api */
+        memcached_return memcached_version(memcached_st *);
+        if (memcached_version(ptr) != MEMCACHED_SUCCESS)
+            XSRETURN_EMPTY;
+        /* XXX assumes first entry in list of hosts responded
+         * and that any other memcached servers have the same version
+         */
+        mXPUSHi(ptr->hosts[0].major_version);
+        mXPUSHi(ptr->hosts[0].minor_version);
+        mXPUSHi(ptr->hosts[0].micro_version);
+        XSRETURN(3);
