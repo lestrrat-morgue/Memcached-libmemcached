@@ -9,11 +9,11 @@ Memcached::libmemcached - Thin fast full interface to the libmemcached client AP
 
 =head1 VERSION
 
-Version 0.1305
+Version 0.1307
 
 =cut
 
-our $VERSION = '0.1305';
+our $VERSION = '0.1307';
 
 use Carp;
 use base qw(Exporter);

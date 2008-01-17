@@ -189,6 +189,7 @@ _memcached_version(Memcached__libmemcached ptr)
          */
         /* XXX internal undocumented api */
         memcached_return memcached_version(memcached_st *);
+        RETVAL = &sv_undef; /* avoid unused warning */
         if (memcached_version(ptr) != MEMCACHED_SUCCESS)
             XSRETURN_EMPTY;
         /* XXX assumes first entry in list of hosts responded

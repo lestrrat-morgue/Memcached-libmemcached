@@ -1,5 +1,12 @@
-Revision history for Memcached-libmemcached
+=head1 NAME
 
-0.01    Date/time
-        First version, released on an unsuspecting world.
+Memcached::libmemcached::Changes - List of significant changes to Memcached::libmemcached
+
+(As of $Date: 2008-01-08 15:54:15 +0000 (Tue, 08 Jan 2008) $ $Revision$)
+
+=head2 Changes in 0.1307 (svn rev XXX)
+
+  Min perl version now 5.008 due to XS length(other_arg) syntax.
+
+=cut
 

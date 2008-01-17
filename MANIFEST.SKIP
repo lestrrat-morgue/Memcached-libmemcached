@@ -6,5 +6,10 @@
 ^blib/
 ^tmp/
 ^old/
+^src/libmemcached/docs/.*\.[13]
+^src/.*/\.libs
+^src/.*/\.deps
+^src/.*\.o
+^src/.*\.lo
 ^src_inst/
 ^Memcached-libmemcached-\d

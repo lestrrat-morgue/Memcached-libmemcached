@@ -8,8 +8,9 @@ use Data::Dumper;
 use Cwd qw(abs_path);
 
 BEGIN {
-    if ($] < 5.006) {
-        warn "Perl version $] is below minimum 5.006 required.\n";
+    my $min = 5.008; # needed for XS length(other_arg) syntax
+    if ($] < $min) {
+        warn "Perl version $] is below minimum $min required.\n";
         exit 0;
     }
 }
@@ -55,7 +56,6 @@ WriteMakefile(
     # need to worry about what library might get used at runtime.
     LDFROM           => '$(OBJECT)'." $lmcd_built_lib",
     PREREQ_PM           => {
-        perl         => 5.006,
         'Test::More' => 0,
     },
     dist                => {
@@ -89,6 +89,17 @@ svnmanifest::
 	svn list -R | grep -v '/$$' > MANIFEST
 	svn diff MANIFEST
 	svn status
+
+checkkeywords:
+	$(RM_RF) blib
+	find . -type f \( -name .svn -prune -o -name \*.pm -o -name \*.PL -o -name \*.pl \) \
+	    -exec bash -c '[ -z "$$(svn pg svn:keywords {})" ] && echo svn propset svn:keywords \"Id Revision\" {}' \;
+
+checkpod:
+	$(RM_RF) blib
+	find . -type f \( -name .svn -prune -o -name \*.pm -o -name \*.PL -o -name \*.pl \) \
+	    -exec podchecker {} \; 2>&1 | grep -v 'pod syntax OK'
+
 }
 }
 
