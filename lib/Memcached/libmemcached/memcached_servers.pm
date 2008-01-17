@@ -1,3 +1,4 @@
+package Memcached::libmemcached::memcached_servers;
 =head1 NAME
 
 memcached_server_count, memcached_server_list, memcached_server_add, memcached_server_push

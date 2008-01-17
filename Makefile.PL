@@ -132,6 +132,12 @@ sub sync_libmemcached_pod {
         $dst_pod =~ s/\.pod/\.pm/;
         open my $src, "<$src_pod" or die "Can't open $src_pod: $!";
         open my $dst, ">$dst_pod" or die "Can't open $dst_pod: $!";
+
+        # convert path into package
+        (my $dst_pkg = $dst_pod) =~ s{/}{::}g;
+        $dst_pkg =~ s{ lib:: (.*?) \.\w+ $ }{$1}x;
+
+        print $dst "package $dst_pkg;\n"; # for search.cpan.org
         while (<$src>) {
             print $dst $_;
         }

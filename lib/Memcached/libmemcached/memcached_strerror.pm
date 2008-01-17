@@ -1,3 +1,4 @@
+package Memcached::libmemcached::memcached_strerror;
 =head1 NAME
 
 memcached_strerror

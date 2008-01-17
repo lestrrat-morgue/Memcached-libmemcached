@@ -1,3 +1,4 @@
+package Memcached::libmemcached::memcached_behavior;
 =head1 NAME
 
 memcached_behavior_get memcached_behavior_set
