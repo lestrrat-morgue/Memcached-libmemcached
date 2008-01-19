@@ -12,6 +12,7 @@
 /* mapping C types to perl classes - keep typemap file in sync */
 typedef memcached_st*        Memcached__libmemcached;
 typedef uint32_t             lmc_data_flags_t;
+typedef char*                lmc_key;
 typedef char*                lmc_value;
 
 /* XXX quick hack for now */
@@ -140,7 +141,7 @@ memcached_mget(Memcached__libmemcached ptr, SV *keys_rv)
             XSRETURN_IV(MEMCACHED_NO_KEY_PROVIDED);
         }
         keys_av = (AV*)SvRV(keys_rv);
-        number_of_keys = AvFILL(keys_av);
+        number_of_keys = AvFILL(keys_av)+1;
 
         Newxz(keys,       number_of_keys, char *);
         Newxz(key_length, number_of_keys, size_t);
@@ -155,6 +156,23 @@ memcached_mget(Memcached__libmemcached ptr, SV *keys_rv)
     OUTPUT:
         RETVAL
 
+
+
+lmc_value
+memcached_fetch(Memcached__libmemcached ptr, \
+        OUT lmc_key key, \
+        OUT lmc_data_flags_t flags, \
+        OUT memcached_return error)
+    PREINIT:
+        size_t key_length=0;
+        size_t value_length=0;
+    INIT: 
+        char key_buffer[MEMCACHED_MAX_KEY];
+        key = key_buffer;
+    CODE:
+        RETVAL = memcached_fetch(ptr, key, &key_length, &value_length, &flags, &error);
+    OUTPUT:
+        RETVAL
 
 
 

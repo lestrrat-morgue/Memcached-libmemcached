@@ -23,25 +23,28 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 3;
+my $items = 3;
+plan tests => ($items * 3) + 8;
 
 my ($rv, $rc, $flags);
 my $t1= time();
 
-my %data = map { ("k$_.$t1" => "v$_.$t1") } (1..3);
+my %data = map { ("k$_.$t1" => "v$_.$t1") } (1..$items);
+# add extra long and extra short items to help spot buffer issues
+$data{"kL.LLLLLLLLLLLLLLLLLL"} = "vLLLLLLLLLLLLLLLLLLLL";
+$data{"kS.S"} = "vS";
 
 is memcached_set($memc, $_, $data{$_}), 'SUCCESS'
     for keys %data;
 
-exit 0;
-
-# XXX the number_of_keys argument can be removed in a later version
-# I've left it here to (slightly) simplify the initial work
-is memcached_mget($memc, [ keys %data ], scalar keys %data), 'SUCCESS';
+is memcached_mget($memc, [ keys %data ]), 'SUCCESS';
 
 my %got;
 my $key;
 while (defined( my $value = memcached_fetch($memc, $key, $flags, $rc) )) {
+    is $rc, 'SUCCESS';
+    is $flags, 0;
+    print "memcached_fetch($key) => $value\n";
     $got{ $key } = $value;
 }
 

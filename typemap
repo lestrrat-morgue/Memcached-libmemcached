@@ -27,6 +27,7 @@ uint16_t                                T_UV
 uint64_t                                T_NV
 
 # --- perl api private abstraction typedefs ---
+lmc_key                                 T_KEY
 lmc_value                               T_VALUE
 lmc_data_flags_t                        T_FLAGS
 
@@ -57,6 +58,17 @@ INPUT
 T_PV
         /* treat undef as null pointer (output does the inverse) */
         $var = (SvOK($arg)) ? ($type)SvPV_nolen($arg) : NULL;
+
+INPUT
+T_KEY
+        /* treat undef as null pointer */
+        $var = (SvOK($arg)) ? ($type)SvPV_nolen($arg) : NULL;
+
+OUTPUT
+T_KEY
+        /* assumes the existance of a key_length variable holding the length */
+        if (!SvREADONLY($arg))
+            sv_setpvn((SV*)$arg, $var, key_length);
 
 INPUT
 T_VALUE
