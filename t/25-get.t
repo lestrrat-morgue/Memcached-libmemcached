@@ -24,7 +24,7 @@ use libmemcached_test;
 my $memc = libmemcached_test_create();
 
 my $items = 3;
-plan tests => ($items * 3) + 8;
+plan tests => $items + $items * 2 + ($items * 2 * 3) + 3;
 
 my ($rv, $rc, $flags);
 my $t1= time();
@@ -37,16 +37,24 @@ $data{"kS.S"} = "vS";
 is memcached_set($memc, $_, $data{$_}), 'SUCCESS'
     for keys %data;
 
-is memcached_mget($memc, [ keys %data ]), 'SUCCESS';
+isnt memcached_mget($memc, undef), 'SUCCESS';
+isnt memcached_mget($memc, 0),     'SUCCESS';
+isnt memcached_mget($memc, 1),     'SUCCESS';
 
-my %got;
-my $key;
-while (defined( my $value = memcached_fetch($memc, $key, $flags, $rc) )) {
-    is $rc, 'SUCCESS';
-    is $flags, 0;
-    print "memcached_fetch($key) => $value\n";
-    $got{ $key } = $value;
+for my $keys_ref (
+    [ keys %data ],
+    { % data },
+) {
+    is memcached_mget($memc, $keys_ref), 'SUCCESS';
+
+    my %got;
+    my $key;
+    while (defined( my $value = memcached_fetch($memc, $key, $flags, $rc) )) {
+        is $rc, 'SUCCESS';
+        is $flags, 0;
+        print "memcached_fetch($key) => $value\n";
+        $got{ $key } = $value;
+    }
+
+    is_deeply \%got, \%data;
 }
-
-is_deeply \%got, \%data;
-

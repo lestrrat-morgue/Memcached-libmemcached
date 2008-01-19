@@ -254,13 +254,23 @@ See L<Memcached::libmemcached::memcached_get>.
 
 =head3 memcached_get
 
-  $value = memcached_get($memc, $key, $flags, $rc);
   $value = memcached_get($memc, $key);
+  $value = memcached_get($memc, $key, $flags, $rc);
 
 Get and return the value of $key.  Returns undef on error.
 
 Also updates $flags to the value of the flags stored with $value,
 and updates $rc with the return code.
+
+=head3 memcached_mget
+
+  memcached_mget($memc, \@keys);
+  memcached_mget($memc, \%keys);
+
+Triggers the asynchronous fetching of multiple keys at once. For multiple key
+operations it is always faster to use this function. You must then use
+memcached_fetch() or memcached_fetch_result() to retrieve any keys found.
+No error is given on keys that are not found.
 
 =cut
 

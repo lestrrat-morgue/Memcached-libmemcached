@@ -1827,9 +1827,15 @@ sub generate_output {
       warn $@   if  $@;
       print "\tSvSETMAGIC($arg);\n" if $do_setmagic;
     } elsif ($arg =~ /^ST\(\d+\)$/) {
+      my $suffix;
+      if (defined $defaults{$var}) {
+          print "\tif (items >= $num) {\n";
+          $suffix = "\t}";
+      }
       eval "print qq\a$expr\a";
       warn $@   if  $@;
       print "\tSvSETMAGIC($arg);\n" if $do_setmagic;
+      print "$suffix\n" if $suffix;
     }
   }
 }

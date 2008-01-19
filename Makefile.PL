@@ -85,6 +85,8 @@ realclean ::
 	$(RM_RF) $(LMCD_INST)
 	cd $(LMCD_SRC) && $(MAKE) distclean
 
+libmemcached.c : t/lib/ExtUtils/ParseXS.pm
+
 $(OBJECT) : $(LMCD_BUILT_LIB)
 
 svnmanifest::
