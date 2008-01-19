@@ -71,7 +71,9 @@ WriteMakefile(
 );
 
 
-sub MY::postamble {
+{   package MY;
+
+sub postamble {
 return qq{
 LMCD_SRC=$lmcd_src
 LMCD_INST=$lmcd_inst
@@ -104,6 +106,14 @@ checkpod:
 }
 
 
+sub tool_xsubpp {
+    my $string = shift->SUPER::tool_xsubpp(@_);
+    # Insert -It/lib into: XSUBPPRUN = $(PERLRUN) $(XSUBPP)
+    $string =~ s{ ^ XSUBPPRUN \s* = .* }{XSUBPPRUN = \$(PERLRUN) -It/lib \$(XSUBPP)}xms;
+    return $string;
+}
+
+} # end of package MY
 
 exit 0;
 
