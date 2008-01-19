@@ -123,9 +123,8 @@ sub build_libmemcached {
     return if -d "$lmcd_inst/lib"; # XXX assume it built ok. use 'make realclean' to rm
     mkdir $lmcd_inst, 0775 unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
-    my $configure_args = '';#'--disable-shared';
+    my $configure_args = '--with-pic'; #'--disable-shared';
     if ($is_developer) {    # XXX make a Makefile.PL argument/option
-        $configure_args .= ' --with-pic';
         #$configure_args .= ' --enable-debug';
         warn "libmemcached configure $configure_args";
     }

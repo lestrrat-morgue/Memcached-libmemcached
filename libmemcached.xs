@@ -124,24 +124,36 @@ memcached_get(Memcached__libmemcached ptr, \
     OUTPUT:
         RETVAL
 
-=head2 Function Patrick is trying to figure out
-/*
-memcached_return
-memcached_mget(Memcached__libmemcached ptr, char **keys, size_t *key_length, unsigned int number_of_keys)
-    CODE:
-        int i;
-        Newxz(keys, number_of_keys, char *);
-        Newxz(key_length, number_of_keys, size_t);
 
-        for (i = 0; i < number_of_keys; i++) {
-            keys[i] = SvPV(ST(i + 1), key_length[i]);
+memcached_return
+memcached_mget(Memcached__libmemcached ptr, SV *keys_rv)
+    PREINIT:
+        char **keys;
+        size_t *key_length;
+        unsigned int number_of_keys;
+        AV *keys_av;
+        int i;
+    CODE:
+        if (!SvROK(keys_rv) || SvTYPE(SvRV(keys_rv)) != SVt_PVAV
+        || SvRMAGICAL(SvRV(keys_rv)) /* disallow tied arrays for now */
+        ) {
+            XSRETURN_IV(MEMCACHED_NO_KEY_PROVIDED);
         }
+        keys_av = (AV*)SvRV(keys_rv);
+        number_of_keys = AvFILL(keys_av);
+
+        Newxz(keys,       number_of_keys, char *);
+        Newxz(key_length, number_of_keys, size_t);
+        for (i = 0; i < number_of_keys; i++) {
+            keys[i] = SvPV(AvARRAY(keys_av)[i], key_length[i]);
+        }
+
+        RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
+
         Safefree(keys);
         Safefree(key_length);
     OUTPUT:
         RETVAL
-*/
-=cut
 
 
 
@@ -181,6 +193,8 @@ memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 
 SV *
 _memcached_version(Memcached__libmemcached ptr)
+    PREINIT:
+        memcached_return memcached_version(memcached_st *); /* declare memcached_version */
     PPCODE:
         /* memcached_version updates ptr->hosts[x].*_version for each
          * associated memcached server that responds to the request.
@@ -188,8 +202,7 @@ _memcached_version(Memcached__libmemcached ptr)
          * the min version for testing version-specific features.
          */
         /* XXX internal undocumented api */
-        memcached_return memcached_version(memcached_st *);
-        RETVAL = &sv_undef; /* avoid unused warning */
+        RETVAL = 0; /* avoid unused warning */
         if (memcached_version(ptr) != MEMCACHED_SUCCESS)
             XSRETURN_EMPTY;
         /* XXX assumes first entry in list of hosts responded
