@@ -272,6 +272,17 @@ operations it is always faster to use this function. You must then use
 memcached_fetch() or memcached_fetch_result() to retrieve any keys found.
 No error is given on keys that are not found.
 
+=head3 memcached_fetch
+
+  $value = memcached_fetch($memc, $key);
+  $value = memcached_fetch($memc, $key, $flag, $rc);
+
+Fetch the next $key and $value pair returned in response to a memcached_mget() call.
+Returns undef if there are no more values.
+
+If $flag is given then it will be updated to whatever flags were stored with the value.
+If $rc is given then it will be updated to the return code.
+
 =cut
 
 

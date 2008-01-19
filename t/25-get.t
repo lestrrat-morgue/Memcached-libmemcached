@@ -23,13 +23,13 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-my $items = 3;
-plan tests => $items + $items * 2 + ($items * 2 * 3) + 3;
+my $items = 5;
+plan tests => $items + 3 + 2 * (1 + $items * 2 + 1);
 
 my ($rv, $rc, $flags);
 my $t1= time();
 
-my %data = map { ("k$_.$t1" => "v$_.$t1") } (1..$items);
+my %data = map { ("k$_.$t1" => "v$_.$t1") } (1..$items-2);
 # add extra long and extra short items to help spot buffer issues
 $data{"kL.LLLLLLLLLLLLLLLLLL"} = "vLLLLLLLLLLLLLLLLLLLL";
 $data{"kS.S"} = "vS";
