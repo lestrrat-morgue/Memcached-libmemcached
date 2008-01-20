@@ -113,6 +113,7 @@ T_PTROBJ_RVIV:init
 T_PTROBJ_RVIV
         if (!$var)          /* if null */
             SvOK_off($arg); /* then return as undef instead of reaf to undef */
-        else
+        else {
             sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", $var);
+        }
 
