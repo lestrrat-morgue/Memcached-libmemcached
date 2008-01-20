@@ -1780,6 +1780,10 @@ sub generate_output {
     ($ntype = $type) =~ s/\s*\*/Ptr/g;
     $ntype =~ s/\(\)//g;
     ($subtype = $ntype) =~ s/(?:Array)?(?:Ptr)?$//;
+    if ($expr = $output_expr{$type_kind{$type}.":init"}) {
+	eval "print qq\a$expr\a";
+	warn $@   if  $@;
+    }
     $expr = $output_expr{$type_kind{$type}};
     if ($expr =~ /DO_ARRAY_ELEM/) {
       blurt("Error: '$subtype' not in typemap"), return

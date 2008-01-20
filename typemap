@@ -14,11 +14,6 @@ TYPEMAP
 memcached_behavior                      T_IV
 memcached_return                        T_RETURN
 
-# --- types for mget/fetch ---
-# memcached_return*                       T_PV
-# size_t*                                 T_PV
-# memcached_result_st*                    T_PV
-
 # --- generic simple types ---
 # general uint16_t
 uint16_t                                T_UV
@@ -41,6 +36,9 @@ T_RETURN
         $var = ($type)SvIV($arg)
 
 OUTPUT
+T_RETURN:init
+        if (TRACE_MEMCACHED(ptr))
+            warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
 T_RETURN
         if (!SvREADONLY($arg)) {
             /* setup return value as a dualvar with int err code and string error message */
@@ -51,8 +49,6 @@ T_RETURN
             sv_setpv($arg, memcached_strerror(ptr, $var));
             SvIOK_on($arg);
         }
-        if (TRACE_MEMCACHED(ptr))
-            warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
 
 INPUT
 T_PV
@@ -111,11 +107,12 @@ T_PTROBJ_RVIV
             warn(\"\t=> %s(%s %s = 0x%p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
 OUTPUT
+T_PTROBJ_RVIV:init
+        if (TRACE_MEMCACHED(ptr))
+            warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 T_PTROBJ_RVIV
         if (!$var)          /* if null */
             SvOK_off($arg); /* then return as undef instead of reaf to undef */
         else
             sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", $var);
-        if (TRACE_MEMCACHED(ptr))
-            warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
