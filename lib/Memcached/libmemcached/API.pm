@@ -27,6 +27,10 @@ our @EXPORT = qw(
     libmemcached_tags
 );
 
+my %libmemcached_extra_functions = (
+    memcached_mget_into_hashref => 1,
+);
+
 
 # load hash of libmemcached functions created by Makefile.PL
 my $libmemcached_funcs = require "Memcached/libmemcached/func_hash.pl";
@@ -34,7 +38,7 @@ die "Memcached/libmemcached/func_hash.pl failed sanity check"
     unless ref $libmemcached_funcs eq 'HASH'
         and keys %$libmemcached_funcs > 20;
 
-our @libmemcached_funcs = sort keys %$libmemcached_funcs;
+our @libmemcached_funcs = sort (keys %$libmemcached_funcs, keys %libmemcached_extra_functions);
 
 
 # load hash of libmemcached functions created by Makefile.PL

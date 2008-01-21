@@ -19,6 +19,79 @@ typedef char*                lmc_value;
 #define TRACE_MEMCACHED(ptr) \
     getenv("PERL_MEMCACHED_TRACE")
 
+#define RECORD_RETURN_ERR(ptr, ret)
+
+static memcached_return
+_prep_keys_lengths(memcached_st *ptr, SV *keys_rv, char ***out_keys, size_t **out_key_length, unsigned int *out_number_of_keys)
+{
+    SV *keys_sv;
+    unsigned int number_of_keys;
+    char **keys;
+    size_t *key_length;
+    int i = 0;
+
+    if (!SvROK(keys_rv))
+        return MEMCACHED_NO_KEY_PROVIDED;
+    keys_sv = SvRV(keys_rv);
+    if (SvRMAGICAL(keys_rv)) /* disallow tied arrays for now */
+        return MEMCACHED_NO_KEY_PROVIDED;
+
+    if (SvTYPE(keys_sv) == SVt_PVAV) {
+        number_of_keys = AvFILL(keys_sv)+1;
+        Newx(keys,       number_of_keys, char *);
+        Newx(key_length, number_of_keys, size_t);
+        for (i = 0; i < number_of_keys; i++) {
+            keys[i] = SvPV(AvARRAY(keys_sv)[i], key_length[i]);
+        }
+    }
+    else if (SvTYPE(keys_sv) == SVt_PVHV) {
+        HE *he;
+        I32 retlen;
+        hv_iterinit((HV*)keys_sv);
+        number_of_keys = HvKEYS(keys_sv);
+        Newx(keys,       number_of_keys, char *);
+        Newx(key_length, number_of_keys, size_t);
+        while ( (he = hv_iternext_flags((HV*)keys_sv, 0)) ) {
+            keys[i] = hv_iterkey(he, &retlen);
+            key_length[i++] = retlen;
+        }
+    }
+    else {
+        return MEMCACHED_NO_KEY_PROVIDED;
+    }
+    *out_number_of_keys = number_of_keys;
+    *out_keys           = keys;
+    *out_key_length     = key_length;
+    return MEMCACHED_SUCCESS;
+}
+
+
+static memcached_return
+_fetch_all_hashref(memcached_st *ptr, HV *dest_ref)
+{
+    memcached_return rc = MEMCACHED_MAXIMUM_RETURN; /* should never be returned */
+
+    while (1) {
+        char key[MEMCACHED_MAX_KEY];
+        size_t key_length;
+        char *value;
+        size_t value_length;
+        uint32_t flags = 0;
+        SV **svp;
+
+        value = memcached_fetch(ptr, key, &key_length, &value_length, &flags, &rc);
+        if (value == NULL)
+            break;
+
+        svp = hv_fetch(dest_ref, key, key_length, 1);
+        sv_setpvn(*svp, value, value_length);
+    }
+
+    return rc;
+}
+
+
+
 /* ====================================================================================== */
 
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached
@@ -55,21 +128,15 @@ memcached_server_add_unix_socket(Memcached__libmemcached ptr, char *socket)
 
 void
 memcached_free(Memcached__libmemcached ptr)
+    ALIAS:
+        DESTROY = 1
     INIT:
         if (!ptr)   /* garbage or already freed this sv */
             XSRETURN_EMPTY;
+        PERL_UNUSED_VAR(ix);
     POSTCALL:
         if (ptr)    /* mark as undef to avoid duplicate free */
             SvOK_off((SV*)SvRV(ST(0)));
-
-void
-DESTROY(Memcached__libmemcached ptr)
-    CODE:
-        if (ptr) {
-            warn("memcached_free not called for %s", SvPV_nolen(ST(0)));
-            memcached_free(ptr);
-            SvOK_off((SV*)SvRV(ST(0)));
-        }
 
 UV
 memcached_behavior_get(Memcached__libmemcached ptr, memcached_behavior flag)
@@ -135,52 +202,38 @@ memcached_get(Memcached__libmemcached ptr, \
         RETVAL
 
 
+
 memcached_return
 memcached_mget(Memcached__libmemcached ptr, SV *keys_rv)
     PREINIT:
         char **keys;
         size_t *key_length;
         unsigned int number_of_keys;
-        SV *keys_sv;
-        int i = 0;
     CODE:
-        if (!SvROK(keys_rv)
-        || SvRMAGICAL(SvRV(keys_rv)) /* disallow tied arrays for now */
-        ) {
-            /* XXX doesn't use memcached_return typemap */
-            XSRETURN_IV(MEMCACHED_NO_KEY_PROVIDED);
+        if ((RETVAL = _prep_keys_lengths(ptr, keys_rv, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
+            RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
+            Safefree(keys);
+            Safefree(key_length);
         }
-        keys_sv = SvRV(keys_rv);
-        if (SvTYPE(keys_sv) == SVt_PVAV) {
-            number_of_keys = AvFILL(keys_sv)+1;
-            Newx(keys,       number_of_keys, char *);
-            Newx(key_length, number_of_keys, size_t);
-            for (i = 0; i < number_of_keys; i++) {
-                keys[i] = SvPV(AvARRAY(keys_sv)[i], key_length[i]);
+    OUTPUT:
+        RETVAL
+
+memcached_return
+memcached_mget_into_hashref(Memcached__libmemcached ptr, SV *keys_ref, HV *dest_ref)
+    PREINIT:
+        char **keys;
+        size_t *key_length;
+        unsigned int number_of_keys;
+    CODE:
+        memcached_return ret;
+        if ((ret = _prep_keys_lengths(ptr, keys_ref, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
+            ret = memcached_mget(ptr, keys, key_length, number_of_keys);
+            Safefree(keys);
+            Safefree(key_length);
+            if (ret == MEMCACHED_SUCCESS) {
+                RETVAL = _fetch_all_hashref(ptr, dest_ref);
             }
         }
-        else if (SvTYPE(keys_sv) == SVt_PVHV) {
-            HE *he;
-            char *key;
-            I32 retlen;
-            hv_iterinit((HV*)keys_sv);
-            number_of_keys = HvKEYS(keys_sv);
-            Newx(keys,       number_of_keys, char *);
-            Newx(key_length, number_of_keys, size_t);
-            while ( (he = hv_iternext_flags((HV*)keys_sv, 0)) ) {
-                keys[i] = hv_iterkey(he, &retlen);
-                key_length[i++] = retlen;
-            }
-        }
-        else {
-            /* XXX doesn't use memcached_return typemap */
-            XSRETURN_IV(MEMCACHED_NO_KEY_PROVIDED);
-        }
-
-        RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
-
-        Safefree(keys);
-        Safefree(key_length);
     OUTPUT:
         RETVAL
 

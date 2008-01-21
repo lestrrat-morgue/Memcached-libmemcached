@@ -268,9 +268,21 @@ and updates $rc with the return code.
   memcached_mget($memc, \%keys);
 
 Triggers the asynchronous fetching of multiple keys at once. For multiple key
-operations it is always faster to use this function. You must then use
+operations it is always faster to use this function. You I<must> then use
 memcached_fetch() or memcached_fetch_result() to retrieve any keys found.
 No error is given on keys that are not found.
+
+Instead of this function, you'd normally use L</memcached_mget_into_hashref>.
+
+=head3 memcached_mget_into_hashref
+
+  memcached_mget_into_hashref($memc, $keys_ref, \%dest_hash);
+
+Combines memcached_mget() and a memcached_fetch() loop into a single highly
+efficient call.
+
+Fetched values are stored in \%dest_hash, updating existing values or adding
+new ones as appropriate.
 
 =head3 memcached_fetch
 

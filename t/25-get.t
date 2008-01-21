@@ -12,6 +12,7 @@ use Memcached::libmemcached
     qw(
         memcached_mget
         memcached_fetch
+        memcached_mget_into_hashref
     ),
     #   other functions used by the tests
     qw(
@@ -24,7 +25,9 @@ use libmemcached_test;
 my $memc = libmemcached_test_create();
 
 my $items = 5;
-plan tests => $items + 3 + 2 * (1 + $items * 2 + 1);
+plan tests => $items + 3
+    + 2 * (1 + $items * 2 + 1)
+    + $items + 2;
 
 my ($rv, $rc, $flags);
 my $t1= time();
@@ -58,3 +61,21 @@ for my $keys_ref (
 
     is_deeply \%got, \%data;
 }
+
+
+print "memcached_mget_into_hashref\n";
+
+# tweak data so it's different from previous tests
+%data = map { $_ . "a" } %data;
+#use Data::Dumper; warn Dumper(\%data);
+
+is memcached_set($memc, $_, $data{$_}), 'SUCCESS'
+    for keys %data;
+
+my %extra = ( foo => 'bar' );
+# reset got data, but not to empty so we check the hash isn't erased
+my %got = %extra;
+is memcached_mget_into_hashref($memc, [ keys %data ], \%got), 'SERVER END';
+
+is_deeply \%got, { %data, %extra };
+

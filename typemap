@@ -37,15 +37,16 @@ T_RETURN
 
 OUTPUT
 T_RETURN:init
+        RECORD_RETURN_ERR(ptr, $var);
         if (TRACE_MEMCACHED(ptr))
             warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
 T_RETURN
         if (!SvREADONLY($arg)) {
             /* setup return value as a dualvar with int err code and string error message */
+            /* XXX could optimize later to reuse read-only char* from memcached_strerror */
             sv_setiv($arg, $var);
             /* XXX need to decide if success is true or false! */
             /* sv_setpv($arg, ($var) ? memcached_strerror(NULL, $var) : "XXX"); */
-            /* XXX could optimize later to reuse read-only char* from memcached_strerror */
             sv_setpv($arg, memcached_strerror(ptr, $var));
             SvIOK_on($arg);
         }
