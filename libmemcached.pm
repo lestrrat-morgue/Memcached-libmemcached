@@ -245,6 +245,15 @@ $expiration and $flags are both optional and default to 0.
 Prepend $value to the value of $key. $key must already exist.
 $expiration and $flags are both optional and default to 0.
 
+=head3 memcached_replace
+
+  memcached_replace($memc, $key, $value)
+  memcached_replace($memc, $key, $value, $expiration, $flags)
+
+Replace with $value the existing value of the value stored with
+$key. $key must already exist.  $expiration and $flags are both
+optional and default to 0.
+
 =cut
 
 
