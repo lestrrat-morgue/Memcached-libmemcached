@@ -19,23 +19,20 @@
 extern "C" {
 #endif
 
-typedef struct memcached_st memcached_st;
-typedef struct memcached_stat_st memcached_stat_st;
-typedef struct memcached_result_st memcached_result_st;
-typedef struct memcached_string_st memcached_string_st;
-typedef struct memcached_server_st memcached_server_st;
+/* These are Private and should not be used by applications */
+#define MEMCACHED_VERSION_STRING_LENGTH 12
 
-#define MEMCACHED_VERSION_STRING 12
+/* Public defines */
 #define MEMCACHED_DEFAULT_PORT 11211
-#define MEMCACHED_DEFAULT_COMMAND_SIZE 350
-#define SMALL_STRING_LEN 1024
-#define HUGE_STRING_LEN 8196
 #define MEMCACHED_MAX_KEY 251 /* We add one to have it null terminated */
-#define MEMCACHED_MAX_BUFFER HUGE_STRING_LEN
+#define MEMCACHED_MAX_BUFFER 8196
 #define MEMCACHED_MAX_HOST_LENGTH 64
 #define MEMCACHED_WHEEL_SIZE 1024
 #define MEMCACHED_STRIDE 4
 #define MEMCACHED_DEFAULT_TIMEOUT INT32_MAX
+
+/* string value */
+#define LIBMEMCACHED_VERSION_STRING "0.14"
 
 typedef enum {
   MEMCACHED_SUCCESS,
@@ -73,6 +70,17 @@ typedef enum {
   MEMCACHED_MAXIMUM_RETURN, /* Always add new error code before */
 } memcached_return;
 
+typedef struct memcached_st memcached_st;
+typedef struct memcached_stat_st memcached_stat_st;
+typedef struct memcached_result_st memcached_result_st;
+typedef struct memcached_string_st memcached_string_st;
+typedef struct memcached_server_st memcached_server_st;
+typedef memcached_return (*memcached_clone_func)(memcached_st *parent, memcached_st *clone);
+typedef memcached_return (*memcached_cleanup_func)(memcached_st *ptr);
+typedef void (*memcached_free_function)(memcached_st *ptr, void *mem);
+typedef void *(*memcached_malloc_function)(memcached_st *ptr, const size_t size);
+typedef void *(*memcached_realloc_function)(memcached_st *ptr, void *mem, const size_t size);
+
 typedef enum {
   MEMCACHED_DISTRIBUTION_MODULA,
   MEMCACHED_DISTRIBUTION_CONSISTENT,
@@ -92,6 +100,15 @@ typedef enum {
   MEMCACHED_BEHAVIOR_BUFFER_REQUESTS,
   MEMCACHED_BEHAVIOR_USER_DATA,
 } memcached_behavior;
+
+typedef enum {
+  MEMCACHED_CALLBACK_USER_DATA,
+  MEMCACHED_CALLBACK_CLEANUP_FUNCTION,
+  MEMCACHED_CALLBACK_CLONE_FUNCTION,
+  MEMCACHED_CALLBACK_MALLOC_FUNCTION,
+  MEMCACHED_CALLBACK_REALLOC_FUNCTION,
+  MEMCACHED_CALLBACK_FREE_FUNCTION,
+} memcached_callback;
 
 typedef enum {
   MEMCACHED_HASH_DEFAULT= 0,
@@ -122,10 +139,10 @@ struct memcached_server_st {
   char hostname[MEMCACHED_MAX_HOST_LENGTH];
   unsigned int port;
   int fd;
+  int cached_errno;
   unsigned int cursor_active;
   char write_buffer[MEMCACHED_MAX_BUFFER];
   size_t write_buffer_offset;
-  char *write_ptr;
   char read_buffer[MEMCACHED_MAX_BUFFER];
   size_t read_data_length;
   size_t read_buffer_length;
@@ -137,6 +154,7 @@ struct memcached_server_st {
   uint8_t minor_version;
   uint8_t micro_version;
   uint16_t count;
+  memcached_st *root;
 };
 
 struct memcached_stat_st {
@@ -163,7 +181,7 @@ struct memcached_stat_st {
   uint64_t evictions;
   uint64_t bytes_read;
   uint64_t bytes_written;
-  char version[MEMCACHED_VERSION_STRING];
+  char version[MEMCACHED_VERSION_STRING_LENGTH];
 };
 
 struct memcached_string_st {
@@ -191,9 +209,8 @@ struct memcached_st {
   memcached_server_st *hosts;
   unsigned int number_of_hosts;
   unsigned int cursor_server;
-  char connected;
   int cached_errno;
-  unsigned long long flags;
+  uint32_t flags;
   int send_size;
   int recv_size;
   int32_t poll_timeout;
@@ -202,6 +219,11 @@ struct memcached_st {
   memcached_server_distribution distribution;
   void *user_data;
   unsigned int wheel[MEMCACHED_WHEEL_SIZE];
+  memcached_clone_func on_clone;
+  memcached_cleanup_func on_cleanup;
+  memcached_free_function call_free;
+  memcached_malloc_function call_malloc;
+  memcached_realloc_function call_realloc;
 #ifdef NOT_USED /* Future Use */
   uint8_t replicas;
   memcached_return warning;
@@ -209,6 +231,8 @@ struct memcached_st {
 };
 
 /* Public API */
+const char * memcached_lib_version(void);
+
 memcached_st *memcached_create(memcached_st *ptr);
 void memcached_free(memcached_st *ptr);
 memcached_st *memcached_clone(memcached_st *clone, memcached_st *ptr);
@@ -284,7 +308,8 @@ memcached_result_st *memcached_fetch_result(memcached_st *ptr,
 #define memcached_server_name(A,B) (B).hostname
 #define memcached_server_port(A,B) (B).port
 #define memcached_server_list(A) (A)->hosts
-#define memcached_server_response_count(A,B) (A)->hosts[B].cursor_active
+#define memcached_server_response_count(A) (A)->cursor_active
+
 
 memcached_return memcached_server_add_udp(memcached_st *ptr, 
                                           char *hostname,
@@ -366,22 +391,18 @@ memcached_return memcached_delete_by_key(memcached_st *ptr,
                                          char *key, size_t key_length,
                                          time_t expiration);
 
-memcached_return memcached_mdelete(memcached_st *ptr, 
-                                   char **key, size_t *key_length,
-                                   unsigned int number_of_keys,
-                                   time_t expiration);
-
-memcached_return memcached_mdelete_by_key(memcached_st *ptr, 
-                                          char *master_key, size_t master_key_length,
-                                          char **key, size_t *key_length,
-                                          unsigned int number_of_keys,
-                                          time_t expiration);
-
 memcached_return memcached_fetch_execute(memcached_st *ptr, 
                                              unsigned int (*callback[])(memcached_st *ptr, memcached_result_st *result, void *context),
                                              void *context,
                                              unsigned int number_of_callbacks
                                              );
+
+memcached_return memcached_callback_set(memcached_st *ptr, 
+                                        memcached_callback flag, 
+                                        void *data);
+void *memcached_callback_get(memcached_st *ptr, 
+                             memcached_callback flag,
+                             memcached_return *error);
 
 /* Result Struct */
 void memcached_result_free(memcached_result_st *result);

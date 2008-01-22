@@ -108,7 +108,8 @@ unsigned long long memcached_behavior_get(memcached_st *ptr,
     temp_flag= MEM_USE_KETAMA;
     break;
   case MEMCACHED_BEHAVIOR_USER_DATA:
-    return (unsigned long long)ptr->user_data;
+    return 0;
+    //return (unsigned long long)ptr->user_data;
   case MEMCACHED_BEHAVIOR_POLL_TIMEOUT:
     {
       return (unsigned long long)ptr->poll_timeout;
@@ -118,8 +119,9 @@ unsigned long long memcached_behavior_get(memcached_st *ptr,
       int sock_size;
       socklen_t sock_length= sizeof(int);
 
+      /* REFACTOR */
       /* We just try the first host, and if it is down we return zero */
-      if ((memcached_connect(ptr, 0)) != MEMCACHED_SUCCESS)
+      if ((memcached_connect(&ptr->hosts[0])) != MEMCACHED_SUCCESS)
         return 0;
 
       if (getsockopt(ptr->hosts[0].fd, SOL_SOCKET, 
@@ -133,8 +135,9 @@ unsigned long long memcached_behavior_get(memcached_st *ptr,
       int sock_size;
       socklen_t sock_length= sizeof(int);
 
+      /* REFACTOR */
       /* We just try the first host, and if it is down we return zero */
-      if ((memcached_connect(ptr, 0)) != MEMCACHED_SUCCESS)
+      if ((memcached_connect(&ptr->hosts[0])) != MEMCACHED_SUCCESS)
         return 0;
 
       if (getsockopt(ptr->hosts[0].fd, SOL_SOCKET, 

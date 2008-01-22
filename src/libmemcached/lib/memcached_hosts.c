@@ -31,17 +31,35 @@ static void rebalance_wheel(memcached_st *ptr)
   }
 }
 
-static void host_reset(memcached_server_st *host, char *hostname, unsigned int port,
+static void host_reset(memcached_st *ptr, memcached_server_st *host, 
+                       char *hostname, unsigned int port,
                        memcached_connection type)
 {
   memset(host,  0, sizeof(memcached_server_st));
   strncpy(host->hostname, hostname, MEMCACHED_MAX_HOST_LENGTH - 1);
+  host->root= ptr ? ptr : NULL;
   host->port= port;
   host->fd= -1;
   host->type= type;
   host->read_ptr= host->read_buffer;
-  host->write_ptr= host->write_buffer;
   host->sockaddr_inited= MEMCACHED_NOT_ALLOCATED;
+}
+
+void server_list_free(memcached_st *ptr, memcached_server_st *servers)
+{
+  unsigned int x;
+
+  if (servers == NULL)
+    return;
+
+  for (x= 0; x < servers->count; x++)
+    if (servers[x].address_info)
+      freeaddrinfo(servers[x].address_info);
+
+  if (ptr && ptr->call_free)
+    ptr->call_free(ptr, servers);
+  else
+    free(servers);
 }
 
 memcached_return memcached_server_push(memcached_st *ptr, memcached_server_st *list)
@@ -55,9 +73,14 @@ memcached_return memcached_server_push(memcached_st *ptr, memcached_server_st *l
 
   count= list[0].count;
 
-  new_host_list= 
-    (memcached_server_st *)realloc(ptr->hosts, 
-                                   sizeof(memcached_server_st) * (count + ptr->number_of_hosts));
+  if (ptr->call_realloc)
+    new_host_list= 
+      (memcached_server_st *)ptr->call_realloc(ptr, ptr->hosts, 
+                                               sizeof(memcached_server_st) * (count + ptr->number_of_hosts));
+  else
+    new_host_list= 
+      (memcached_server_st *)realloc(ptr->hosts, 
+                                     sizeof(memcached_server_st) * (count + ptr->number_of_hosts));
 
   if (!new_host_list)
     return MEMCACHED_MEMORY_ALLOCATION_FAILURE;
@@ -67,7 +90,7 @@ memcached_return memcached_server_push(memcached_st *ptr, memcached_server_st *l
   for (x= 0; x < count; x++)
   {
     WATCHPOINT_ASSERT(list[x].hostname[0] != 0);
-    host_reset(&ptr->hosts[ptr->number_of_hosts], list[x].hostname, 
+    host_reset(ptr, &ptr->hosts[ptr->number_of_hosts], list[x].hostname, 
                list[x].port, list[x].type);
     ptr->number_of_hosts++;
   }
@@ -120,14 +143,18 @@ static memcached_return server_add(memcached_st *ptr, char *hostname,
   LIBMEMCACHED_MEMCACHED_SERVER_ADD_START();
 
 
-  new_host_list= (memcached_server_st *)realloc(ptr->hosts, 
-                                                sizeof(memcached_server_st) * (ptr->number_of_hosts+1));
-  if (!new_host_list)
+  if (ptr->call_realloc)
+    new_host_list= (memcached_server_st *)ptr->call_realloc(ptr, ptr->hosts, 
+                                                            sizeof(memcached_server_st) * (ptr->number_of_hosts+1));
+  else
+    new_host_list= (memcached_server_st *)realloc(ptr->hosts, 
+                                                  sizeof(memcached_server_st) * (ptr->number_of_hosts+1));
+  if (new_host_list == NULL)
     return MEMCACHED_MEMORY_ALLOCATION_FAILURE;
 
   ptr->hosts= new_host_list;
 
-  host_reset(&ptr->hosts[ptr->number_of_hosts], hostname, port, type);
+  host_reset(ptr, &ptr->hosts[ptr->number_of_hosts], hostname, port, type);
   ptr->number_of_hosts++;
   ptr->hosts[0].count++;
 
@@ -165,7 +192,9 @@ memcached_server_st *memcached_server_list_append(memcached_server_st *ptr,
     return NULL;
   }
 
-  host_reset(&new_host_list[count-1], hostname, port, MEMCACHED_CONNECTION_TCP);
+  host_reset(NULL, &new_host_list[count-1], hostname, port, MEMCACHED_CONNECTION_TCP);
+
+  /* Backwards compatibility hack */
   new_host_list[0].count++;
 
 
@@ -183,14 +212,5 @@ unsigned int memcached_server_list_count(memcached_server_st *ptr)
 
 void memcached_server_list_free(memcached_server_st *ptr)
 {
-  unsigned int x;
-
-  if (ptr == NULL)
-    return;
-
-  for (x= 0; x < ptr->count; x++)
-    if (ptr[x].address_info)
-      freeaddrinfo(ptr[x].address_info);
-
-  free(ptr);
+  server_list_free(NULL, ptr);
 }

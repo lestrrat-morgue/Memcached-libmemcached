@@ -1,3 +1,14 @@
+0.14 Tue Jan 22 06:21:49 PST 2008
+  * For for bug found by Evan Weaver where increment() was not returning
+    propper error of value was not found.
+  * Fix for bad null pointer on flag by Toru Maesaka.
+  * Refactor of all IO to just pass in the active server
+  * Problem configuring (PKG_CHECK_MODULES) fixed by removal of "rpath" in 
+    support/libmemcached.pc.in (Thanks to Ross McFarland).
+  * Added memcached_callback_get()/set()
+  * First prototype of C++ interface
+  * Updated docs for uint16_t changes in previous release
+
 0.13 Sun Jan 13 06:51:50 PST 2008
   * MEMCACHED_BEHAVIOR_USER_DATA added to store user pointer.
   * Fix for failure to connect to invalidate socket.

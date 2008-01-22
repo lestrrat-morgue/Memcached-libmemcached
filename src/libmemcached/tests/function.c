@@ -881,12 +881,23 @@ uint8_t get_stats_keys(memcached_st *memc)
  list= memcached_stat_get_keys(memc, &stat, &rc);
  assert(rc == MEMCACHED_SUCCESS);
  for (ptr= list; *ptr; ptr++)
-   printf("Found key %s\n", *ptr);
+   assert(*ptr);
  fflush(stdout);
 
  free(list);
 
  return 0;
+}
+
+uint8_t version_string_test(memcached_st *memc)
+{
+  const char *version_string;
+
+  version_string= memcached_lib_version();
+
+  assert(!strcmp(version_string, LIBMEMCACHED_VERSION_STRING));
+
+  return 0;
 }
 
 uint8_t get_stats(memcached_st *memc)
@@ -945,6 +956,55 @@ uint8_t add_host_test(memcached_st *memc)
   assert(rc == MEMCACHED_SUCCESS);
 
   memcached_server_list_free(servers);
+
+  return 0;
+}
+
+memcached_return clone_test_callback(memcached_st *parent, memcached_st *clone)
+{
+  return MEMCACHED_SUCCESS;
+}
+
+memcached_return cleanup_test_callback(memcached_st *ptr)
+{
+  return MEMCACHED_SUCCESS;
+}
+
+uint8_t callback_test(memcached_st *memc)
+{
+  /* Test User Data */
+  {
+    int x= 5;
+    int *test_ptr;
+    memcached_return rc;
+
+    rc= memcached_callback_set(memc, MEMCACHED_CALLBACK_USER_DATA, &x);
+    assert(rc == MEMCACHED_SUCCESS);
+    test_ptr= (int *)memcached_callback_get(memc, MEMCACHED_CALLBACK_USER_DATA, &rc);
+    assert(*test_ptr == x);
+  }
+
+  /* Test Clone Callback */
+  {
+    memcached_clone_func temp_function;
+    memcached_return rc;
+
+    rc= memcached_callback_set(memc, MEMCACHED_CALLBACK_CLONE_FUNCTION, clone_test_callback);
+    assert(rc == MEMCACHED_SUCCESS);
+    temp_function= (memcached_clone_func)memcached_callback_get(memc, MEMCACHED_CALLBACK_CLONE_FUNCTION, &rc);
+    assert(temp_function == clone_test_callback);
+  }
+
+  /* Test Cleanup Callback */
+  {
+    memcached_cleanup_func temp_function;
+    memcached_return rc;
+
+    rc= memcached_callback_set(memc, MEMCACHED_CALLBACK_CLONE_FUNCTION, cleanup_test_callback);
+    assert(rc == MEMCACHED_SUCCESS);
+    temp_function= (memcached_cleanup_func)memcached_callback_get(memc, MEMCACHED_CALLBACK_CLONE_FUNCTION, &rc);
+    assert(temp_function == cleanup_test_callback);
+  }
 
   return 0;
 }
@@ -1542,6 +1602,44 @@ uint8_t user_supplied_bug11(memcached_st *memc)
   return 0;
 }
 
+/*
+  Bug found where incr was not returning MEMCACHED_NOTFOUND when object did not exist.
+*/
+uint8_t user_supplied_bug12(memcached_st *memc)
+{
+  memcached_return rc;
+  uint32_t flags;
+  size_t value_length;
+  char *value;
+  uint64_t number_value;
+
+  value= memcached_get(memc, "autoincrement", strlen("autoincrement"),
+                        &value_length, &flags, &rc);		
+  assert(value == NULL);
+  assert(rc == MEMCACHED_NOTFOUND);
+
+  rc= memcached_increment(memc, "autoincrement", strlen("autoincrement"),
+                          1, &number_value);
+
+  assert(value == NULL);
+  assert(rc == MEMCACHED_NOTFOUND);
+
+  rc= memcached_set(memc, "autoincrement", strlen("autoincrement"), "1", 1, 0, 0);
+
+  value= memcached_get(memc, "autoincrement", strlen("autoincrement"),
+                        &value_length, &flags, &rc);		
+  assert(value);
+  assert(rc == MEMCACHED_SUCCESS);
+  free(value);
+
+  rc= memcached_increment(memc, "autoincrement", strlen("autoincrement"),
+                          1, &number_value);
+  assert(number_value == 2);
+  assert(rc == MEMCACHED_SUCCESS);
+
+  return 0;
+}
+
 uint8_t result_static(memcached_st *memc)
 {
   memcached_result_st result;
@@ -1941,6 +2039,59 @@ memcached_return pre_hash_ketama(memcached_st *memc)
   return MEMCACHED_SUCCESS;
 }
 
+void my_free(memcached_st *ptr, void *mem)
+{
+  free(mem);
+}
+
+void *my_malloc(memcached_st *ptr, const size_t size)
+{
+  return malloc(size);
+}
+
+void *my_realloc(memcached_st *ptr, void *mem, const size_t size)
+{
+  return realloc(mem, size);
+}
+
+memcached_return set_memory_alloc(memcached_st *memc)
+{
+  {
+    memcached_malloc_function test_ptr;
+    memcached_return rc;
+
+    rc= memcached_callback_set(memc, MEMCACHED_CALLBACK_MALLOC_FUNCTION, &my_malloc);
+    assert(rc == MEMCACHED_SUCCESS);
+    test_ptr= (memcached_malloc_function)memcached_callback_get(memc, MEMCACHED_CALLBACK_MALLOC_FUNCTION, &rc);
+    assert(rc == MEMCACHED_SUCCESS);
+    assert(test_ptr == my_malloc);
+  }
+
+  {
+    memcached_realloc_function test_ptr;
+    memcached_return rc;
+
+    rc= memcached_callback_set(memc, MEMCACHED_CALLBACK_REALLOC_FUNCTION, &my_realloc);
+    assert(rc == MEMCACHED_SUCCESS);
+    test_ptr= (memcached_realloc_function)memcached_callback_get(memc, MEMCACHED_CALLBACK_REALLOC_FUNCTION, &rc);
+    assert(rc == MEMCACHED_SUCCESS);
+    assert(test_ptr == my_realloc);
+  }
+
+  {
+    memcached_free_function test_ptr;
+    memcached_return rc;
+
+    rc= memcached_callback_set(memc, MEMCACHED_CALLBACK_FREE_FUNCTION, my_free);
+    assert(rc == MEMCACHED_SUCCESS);
+    test_ptr= (memcached_free_function)memcached_callback_get(memc, MEMCACHED_CALLBACK_FREE_FUNCTION, &rc);
+    assert(rc == MEMCACHED_SUCCESS);
+    assert(test_ptr == my_free);
+  }
+
+  return MEMCACHED_SUCCESS;
+}
+
 memcached_return enable_consistent(memcached_st *memc)
 {
   memcached_server_distribution value= MEMCACHED_DISTRIBUTION_CONSISTENT;
@@ -2075,6 +2226,8 @@ test_st tests[] ={
   {"add_host_test", 0, add_host_test },
   {"get_stats_keys", 0, get_stats_keys },
   {"behavior_test", 0, get_stats_keys },
+  {"callback_test", 0, get_stats_keys },
+  {"version_string_test", 0, version_string_test},
   {0, 0, 0}
 };
 
@@ -2120,6 +2273,7 @@ test_st user_tests[] ={
   {"user_supplied_bug9", 1, user_supplied_bug9 },
   {"user_supplied_bug10", 1, user_supplied_bug10 },
   {"user_supplied_bug11", 1, user_supplied_bug11 },
+  {"user_supplied_bug12", 1, user_supplied_bug12 },
   {0, 0, 0}
 };
 
@@ -2155,6 +2309,7 @@ collection_st collection[] ={
   {"poll_timeout", poll_timeout, 0, tests},
   {"gets", enable_cas, 0, tests},
   {"consistent", enable_consistent, 0, tests},
+  {"memory_allocators", set_memory_alloc, 0, tests},
 //  {"udp", pre_udp, 0, tests},
   {"version_1_2_3", check_for_1_2_3, 0, version_1_2_3},
   {"string", 0, 0, string_tests},

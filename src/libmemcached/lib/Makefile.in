@@ -57,14 +57,15 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libmemcached_la_DEPENDENCIES = $(am__append_1)
 am_libmemcached_la_OBJECTS = crc.lo hsieh_hash.lo memcached.lo \
-	memcached_auto.lo memcached_behavior.lo memcached_connect.lo \
-	memcached_delete.lo memcached_do.lo memcached_fetch.lo \
-	memcached_fetch_execute.lo memcached_flush.lo memcached_get.lo \
-	memcached_hash.lo memcached_hosts.lo memcached_io.lo md5.lo \
-	memcached_quit.lo memcached_parse.lo memcached_response.lo \
-	memcached_result.lo memcached_storage.lo memcached_string.lo \
-	memcached_stats.lo memcached_strerror.lo \
-	memcached_verbosity.lo memcached_version.lo
+	memcached_auto.lo memcached_behavior.lo memcached_callback.lo \
+	memcached_connect.lo memcached_delete.lo memcached_do.lo \
+	memcached_fetch.lo memcached_fetch_execute.lo \
+	memcached_flush.lo memcached_get.lo memcached_hash.lo \
+	memcached_hosts.lo memcached_io.lo md5.lo memcached_quit.lo \
+	memcached_parse.lo memcached_response.lo memcached_result.lo \
+	memcached_storage.lo memcached_string.lo memcached_stats.lo \
+	memcached_strerror.lo memcached_verbosity.lo \
+	memcached_version.lo
 libmemcached_la_OBJECTS = $(am_libmemcached_la_OBJECTS)
 libmemcached_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -235,6 +236,7 @@ libmemcached_la_SOURCES = crc.c \
 			  memcached.c \
 			  memcached_auto.c \
 			  memcached_behavior.c \
+			  memcached_callback.c \
 			  memcached_connect.c \
 			  memcached_delete.c \
 			  memcached_do.c \
@@ -334,6 +336,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_auto.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_behavior.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_callback.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_connect.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_delete.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_do.Plo@am__quote@

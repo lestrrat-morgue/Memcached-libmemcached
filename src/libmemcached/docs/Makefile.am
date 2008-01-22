@@ -14,6 +14,7 @@ EXTRA_DIST = libmemcached.pod\
 	memcached_verbosity.pod\
 	memstat.pod\
 	memcached_behavior.pod\
+	memcached_callback.pod\
 	memcached_server_st.pod\
 	memcat.pod\
 	memcached_create.pod\
@@ -21,6 +22,7 @@ EXTRA_DIST = libmemcached.pod\
 	memcp.pod\
 	memcached_delete.pod\
 	memcached_set.pod\
+	memcached_version.pod\
 	memflush.pod
 
 man_MANS = libmemcached.3\
@@ -38,6 +40,8 @@ man_MANS = libmemcached.3\
 	memcached_append_by_key.3\
 	memcached_behavior_get.3\
 	memcached_behavior_set.3\
+	memcached_callback_get.3\
+	memcached_callback_set.3\
 	memcached_cas.3\
 	memcached_cas_by_key.3\
 	memcached_clone.3\
@@ -74,7 +78,9 @@ man_MANS = libmemcached.3\
 	memcached_stat_servername.3\
 	memcached_strerror.3\
 	memcached_quit.3\
-	memcached_verbosity.3
+	memcached_verbosity.3\
+	memcached_lib_version.3\
+	memcached_version.3
 
 libmemcached.3: libmemcached.pod 
 	pod2man -c "libmemcached" -r "" -s 3 libmemcached.pod > libmemcached.3
@@ -205,6 +211,12 @@ memcached_behavior_get.3: memcached_behavior.pod
 memcached_behavior_set.3: memcached_behavior.pod
 	pod2man -c "libmemcached" -r "" -s 3 memcached_behavior.pod > memcached_behavior_set.3
 
+memcached_callback_get.3: memcached_callback.pod
+	pod2man -c "libmemcached" -r "" -s 3 memcached_callback.pod > memcached_callback_get.3
+
+memcached_callback_set.3: memcached_callback.pod
+	pod2man -c "libmemcached" -r "" -s 3 memcached_callback.pod > memcached_callback_set.3
+
 memcached_stat.3: memcached_stats.pod
 	pod2man -c "libmemcached" -r "" -s 3 memcached_stats.pod > memcached_stat.3
 
@@ -244,6 +256,12 @@ memcached_result_flags.3: memcached_result_st.pod
 memcached_result_cas.3: memcached_result_st.pod
 	pod2man -c "libmemcached" -r "" -s 3 memcached_result_st.pod > memcached_result_cas.3
 
+memcached_version.3: memcached_version.pod
+	pod2man -c "libmemcached" -r "" -s 3 memcached_version.pod > memcached_version.3
+
+memcached_lib_version.3: memcached_version.pod
+	pod2man -c "libmemcached" -r "" -s 3 memcached_version.pod  > memcached_lib_version.3
+
 memcp.1: memcp.pod
 	pod2man -c "libmemcached" -r "" -s 1 memcp.pod > memcp.1
 
@@ -264,6 +282,7 @@ memerror.1: memerror.pod
 
 memflush.1: memflush.pod
 	pod2man -c "libmemcached" -r "" -s 1 memflush.pod > memflush.1
+
 
 clean:
 	rm -f *.1
