@@ -122,7 +122,6 @@ src/libmemcached/src/utilities.h
 src/libmemcached/support/Makefile.am
 src/libmemcached/support/Makefile.in
 src/libmemcached/support/libmemcached.pc.in
-src/libmemcached/support/libmemcached.spec
 src/libmemcached/support/libmemcached.spec.in
 src/libmemcached/support/set_benchmark.sh
 src/libmemcached/tests/Makefile.am
@@ -161,6 +160,7 @@ t/60-stats.t
 t/80-result_st.t
 t/api-coverage.t
 t/lib/libmemcached_test.pm
+t/lib/ExtUtils/ParseXS.pm
 t/pod-coverage.t
 t/pod.t
 typemap
