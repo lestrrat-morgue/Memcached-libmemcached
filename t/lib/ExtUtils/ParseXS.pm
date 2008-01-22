@@ -453,7 +453,7 @@ EOF
 	  s/\s+$//;
 	  my ($arg, $default) = / ( [^=]* ) ( (?: = .* )? ) /x;
 	  my ($pre, $name) = ($arg =~ /(.*?) \s*
-					     \b ( \w+ | length\( \s*\w+\s* \) )
+					     \b ( \w+ | (?:byte\s+|utf8\s+)? length\( \s*\w+\s* \) )
 					     \s* $ /x);
 	  next unless defined($pre) && length($pre);
 	  my $out_type = '';
@@ -465,7 +465,7 @@ EOF
 	    $pre =~ s/^(IN|IN_OUTLIST|OUTLIST|OUT|IN_OUT)\s+//;
 	  }
 	  my $islength;
-	  if ($name =~ /^length\( \s* (\w+) \s* \)\z/x) {
+	  if ($name =~ /^(?:byte\s+|utf8\s+)? length \( \s* (\w+) \s* \)\z/x) {
 	    $name = "XSauto_length_of_$1";
 	    $islength = 1;
 	    die "Default value on length() argument: `$_'"
@@ -1110,11 +1110,11 @@ sub INPUT_handler {
     s/\s*;$//g unless /[=;+].*\S/ ;
 
     # Process the length(foo) declarations
-    if (s/^([^=]*)\blength\(\s*(\w+)\s*\)\s*$/$1 XSauto_length_of_$2=NO_INIT/x) {
-      print "\tSTRLEN\tSTRLEN_length_of_$2;\n";
-      $lengthof{$2} = $name;
+    if (s/^([^=]*?) (\b byte|\b utf8|) \s+ length \(\s*(\w+)\s*\)\s*$/$1 XSauto_length_of_$3=NO_INIT/x) {
+      print "\tSTRLEN\tSTRLEN_length_of_$3;\n";
+      $lengthof{$3} = $2;   # '' or 'byte' or 'utf8'
       # $islengthof{$name} = $1;
-      $deferred .= "\n\tXSauto_length_of_$2 = STRLEN_length_of_$2;";
+      $deferred .= "\n\tXSauto_length_of_$3 = STRLEN_length_of_$3;";
     }
 
     # check for optional initialisation code
@@ -1702,8 +1702,9 @@ sub generate_init {
   $tk = $type_kind{$type};
   $tk =~ s/OBJ$/REF/ if $func_name =~ /DESTROY$/;
   if ($tk eq 'T_PV' and exists $lengthof{$var}) {
+    my $encoding = $lengthof{$var}; # '' or 'byte' or 'utf8'
     print "\t$var" unless $name_printed;
-    print " = ($type)SvPV($arg, STRLEN_length_of_$var);\n";
+    print " = ($type)SvPV$encoding($arg, STRLEN_length_of_$var);\n";
     die "default value not supported with length(NAME) supplied"
       if defined $defaults{$var};
     return;
