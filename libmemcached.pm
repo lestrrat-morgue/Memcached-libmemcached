@@ -364,15 +364,18 @@ a I<dualvar> that already contains the error string.
 =head2 Unsupported Functions
 
 =head3 memcached_cas 
+=cut
 
 =head3 (stats)   
+=cut
 
 =head3 (disconnect/quit)
+=cut
 
 =head3 memcached_flush 
+=cut
 
 =head3 memcached_replace
-
 =cut
 
 
