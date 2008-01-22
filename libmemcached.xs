@@ -160,14 +160,14 @@ memcached_behavior_set(Memcached__libmemcached ptr, memcached_behavior flag, voi
 =cut
 
 memcached_return
-memcached_set(Memcached__libmemcached ptr, char *key, size_t byte length(key), char *value, size_t byte length(value), time_t expiration= 0, lmc_data_flags_t flags= 0)
+memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags= 0)
 
 
 memcached_return
-memcached_append(Memcached__libmemcached ptr, char *key, size_t byte length(key), char *value, size_t byte length(value), time_t expiration= 0, lmc_data_flags_t flags=0)
+memcached_append(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_prepend(Memcached__libmemcached ptr, char *key, size_t byte length(key), char *value, size_t byte length(value), time_t expiration= 0, lmc_data_flags_t flags=0)
+memcached_prepend(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
 
 
 
@@ -176,10 +176,10 @@ memcached_prepend(Memcached__libmemcached ptr, char *key, size_t byte length(key
 =cut
 
 memcached_return
-memcached_increment(Memcached__libmemcached ptr, char *key, size_t byte length(key), unsigned int offset, IN_OUT uint64_t value=NO_INIT)
+memcached_increment(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset, IN_OUT uint64_t value=NO_INIT)
 
 memcached_return
-memcached_decrement(Memcached__libmemcached ptr, char *key, size_t byte length(key), unsigned int offset, IN_OUT uint64_t value=NO_INIT)
+memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset, IN_OUT uint64_t value=NO_INIT)
 
 
 
@@ -191,7 +191,7 @@ memcached_decrement(Memcached__libmemcached ptr, char *key, size_t byte length(k
 
 lmc_value
 memcached_get(Memcached__libmemcached ptr, \
-        char *key, size_t byte length(key), \
+        char *key, size_t length(key), \
         OUT lmc_data_flags_t flags=0, \
         OUT memcached_return error=0)
     PREINIT:
@@ -274,7 +274,7 @@ memcached_fetch_result(Memcached__libmemcached ptr,\
 =cut
 
 memcached_return
-memcached_delete(Memcached__libmemcached ptr, char *key, size_t byte length(key), time_t expiration= 0)
+memcached_delete(Memcached__libmemcached ptr, char *key, size_t length(key), lmc_expiration expiration= 0)
 
 
 

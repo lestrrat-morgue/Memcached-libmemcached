@@ -24,6 +24,7 @@ uint64_t                                T_NV
 # --- perl api private abstraction typedefs ---
 lmc_key                                 T_KEY
 lmc_value                               T_VALUE
+lmc_expiration                          T_EXPIRATION
 lmc_data_flags_t                        T_FLAGS
 
 # --- complex types (incl. objects, typedef name encodes class name) ---
@@ -86,6 +87,11 @@ OUTPUT
 T_FLAGS
         if (!SvREADONLY($arg))
             sv_setuv($arg, (UV)$var);
+
+INPUT
+T_EXPIRATION
+        /* XXX add logic for default expiration */
+        $var = ($type)SvUV($arg)
 
 
 INPUT

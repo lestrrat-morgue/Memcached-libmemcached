@@ -23,9 +23,9 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 5;
+plan tests => 12;
 
-my ($rv, $rc, $flags);
+my ($rv, $rc, $flags, $tmp);
 my $t1= time();
 my $k1= "$0-test-key-$t1"; # can't have spaces
 my $v1= "$0 test value $t1";
@@ -35,12 +35,35 @@ print "memcached_get the not yet stored value\n";
 is scalar memcached_get($memc, $k1, $flags=0, $rc=0), undef,
     'should not exist yet and so should return undef';
 
-print "memcached_set\n";
-is memcached_set($memc, $k1, $v1), "SUCCESS";
+# test set with expiry and flags
+is memcached_set($memc, $k1, $v1, 1, 0xDEADCAFE), "SUCCESS";
 
-print "memcached_get the just stored value\n";
 is memcached_get($memc, $k1, $flags=0, $rc=0), $v1;
 cmp_ok $rc, 'eq', 'SUCCESS';
-is $flags, 0;
+if ($flags == 0xCAFE) {
+    warn "You're limited to 16 bit flags\n";
+    $flags = 0xDEADCAFE;
+}
+is $flags, 0xDEADCAFE;
+
+sleep 1;
+
+ok not defined memcached_get($memc, $k1, $flags=0, $rc=0);
+cmp_ok $rc, 'eq', 'NOT FOUND';
 
 # repeat for value with a null byte to check value_length works
+
+my $smiley = "\x{263A}";
+
+is memcached_set($memc, $k1, $tmp = $smiley), "SUCCESS";
+is length $tmp, length $smiley, 'utf8 arg length should not be altered';
+is $tmp, $smiley, 'utf8 arg should not be altered';
+
+$tmp = memcached_get($memc, $k1, $flags, $rc=0);
+cmp_ok $rc, 'eq', 'SUCCESS';
+{
+    local $TODO = "support utf8";
+    # XXX is $tmp, $smiley;
+    pass "no inbuilt utf8 support\n";
+}
+
