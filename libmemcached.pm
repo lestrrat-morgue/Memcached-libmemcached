@@ -254,6 +254,16 @@ Replace with $value the existing value of the value stored with
 $key. $key must already exist.  $expiration and $flags are both
 optional and default to 0.
 
+=head3 memcached_cas
+
+  memcached_cas($memc, $key, $value) 
+  memcached_cas($memc, $key, $value, $expiration, $flags)
+
+Overwrites data in the server stored as $key as long as $value
+is still the same in the server. Cas is still buggy in memached.
+Turning on support for it in libmemcached is optional.
+Please see memcached_set() for information on how to do this.
+
 =cut
 
 

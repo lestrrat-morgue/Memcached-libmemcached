@@ -172,6 +172,9 @@ memcached_prepend(Memcached__libmemcached ptr, char *key, size_t length(key), ch
 memcached_return
 memcached_replace(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
 
+memcached_return
+memcached_cas(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
+
 
 =head2 Functions for Incrementing and Decrementing Values from memcached
 
