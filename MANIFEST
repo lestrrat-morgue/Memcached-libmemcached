@@ -153,14 +153,15 @@ t/15-auto.t
 t/20-set.t
 t/25-get.t
 t/30-prepend-append.t
+t/35-replace.t
 t/40-delete.t
 t/50-quit.t
 t/51-flush.t
 t/60-stats.t
 t/80-result_st.t
 t/api-coverage.t
-t/lib/libmemcached_test.pm
 t/lib/ExtUtils/ParseXS.pm
+t/lib/libmemcached_test.pm
 t/pod-coverage.t
 t/pod.t
 typemap
