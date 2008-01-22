@@ -56,7 +56,7 @@ sub process_file {
 	   typemap => [],
 	   output => \*STDOUT,
 	   csuffix => '.c',
-           verbose => 1,
+           verbose => $ENV{PERL_PARSEXS_VERBOSE}||0,
 	   %args,
 	  );
 
