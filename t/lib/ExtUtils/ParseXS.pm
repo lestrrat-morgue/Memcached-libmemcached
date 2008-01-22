@@ -18,7 +18,7 @@ my(@XSStack);	# Stack of conditionals and INCLUDEs
 my($XSS_work_idx, $cpp_next_tmp);
 
 use vars qw($VERSION);
-$VERSION = '2.18';
+$VERSION = '2.1801';
 
 use vars qw(%input_expr %output_expr $ProtoUsed @InitFileCode $FH $proto_re $Overload $errors $Fallback
 	    $cplusplus $hiertype $WantPrototypes $WantVersionChk $except $WantLineNumbers
@@ -30,7 +30,7 @@ use vars qw(%input_expr %output_expr $ProtoUsed @InitFileCode $FH $proto_re $Ove
             $processing_arg_with_types %argtype_seen @outlist %in_out %lengthof
             $proto_in_this_xsub $scope_in_this_xsub $interface $prepush_done $interface_macro $interface_macro_set
             $ProtoThisXSUB $ScopeThisXSUB $xsreturn
-            @line_no $ret_type $func_header $orig_args
+            @line_no $ret_type $func_header $orig_args $verbose
 	   ); # Add these just to get compilation to happen.
 
 
@@ -56,6 +56,7 @@ sub process_file {
 	   typemap => [],
 	   output => \*STDOUT,
 	   csuffix => '.c',
+           verbose => 1,
 	   %args,
 	  );
 
@@ -91,6 +92,7 @@ sub process_file {
   $WantOptimize = $args{optimize};
   $process_inout = $args{inout};
   $process_argtypes = $args{argtypes};
+  $verbose = $args{verbose};
   @tm = ref $args{typemap} ? @{$args{typemap}} : ($args{typemap});
   
   for ($args{filename}) {
@@ -148,6 +150,7 @@ sub process_file {
       unless -T $typemap ;
     open(TYPEMAP, $typemap)
       or warn ("Warning: could not open typemap file '$typemap': $!\n"), next;
+    warn("Reading $typemap\n") if $verbose;
     my $mode = 'Typemap';
     my $junk = "" ;
     my $current = \$junk;
@@ -191,6 +194,8 @@ sub process_file {
       }
     }
     close(TYPEMAP);
+    warn sprintf "typemaps: input %d, output %d\n", scalar keys %input_expr, scalar keys %output_expr
+        if $verbose;
   }
 
   foreach my $key (keys %input_expr) {
@@ -409,6 +414,8 @@ EOF
     unshift @line, $2
       if $process_argtypes
 	and $ret_type =~ s/^(.*?\w.*?)\s*\b(\w+\s*\(.*)/$1/s;
+
+    warn "reading $ret_type $line[0]\n" if $verbose;
 
     # a function definition needs at least 2 lines
     blurt ("Error: Function definition too short '$ret_type'"), next PARAGRAPH
@@ -890,6 +897,8 @@ EOF
     }
   }
 
+  warn "Writing bootstrap code\n" if $verbose;
+
   if ($Overload) # make it findable with fetchmethod
   {
     print Q(<<"EOF");
@@ -1051,7 +1060,9 @@ sub TidyType
 # Return: the matched keyword if found, otherwise 0
 sub check_keyword {
 	$_ = shift(@line) while !/\S/ && @line;
-	s/^(\s*)($_[0])\s*:\s*(?:#.*)?/$1/s && $2;
+	my $keyword = s/^(\s*)($_[0])\s*:\s*(?:#.*)?/$1/s && $2;
+        warn "\t$keyword\n" if $keyword && $verbose;
+        return $keyword;
 }
 
 sub print_section {
