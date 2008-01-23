@@ -161,6 +161,7 @@ t/60-stats.t
 t/80-result_st.t
 t/api-coverage.t
 t/lib/ExtUtils/ParseXS.pm
+t/lib/ExtUtils/xsubpp
 t/lib/libmemcached_test.pm
 t/pod-coverage.t
 t/pod.t

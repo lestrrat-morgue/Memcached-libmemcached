@@ -85,7 +85,10 @@ realclean ::
 	$(RM_RF) $(LMCD_INST)
 	cd $(LMCD_SRC) && $(MAKE) distclean
 
-libmemcached.c : t/lib/ExtUtils/ParseXS.pm
+# use our custom ParseXS.pm (and the matching xsubpp to drive it)
+XSUBPPDIR=t/lib/ExtUtils
+
+libmemcached.c : $(XSUBPPDIR)/ParseXS.pm typemap
 
 $(OBJECT) : $(LMCD_BUILT_LIB)
 
