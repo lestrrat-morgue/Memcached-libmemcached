@@ -1,6 +1,9 @@
 General:
 
 Document all typedef actions on input and output
+All version api and add tests to cross-check the pm $VERSION
+Resolve mapping of error codes to booleans
+(see parse_*_reply in http://search.cpan.org/src/KROKI/Cache-Memcached-Fast-0.07/src/client.c)
 
 Structure:
     Aim to be at least thread-safe and ideally thread-hot.
