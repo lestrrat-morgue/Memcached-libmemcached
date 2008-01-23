@@ -33,6 +33,7 @@ XSLoader::load('Memcached::libmemcached', $VERSION);
   use Memcached::libmemcached;
 
   $memc = memcached_create();
+
   memcached_server_add($memc, "localhost");
 
   memcached_set($memc, $key, $value);
@@ -78,26 +79,47 @@ The term "memcache" is used to refer to the C<memcached_st> structure at the
 heart of the libmemcached library. We'll use $memc to represent this
 structure in perl code.
 
-=head2 Function Arguments
+=head2 Function Names and Arguments
 
-There are no I<length> arguments. Wherever the libmemcached documentation shows
-a length argument (input or output) the corresponding argument doesn't exist in
-the Perl API, because it's not needed.
+The function names in this module are exactly the same as the functions in the
+libmemcached library and documentation.
 
-For pointer arguments, undef is mapped to null on input and null is mapped to
-undef on output.
+The function arguments are also the same as the libmemcached library and
+documentation, with two exceptions:
+
+* There are no I<length> arguments. Wherever the libmemcached documentation
+shows a length argument (input or output) the corresponding argument doesn't
+exist in the Perl API, because it's not needed.
+
+* Some arguments are optional.
+
+Many libmemcached function arguments are I<output values>: the argument is the
+address of the value that the function will modify. For these the perl function
+will modify the argument directly if it can. For example, in this call:
+
+    $value = memcached_get($memc, $key, $flags, $rc);
+
+The $flags and $rc arguments are output values that are modified by the
+memcached_get() function.
+
+See the L</Type Mapping> section for the fine detail of how each argument type
+is handled.
 
 =head2 Return Status
 
-Most of the methods return an integer status value. This is shown as
-C<memcached_return> in the libmemcached documentation. 
+Most of the functions return an integer status value. This is shown as
+C<memcached_return> in the libmemcached documentation.
 
-In the perl interface this value is a I<dualvar>, like C<$!>, that has both
-integer and string components set to different values.  In a numeric context
-the value is the integer status code.  In a string content the value is the
-corresponding error string.
+In the perl interface this value is not returned directly. Instead a simple
+boolean is returned: true for 'success', defined but false for some
+'unsuccessfull' conditions, and undef for all other cases (i.e., errors).
 
-All the functions documented below return a C<memcached_return> unless otherwise indicated.
+All the functions documented below return this simple boolean value unless
+otherwise indicated.
+
+The actual C<memcached_return> integer value, and corresponding error message,
+for the last libmemcached function call can be accessed via the
+L</memcached_errstr> function.
 
 =cut
 
@@ -105,13 +127,20 @@ All the functions documented below return a C<memcached_return> unless otherwise
 
 All the public functions in libmemcached are available for import.
 
-All the public constants and enums in libmemcached are available for import.
+All the public constants and enums in libmemcached are also available for import.
 
 Exporter tags are defined for each enum. This allows you to import groups of
-constants easily. For example, to import all the contants for
-memcached_behavior_set() and memcached_behavior_get(), you can use:
+constants easily. For example, to enable consistent hashing you could use:
 
-  use Memcached::libmemcached qw(:memcached_behavior).
+  use Memcached::libmemcached qw(:memcached_behavior :memcached_server_distribution);
+
+  memcached_behavior_set($memc, MEMCACHED_BEHAVIOR_DISTRIBUTION(), MEMCACHED_DISTRIBUTION_CONSISTENT());
+
+The L<Exporter> module allows patterns in the import list, so to import all the
+functions, for example, you can use:
+
+  use Memcached::libmemcached qw(/^memcached/);
+
 
 =head1 FUNCTIONS
 
@@ -415,10 +444,36 @@ a I<dualvar> that already contains the error string.
 =cut
 
 
+=head1 EXTRA INFORMATION
+
+=head2 Tracing Execution
+
+The C<PERL_LIBMEMCACHED_TRACE> environment variable can be used to control
+tracing. The value is read when L<memcached_create> is called.
+
+If set >= 1 then any non-success memcached_return value will be logged via warn().
+
+If set >= 2 or more then some data types will list conversions of input and output values for function calls.
+
+More flexible mechanisms will be added later.
+
+=head2 Type Mapping
+
+For pointer arguments, undef is mapped to null on input and null is mapped to
+undef on output.
+
+XXX expand with details from typemap file
 
 =head1 AUTHOR
 
 Tim Bunce, C<< <Tim.Bunce@pobox.com> >> with help from Patrick Galbraith.
+
+L<http://www.tim.bunce.name>
+
+=head1 ACKNOWLEDGEMENTS
+
+Larry Wall for Perl, Brad Fitzpatrick for memcached, Brian Aker for libmemcached,
+and Patrick Galbraith for helping with the implementation.
 
 =head1 PORTABILITY
 
@@ -434,8 +489,6 @@ C<bug-memcached-libmemcached@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Memcached-libmemcached>.
 I will be notified, and then you'll automatically be notified of progress on
 your bug as I make changes.
-
-=head1 ACKNOWLEDGEMENTS
 
 =head1 COPYRIGHT & LICENSE
 

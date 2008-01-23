@@ -20,8 +20,9 @@ typedef time_t               lmc_expiration;
 #define LMC_STATE(ptr) \
     ((lmc_state_st*)memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, NULL))
 #define LMC_TRACE_LEVEL(ptr) \
-    (ptr) ? LMC_STATE(ptr)->trace_level : 0
-#define LMC_RETURN_OK(ret) (ret==MEMCACHED_SUCCESS || ret==MEMCACHED_END || ret==MEMCACHED_BUFFERED)
+    ((ptr) ? LMC_STATE(ptr)->trace_level : 0)
+#define LMC_RETURN_OK(ret) \
+    (ret==MEMCACHED_SUCCESS || ret==MEMCACHED_END || ret==MEMCACHED_BUFFERED)
 
 #define RECORD_RETURN_ERR(ptr, ret) \
     STMT_START {    \
@@ -37,17 +38,20 @@ typedef time_t               lmc_expiration;
 typedef struct lmc_state_st lmc_state_st;
 struct lmc_state_st {
     int              trace_level;
+    int              options;
     memcached_return last_return;
     int              last_errno;
-    /* copy cached errno */
 };
 
 static lmc_state_st *
 lmc_state_new(SV *memc_sv)
 {
+    char *trace = getenv("PERL_LIBMEMCACHED_TRACE");
     lmc_state_st *lmc_state;
     Newz(0, lmc_state, 1, struct lmc_state_st);
-    lmc_state->trace_level = (int)(void*)getenv("PERL_MEMCACHED_TRACE"); /* XXX */
+    if (trace) {
+        lmc_state->trace_level = atoi(trace);
+    }
     return lmc_state;
 }
 
@@ -58,7 +62,7 @@ lmc_state_cleanup(memcached_st *ptr)
     memcached_return rc;
     lmc_state = memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, &rc);
     memcached_callback_set(ptr, MEMCACHED_CALLBACK_USER_DATA, 0);
-    if (lmc_state->trace_level)
+    if (lmc_state->trace_level >= 2)
         warn("lmc_state_cleanup(%p) %p", ptr, lmc_state);
     Safefree(lmc_state);
 }
@@ -304,8 +308,8 @@ memcached_fetch(Memcached__libmemcached ptr, \
     PREINIT:
         size_t key_length=0;
         size_t value_length=0;
-    INIT: 
         char key_buffer[MEMCACHED_MAX_KEY];
+    INIT: 
         key = key_buffer;
     CODE:
         RETVAL = memcached_fetch(ptr, key, &key_length, &value_length, &flags, &error);
@@ -349,10 +353,11 @@ memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 
 SV *
 memcached_errstr(Memcached__libmemcached ptr)
-    INIT:
-        lmc_state_st* lmc_state = LMC_STATE(ptr);
-        RETVAL = newSV(0);
+    PREINIT:
+        lmc_state_st* lmc_state;
     CODE:
+        RETVAL = newSV(0);
+        lmc_state = LMC_STATE(ptr);
         /* setup return value as a dualvar with int err code and string error message */
         sv_setiv(RETVAL, lmc_state->last_return);
         sv_setpv(RETVAL, memcached_strerror(ptr, lmc_state->last_return));

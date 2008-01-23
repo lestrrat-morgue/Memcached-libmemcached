@@ -2,8 +2,12 @@ General:
 
 Document all typedef actions on input and output
 All version api and add tests to cross-check the pm $VERSION
+
 Resolve mapping of error codes to booleans
 (see parse_*_reply in http://search.cpan.org/src/KROKI/Cache-Memcached-Fast-0.07/src/client.c)
+
+Write a pod that lists all the enum types and their constants
+so people can see which tag to use to import a constant.
 
 Structure:
     Aim to be at least thread-safe and ideally thread-hot.
@@ -26,12 +30,5 @@ Compatibility:
     Should we support automatic storable/compress or leave those to higher level code?
     Could support generic get & set key and get & set value callback hooks.
     Like BerkeleyDB filters: http://search.cpan.org/~pmqs/BerkeleyDB/BerkeleyDB.pod#DBM_Filters
-    Write Cache::Memcached emulation and run its test suite.
-
-Consider  memcached_fetch_execute API
-    memcached_fetch_execute(memcached_st *ptr,
-+                          unsigned int (*callback[])(memcached_st *ptr, memcached_result_st *result, void *context),
-+                          void *context,
-+                          unsigned int number_of_callbacks
-+                         )
+    Write Cache::Memcached* emulations and run their test suites.
 

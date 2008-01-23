@@ -38,8 +38,10 @@ T_RETURN
 
 OUTPUT
 T_RETURN:init
-        if (LMC_TRACE_LEVEL(ptr))
-            warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
+        if (LMC_TRACE_LEVEL(ptr)) {
+            if (LMC_TRACE_LEVEL(ptr) > 1 || !LMC_RETURN_OK($var))
+                warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
+        }
         RECORD_RETURN_ERR(ptr, $var);
 T_RETURN
         if (!SvREADONLY($arg)) {
@@ -112,7 +114,7 @@ T_PTROBJ_RVIV
         }
         else
             croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\");
-        if (LMC_TRACE_LEVEL($var))
+        if (LMC_TRACE_LEVEL($var) >= 2)
             warn(\"\t=> %s(%s %s = 0x%p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
 OUTPUT
@@ -120,10 +122,10 @@ T_PTROBJ_RVIV
         if (!$var)          /* if null */
             SvOK_off($arg); /* then return as undef instead of reaf to undef */
         else {
-            sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", $var);
             lmc_state_st *lmc_state = lmc_state_new($arg);
+            sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", $var);
             memcached_callback_set($var, MEMCACHED_CALLBACK_USER_DATA,        lmc_state);
             memcached_callback_set($var, MEMCACHED_CALLBACK_CLEANUP_FUNCTION, lmc_state_cleanup);
         }
-        if (0 && LMC_TRACE_LEVEL($var))
+        if (LMC_TRACE_LEVEL($var) >= 2)
             warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
