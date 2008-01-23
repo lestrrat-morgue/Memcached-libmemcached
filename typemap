@@ -34,22 +34,24 @@ Memcached__libmemcached                 T_PTROBJ_RVIV
 
 INPUT
 T_RETURN
-        $var = ($type)SvIV($arg)
+        $var = (SvOK($arg)) ? ($type)SvIV($arg) : 0;
 
 OUTPUT
 T_RETURN:init
-        RECORD_RETURN_ERR(ptr, $var);
-        if (TRACE_MEMCACHED(ptr))
+        if (LMC_TRACE_LEVEL(ptr))
             warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
+        RECORD_RETURN_ERR(ptr, $var);
 T_RETURN
         if (!SvREADONLY($arg)) {
-            /* setup return value as a dualvar with int err code and string error message */
-            /* XXX could optimize later to reuse read-only char* from memcached_strerror */
-            sv_setiv($arg, $var);
-            /* XXX need to decide if success is true or false! */
-            /* sv_setpv($arg, ($var) ? memcached_strerror(NULL, $var) : "XXX"); */
-            sv_setpv($arg, memcached_strerror(ptr, $var));
-            SvIOK_on($arg);
+            if (LMC_RETURN_OK($var)) {
+                sv_setsv($arg, &PL_sv_yes);
+            }
+            else if ($var == MEMCACHED_NOTFOUND) {
+                sv_setsv($arg, &PL_sv_no);
+            }
+            else {
+                SvOK_off($arg);
+            }
         }
 
 INPUT
@@ -81,7 +83,7 @@ T_VALUE
 
 INPUT
 T_FLAGS
-        $var = ($type)SvUV($arg)
+        $var = (SvOK($arg)) ? ($type)SvUV($arg) : 0;
 
 OUTPUT
 T_FLAGS
@@ -110,17 +112,18 @@ T_PTROBJ_RVIV
         }
         else
             croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\");
-        if (TRACE_MEMCACHED(ptr))
+        if (LMC_TRACE_LEVEL($var))
             warn(\"\t=> %s(%s %s = 0x%p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
 OUTPUT
-T_PTROBJ_RVIV:init
-        if (TRACE_MEMCACHED(ptr))
-            warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 T_PTROBJ_RVIV
         if (!$var)          /* if null */
             SvOK_off($arg); /* then return as undef instead of reaf to undef */
         else {
             sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", $var);
+            lmc_state_st *lmc_state = lmc_state_new($arg);
+            memcached_callback_set($var, MEMCACHED_CALLBACK_USER_DATA,        lmc_state);
+            memcached_callback_set($var, MEMCACHED_CALLBACK_CLEANUP_FUNCTION, lmc_state_cleanup);
         }
-
+        if (0 && LMC_TRACE_LEVEL($var))
+            warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);

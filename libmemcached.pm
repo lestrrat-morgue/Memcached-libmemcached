@@ -214,6 +214,21 @@ Disconnect from all currently connected servers and reset state.
 Not normally called explicitly.
 See L<Memcached::libmemcached::memcached_quit>.
 
+=head3 memcached_errstr
+
+  $errstr = memcached_errstr($memc);
+
+Returns the error message and code from the most recent call to any
+libmemcached function that returns a C<memcached_return>, which most do.
+
+The return value is a I<dualvar>, like $!, which means it has separate numeric
+and string values. The numeric value is the memcached_return integer value,
+and the string value is the corresponding error message what memcached_strerror()
+would return.
+
+As a special case, if the memcached_return is MEMCACHED_ERRNO, indicating a
+system call error, then the string returned by strerror() is appended.
+
 =cut
 
 
@@ -256,13 +271,15 @@ optional and default to 0.
 
 =head3 memcached_cas
 
-  memcached_cas($memc, $key, $value) 
-  memcached_cas($memc, $key, $value, $expiration, $flags)
+  memcached_cas($memc, $key, $value, $expiration, $flags, $cas)
 
-Overwrites data in the server stored as $key as long as $value
+Overwrites data in the server stored as $key as long as $cas
 is still the same in the server. Cas is still buggy in memached.
 Turning on support for it in libmemcached is optional.
-Please see memcached_set() for information on how to do this.
+Please see memcached_behavior_set() for information on how to do this.
+
+XXX and the memcached_result_cas() function isn't implemented yet
+so you can't get the $cas to use.
 
 =cut
 

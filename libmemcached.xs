@@ -14,12 +14,58 @@ typedef memcached_st*        Memcached__libmemcached;
 typedef uint32_t             lmc_data_flags_t;
 typedef char*                lmc_key;
 typedef char*                lmc_value;
+typedef time_t               lmc_expiration;
 
 /* XXX quick hack for now */
-#define TRACE_MEMCACHED(ptr) \
-    getenv("PERL_MEMCACHED_TRACE")
+#define LMC_STATE(ptr) \
+    ((lmc_state_st*)memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, NULL))
+#define LMC_TRACE_LEVEL(ptr) \
+    (ptr) ? LMC_STATE(ptr)->trace_level : 0
+#define LMC_RETURN_OK(ret) (ret==MEMCACHED_SUCCESS || ret==MEMCACHED_END || ret==MEMCACHED_BUFFERED)
 
-#define RECORD_RETURN_ERR(ptr, ret)
+#define RECORD_RETURN_ERR(ptr, ret) \
+    STMT_START {    \
+        lmc_state_st* lmc_state = LMC_STATE(ptr); \
+        lmc_state->last_return = ret;   \
+        lmc_state->last_errno  = ptr->cached_errno; /* if MEMCACHED_ERRNO */ \
+    } STMT_END
+
+
+/* ====================================================================================== */
+
+
+typedef struct lmc_state_st lmc_state_st;
+struct lmc_state_st {
+    int              trace_level;
+    memcached_return last_return;
+    int              last_errno;
+    /* copy cached errno */
+};
+
+static lmc_state_st *
+lmc_state_new(SV *memc_sv)
+{
+    lmc_state_st *lmc_state;
+    Newz(0, lmc_state, 1, struct lmc_state_st);
+    lmc_state->trace_level = (int)(void*)getenv("PERL_MEMCACHED_TRACE"); /* XXX */
+    return lmc_state;
+}
+
+static void
+lmc_state_cleanup(memcached_st *ptr)
+{
+    lmc_state_st *lmc_state = 0;
+    memcached_return rc;
+    lmc_state = memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, &rc);
+    memcached_callback_set(ptr, MEMCACHED_CALLBACK_USER_DATA, 0);
+    if (lmc_state->trace_level)
+        warn("lmc_state_cleanup(%p) %p", ptr, lmc_state);
+    Safefree(lmc_state);
+}
+
+
+/* ====================================================================================== */
+
 
 static memcached_return
 _prep_keys_lengths(memcached_st *ptr, SV *keys_rv, char ***out_keys, size_t **out_key_length, unsigned int *out_number_of_keys)
@@ -67,9 +113,20 @@ _prep_keys_lengths(memcached_st *ptr, SV *keys_rv, char ***out_keys, size_t **ou
 
 
 static memcached_return
-_fetch_all_hashref(memcached_st *ptr, HV *dest_ref)
+_fetch_all_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
 {
-    memcached_return rc = MEMCACHED_MAXIMUM_RETURN; /* should never be returned */
+    /* rc is the return code from the preceeding mget */
+
+    if (!LMC_RETURN_OK(rc)) {
+        if (rc == MEMCACHED_NOTFOUND) {
+            /* when number_of_keys==0 memcached_mget returns MEMCACHED_NOTFOUND
+            * which we'd normally translate into a false return value
+            * but that's not really appropriate here
+            */
+            return MEMCACHED_SUCCESS;
+        }
+        return rc;
+    }
 
     while (1) {
         char key[MEMCACHED_MAX_KEY];
@@ -89,8 +146,6 @@ _fetch_all_hashref(memcached_st *ptr, HV *dest_ref)
 
     return rc;
 }
-
-
 
 /* ====================================================================================== */
 
@@ -173,7 +228,7 @@ memcached_return
 memcached_replace(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_cas(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
+memcached_cas(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0, uint64_t cas)
 
 
 =head2 Functions for Incrementing and Decrementing Values from memcached
@@ -230,14 +285,11 @@ memcached_mget_into_hashref(Memcached__libmemcached ptr, SV *keys_ref, HV *dest_
         size_t *key_length;
         unsigned int number_of_keys;
     CODE:
-        memcached_return ret;
-        if ((ret = _prep_keys_lengths(ptr, keys_ref, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
-            ret = memcached_mget(ptr, keys, key_length, number_of_keys);
+        if ((RETVAL = _prep_keys_lengths(ptr, keys_ref, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
+            RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
             Safefree(keys);
             Safefree(key_length);
-            if (ret == MEMCACHED_SUCCESS) {
-                RETVAL = _fetch_all_hashref(ptr, dest_ref);
-            }
+            RETVAL = _fetch_all_hashref(ptr, RETVAL, dest_ref);
         }
     OUTPUT:
         RETVAL
@@ -247,8 +299,8 @@ memcached_mget_into_hashref(Memcached__libmemcached ptr, SV *keys_ref, HV *dest_
 lmc_value
 memcached_fetch(Memcached__libmemcached ptr, \
         OUT lmc_key key, \
-        OUT lmc_data_flags_t flags=0, \
-        OUT memcached_return error=0)
+        IN_OUT lmc_data_flags_t flags=0, \
+        IN_OUT memcached_return error=0)
     PREINIT:
         size_t key_length=0;
         size_t value_length=0;
@@ -294,6 +346,23 @@ memcached_delete(Memcached__libmemcached ptr, char *key, size_t length(key), lmc
 
 char *
 memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
+
+SV *
+memcached_errstr(Memcached__libmemcached ptr)
+    INIT:
+        lmc_state_st* lmc_state = LMC_STATE(ptr);
+        RETVAL = newSV(0);
+    CODE:
+        /* setup return value as a dualvar with int err code and string error message */
+        sv_setiv(RETVAL, lmc_state->last_return);
+        sv_setpv(RETVAL, memcached_strerror(ptr, lmc_state->last_return));
+        if (lmc_state->last_return == MEMCACHED_ERRNO) {
+            sv_catpvf(RETVAL, " %s", strerror(lmc_state->last_errno));
+        }
+        SvIOK_on(RETVAL); /* set as dualvar */
+    OUTPUT:
+        RETVAL
+
 
 SV *
 _memcached_version(Memcached__libmemcached ptr)

@@ -22,7 +22,7 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 8;
+plan tests => 9;
 
 my $t1= time();
 my $k1= "$0-test-key-$t1"; # can't have spaces
@@ -30,22 +30,24 @@ my $v1= 42;
 my $v2=0;
 
 print "memcached_increment the not yet stored value\n";
-is scalar memcached_increment($memc, $k1, 1, $v2), 'SUCCESS',
-    'should not exist yet and so should return undef';
+ok !memcached_increment($memc, $k1, 1, $v2),
+    'should not exist yet and so should return false';
+ok defined memcached_increment($memc, $k1, 1, $v2),
+    'should not exist yet and so should return false but defined';
 
 print "memcached_set\n";
-is memcached_set($memc, $k1, $v1), "SUCCESS";
+ok memcached_set($memc, $k1, $v1);
 
 print "memcached_increment the just stored value\n";
-is scalar memcached_increment($memc, $k1, 1, $v2), 'SUCCESS',
+ok memcached_increment($memc, $k1, 1, $v2),
     'should increment existing value';
 is $v2, $v1+1;
 
-is scalar memcached_increment($memc, $k1, 1, $v2), 'SUCCESS',
+ok memcached_increment($memc, $k1, 1, $v2),
     'should increment existing value';
 is $v2, $v1+2;
 
-is scalar memcached_decrement($memc, $k1, 1, $v2), 'SUCCESS',
+ok memcached_decrement($memc, $k1, 1, $v2),
     'should increment existing value';
 is $v2, $v1+1;
 

@@ -1,26 +1,16 @@
 General:
 
+Document all typedef actions on input and output
+
 Structure:
     Aim to be at least thread-safe and ideally thread-hot.
     Add MEMCACHED_BEHAVIOR_USER_DATA structure
-        hold last memcached_return value
         will also hold PrintError & RaiseError flags
-    Add memcached_perl_err($memc) to return last memcached_return value
-
-Errors:
-    Is success true or false?
-    Make return type a dual-var like $! with integer and string message parts.
-        add tests for it
+    Resolve uint64_t issues (esp re cas)
 
 Tests:
 
-Add wrapper around memcached_fetch that fetches all into a hash ref
-(allow an optional existing hash ref to be passed).
-
 CPAN:
-    Fix pod to be pod:
-    http://search.cpan.org/src/TIMB/Memcached-libmemcached-0.1301/lib/Memcached/libmemcached/memcached_auto.pod
-    (may need to edit somehow to add package declaration)
     Find out how to get more info into a cpan-testers NA report.
 
 Compatibility:
@@ -41,6 +31,4 @@ Consider  memcached_fetch_execute API
 +                          void *context,
 +                          unsigned int number_of_callbacks
 +                         )
-
-MEMCACHED_BEHAVIOR_USER_DATA needs free/cleanup func
 

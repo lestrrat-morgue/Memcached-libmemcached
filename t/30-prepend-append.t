@@ -39,7 +39,7 @@ ok memcached_prepend($memc, $k1, $pre);
 ok memcached_append($memc, $k1, $end);
 
 my $ret= memcached_get($memc, $k1, $flags=0, $rc=0);
-is $rc, 'SUCCESS', 'memcached_get should work';
+ok $rc, 'memcached_get rc should be true';
 ok defined $ret, 'memcached_get result should be defined';
 
 my $combined= $pre . $orig . $end;

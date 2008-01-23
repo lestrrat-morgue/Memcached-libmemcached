@@ -27,7 +27,7 @@ my $memc = libmemcached_test_create();
 my $items = 5;
 plan tests => $items + 3
     + 2 * (1 + $items * 2 + 1)
-    + $items + 2;
+    + $items + 4;
 
 my ($rv, $rc, $flags);
 my $t1= time();
@@ -37,24 +37,24 @@ my %data = map { ("k$_.$t1" => "v$_.$t1") } (1..$items-2);
 $data{"kL.LLLLLLLLLLLLLLLLLL"} = "vLLLLLLLLLLLLLLLLLLLL";
 $data{"kS.S"} = "vS";
 
-is memcached_set($memc, $_, $data{$_}), 'SUCCESS'
+ok memcached_set($memc, $_, $data{$_})
     for keys %data;
 
-isnt memcached_mget($memc, undef), 'SUCCESS';
-isnt memcached_mget($memc, 0),     'SUCCESS';
-isnt memcached_mget($memc, 1),     'SUCCESS';
+ok !memcached_mget($memc, undef);
+ok !memcached_mget($memc, 0);
+ok !memcached_mget($memc, 1);
 
 for my $keys_ref (
     [ keys %data ],
     { % data },
 ) {
-    is memcached_mget($memc, $keys_ref), 'SUCCESS';
+    ok memcached_mget($memc, $keys_ref);
 
     my %got;
     my $key;
     while (defined( my $value = memcached_fetch($memc, $key, $flags, $rc) )) {
-        is $rc, 'SUCCESS';
-        is $flags, 0;
+        ok $rc, 'rc should be true';
+        is $flags, 0, 'flags should be 0';
         print "memcached_fetch($key) => $value\n";
         $got{ $key } = $value;
     }
@@ -62,20 +62,26 @@ for my $keys_ref (
     is_deeply \%got, \%data;
 }
 
-
 print "memcached_mget_into_hashref\n";
 
 # tweak data so it's different from previous tests
 %data = map { $_ . "a" } %data;
 #use Data::Dumper; warn Dumper(\%data);
 
-is memcached_set($memc, $_, $data{$_}), 'SUCCESS'
+ok memcached_set($memc, $_, $data{$_})
     for keys %data;
+
+ok memcached_mget_into_hashref($memc, [ ], {}),
+    'should return true, even if no keys';
+
+ok memcached_mget_into_hashref($memc, [ 'none such foo' ], {}),
+    'should return true, even if no results';
 
 my %extra = ( foo => 'bar' );
 # reset got data, but not to empty so we check the hash isn't erased
 my %got = %extra;
-is memcached_mget_into_hashref($memc, [ keys %data ], \%got), 'SERVER END';
+ok memcached_mget_into_hashref($memc, [ keys %data ], \%got),
+    'should return true';
 
 is_deeply \%got, { %data, %extra };
 

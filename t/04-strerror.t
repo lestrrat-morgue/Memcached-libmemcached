@@ -10,6 +10,7 @@ use Memcached::libmemcached
     #   functions explicitly tested by this file
     qw(
         memcached_strerror
+        memcached_errstr
     ),
     #   other functions used by the tests
     qw(
@@ -22,13 +23,18 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 4;
+plan tests => 5;
 
 is memcached_strerror($memc, 0), 'SUCCESS';
 is memcached_strerror($memc, 1), 'FAILURE';
 
 # XXX also test dual-var nature of return codes here
-my $rc = memcached_server_add_unix_socket($memc, undef);
-#use Devel::Peek; Dump($rc);
-cmp_ok $rc, '==', MEMCACHED_FAILURE();
-cmp_ok $rc, 'eq', "FAILURE";
+my $rc = memcached_server_add_unix_socket($memc, undef); # should fail
+ok !defined($rc), 'rc should not be defined';
+
+my $errstr = memcached_errstr($memc);
+#use Devel::Peek; Dump($errstr);
+cmp_ok $errstr, '==', MEMCACHED_FAILURE(),
+    'should be MEMCACHED_FAILURE integer in numeric context';
+cmp_ok $errstr, 'eq', "FAILURE",
+    'should be "FAILURE" string in string context';

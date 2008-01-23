@@ -4,7 +4,14 @@ Memcached::libmemcached::Changes - List of significant changes to Memcached::lib
 
 (As of $Date: 2008-01-08 15:54:15 +0000 (Tue, 08 Jan 2008) $ $Revision$)
 
-=head2 Changes in 0.1307 (svn rev XXX)
+=head2 Changes in 0.1308
+
+  Includes libmemcached-0.14
+  memcached_return values are now boolean (true, defined false, or undef)
+  Added memcached_errstr($memc) to access last error code and string.
+  Bundle xsubpp to avoid problems interfacing with our custom ParseXS.
+
+=head2 Changes in 0.1307
 
   Min perl version now 5.008 due to XS length(other_arg) syntax.
 

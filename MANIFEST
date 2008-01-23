@@ -7,6 +7,7 @@ TODO
 lib/Memcached/libmemcached/API.pm
 lib/Memcached/libmemcached/memcached_auto.pm
 lib/Memcached/libmemcached/memcached_behavior.pm
+lib/Memcached/libmemcached/memcached_callback.pm
 lib/Memcached/libmemcached/memcached_create.pm
 lib/Memcached/libmemcached/memcached_delete.pm
 lib/Memcached/libmemcached/memcached_flush.pm
@@ -18,6 +19,7 @@ lib/Memcached/libmemcached/memcached_set.pm
 lib/Memcached/libmemcached/memcached_stats.pm
 lib/Memcached/libmemcached/memcached_strerror.pm
 lib/Memcached/libmemcached/memcached_verbosity.pm
+lib/Memcached/libmemcached/memcached_version.pm
 libmemcached.pm
 libmemcached.xs
 ppport.h
@@ -49,6 +51,7 @@ src/libmemcached/docs/libmemcached.pod
 src/libmemcached/docs/libmemcached_examples.pod
 src/libmemcached/docs/memcached_auto.pod
 src/libmemcached/docs/memcached_behavior.pod
+src/libmemcached/docs/memcached_callback.pod
 src/libmemcached/docs/memcached_create.pod
 src/libmemcached/docs/memcached_delete.pod
 src/libmemcached/docs/memcached_flush.pod
@@ -60,6 +63,7 @@ src/libmemcached/docs/memcached_set.pod
 src/libmemcached/docs/memcached_stats.pod
 src/libmemcached/docs/memcached_strerror.pod
 src/libmemcached/docs/memcached_verbosity.pod
+src/libmemcached/docs/memcached_version.pod
 src/libmemcached/docs/memcat.pod
 src/libmemcached/docs/memcp.pod
 src/libmemcached/docs/memerror.pod
@@ -71,6 +75,7 @@ src/libmemcached/include/Makefile.am
 src/libmemcached/include/Makefile.in
 src/libmemcached/include/libmemcached_config.h.in
 src/libmemcached/include/memcached.h
+src/libmemcached/include/memcached.hh
 src/libmemcached/lib/Makefile.am
 src/libmemcached/lib/Makefile.in
 src/libmemcached/lib/common.h
@@ -82,6 +87,7 @@ src/libmemcached/lib/md5.c
 src/libmemcached/lib/memcached.c
 src/libmemcached/lib/memcached_auto.c
 src/libmemcached/lib/memcached_behavior.c
+src/libmemcached/lib/memcached_callback.c
 src/libmemcached/lib/memcached_connect.c
 src/libmemcached/lib/memcached_delete.c
 src/libmemcached/lib/memcached_do.c
@@ -122,6 +128,7 @@ src/libmemcached/src/utilities.h
 src/libmemcached/support/Makefile.am
 src/libmemcached/support/Makefile.in
 src/libmemcached/support/libmemcached.pc.in
+src/libmemcached/support/libmemcached.spec
 src/libmemcached/support/libmemcached.spec.in
 src/libmemcached/support/set_benchmark.sh
 src/libmemcached/tests/Makefile.am
@@ -129,6 +136,7 @@ src/libmemcached/tests/Makefile.in
 src/libmemcached/tests/function.c
 src/libmemcached/tests/output.res
 src/libmemcached/tests/output2.res
+src/libmemcached/tests/plus.cpp
 src/libmemcached/tests/r/memcat.res
 src/libmemcached/tests/r/memcp.res
 src/libmemcached/tests/r/memrm.res

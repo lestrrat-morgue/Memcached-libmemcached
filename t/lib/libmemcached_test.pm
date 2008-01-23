@@ -16,24 +16,27 @@ use Memcached::libmemcached qw(
     memcached_create
     memcached_server_add
     memcached_get
+    memcached_errstr
 );
 
 sub libmemcached_test_create {
     my ($args) = @_;
 
-    my $memc = memcached_create();
+    my $memc = memcached_create()
+        or die "memcached_create failed";
 
     my $opts = $ENV{PERL_LIBMEMCACHED_OPTS} || 'localhost';
 
     # XXX may change to memcached_parse_options or somesuch so the env
     # var can set behaviours etc
     my $rc = memcached_server_add($memc, $opts);
-    die "libmemcached_test_create: memcached_server_add($opts) failed: $rc" if $rc != 0;
+    die "libmemcached_test_create: memcached_server_add($opts) failed: ".memcached_errstr($memc)
+        if not $rc;
 
     # XXX ideally this should be a much 'simpler/safer' command
-    memcached_get($memc, "foo", my $flags=0, $rc=0);
+    memcached_get($memc, "foo");
     plan skip_all => "Can't talk to any memcached servers"
-        if $rc !~ /SUCCESS|NOT FOUND/;
+        if memcached_errstr($memc) !~ /SUCCESS|NOT FOUND/;
 
     plan skip_all => "memcached server version less than $args->{min_version}"
         if $args->{min_version}
