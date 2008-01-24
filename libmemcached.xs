@@ -41,6 +41,8 @@ struct lmc_state_st {
     int              options;
     memcached_return last_return;
     int              last_errno;
+    SV              *fetch_cb;
+    SV              *set_cb;
 };
 
 static lmc_state_st *
@@ -62,6 +64,13 @@ lmc_state_cleanup(memcached_st *ptr)
     memcached_return rc;
     lmc_state = memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, &rc);
     memcached_callback_set(ptr, MEMCACHED_CALLBACK_USER_DATA, 0);
+
+    if (lmc_state->fetch_cb != NULL)
+        SvREFCNT_dec(lmc_state->fetch_cb);
+
+    if (lmc_state->set_cb != NULL)
+        SvREFCNT_dec(lmc_state->set_cb);
+
     if (lmc_state->trace_level >= 2)
         warn("lmc_state_cleanup(%p) %p", ptr, lmc_state);
     Safefree(lmc_state);
@@ -115,10 +124,60 @@ _prep_keys_lengths(memcached_st *ptr, SV *keys_rv, char ***out_keys, size_t **ou
     return MEMCACHED_SUCCESS;
 }
 
+static unsigned int
+_run_single_callback(memcached_st *ptr, memcached_result_st *result, void *context) 
+{
+    lmc_state_st *lmc_state;
+    SV **svp;
+
+    lmc_state = LMC_STATE(ptr);
+    svp       = (SV **) context;
+
+    if (lmc_state->fetch_cb) {
+        dSP;
+        ENTER;
+        SAVETMPS;
+
+        PUSHMARK(SP);
+        EXTEND(SP, 3);
+        PUSHs(sv_2mortal(newSVpv(memcached_result_key_value(result), memcached_result_key_length(result))));
+        PUSHs(sv_2mortal(newSVpv(memcached_result_value(result), memcached_result_length(result))));
+        PUSHs(sv_2mortal(newSViv(memcached_result_flags(result))));
+        PUTBACK;
+
+        call_sv(lmc_state->fetch_cb, G_SCALAR);
+        SPAGAIN;
+
+        sv_setsv(*svp, POPs);
+
+        FREETMPS;
+        LEAVE;
+    } else {
+        sv_setpvn(*svp, memcached_result_value(result), memcached_result_length(result));
+    }
+    return 1;
+}
+
+static unsigned int
+_run_callbacks(memcached_st *ptr, memcached_result_st *result, void *context)
+{
+    HV *dest_ref;
+    SV **svp;
+
+    dest_ref = (HV *) context;
+
+    svp = hv_fetch( dest_ref, memcached_result_key_value(result), memcached_result_key_length(result), 1);
+    return _run_single_callback(ptr, result, svp);
+}
+
+/* ====================================================================================== */
 
 static memcached_return
 _fetch_all_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
 {
+    unsigned int (*callback[])(memcached_st *ptr, memcached_result_st *result, void *context) = {
+        _run_callbacks
+    };
     /* rc is the return code from the preceeding mget */
 
     if (!LMC_RETURN_OK(rc)) {
@@ -132,26 +191,10 @@ _fetch_all_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
         return rc;
     }
 
-    while (1) {
-        char key[MEMCACHED_MAX_KEY];
-        size_t key_length;
-        char *value;
-        size_t value_length;
-        uint32_t flags = 0;
-        SV **svp;
-
-        value = memcached_fetch(ptr, key, &key_length, &value_length, &flags, &rc);
-        if (value == NULL)
-            break;
-
-        svp = hv_fetch(dest_ref, key, key_length, 1);
-        sv_setpvn(*svp, value, value_length);
-    }
-
-    return rc;
+    return 
+        memcached_fetch_execute(ptr, callback, (void *) dest_ref, 1);
 }
 
-/* ====================================================================================== */
 
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached
 
@@ -253,18 +296,20 @@ memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), 
 
 =cut
 
-lmc_value
+SV *
 memcached_get(Memcached__libmemcached ptr, \
         char *key, size_t length(key), \
         OUT lmc_data_flags_t flags=0, \
         OUT memcached_return error=0)
     PREINIT:
-        size_t value_length=0;
+        unsigned int (*callbacks[])(memcached_st *ptr, memcached_result_st *result, void *context) = { _run_single_callback };
     CODE:
-        RETVAL = memcached_get(ptr, key, XSauto_length_of_key, &value_length, &flags, &error);
+        /* rc is the return code from the preceeding mget */
+        error = memcached_mget_by_key(ptr, NULL, 0, &key, &XSauto_length_of_key, 1);
+        RETVAL = newSV(0);
+        memcached_fetch_execute(ptr, callbacks, (void *) &RETVAL, 1);
     OUTPUT:
         RETVAL
-
 
 
 memcached_return
@@ -390,3 +435,44 @@ _memcached_version(Memcached__libmemcached ptr)
         mXPUSHi(ptr->hosts[0].minor_version);
         mXPUSHi(ptr->hosts[0].micro_version);
         XSRETURN(3);
+
+void
+memcached_set_fetch_callback(Memcached__libmemcached ptr, SV *coderef)
+    PREINIT:
+        lmc_state_st *lmc_state;
+    CODE:
+        if (! SvOK(coderef) || ! SvROK(coderef) ||
+            SvTYPE( SvRV(coderef) ) != SVt_PVCV)
+        {
+            croak("set_fetch_callback must be given a reference to a subroutine");
+        }
+
+        lmc_state = LMC_STATE(ptr);
+
+        if (lmc_state->fetch_cb != NULL)
+            SvREFCNT_dec(lmc_state->fetch_cb);
+
+        lmc_state->fetch_cb = SvREFCNT_inc(coderef);
+
+void
+memcached_set_set_callback(Memcached__libmemcached ptr, SV *coderef)
+    PREINIT:
+        lmc_state_st *lmc_state;
+    CODE:
+        if (! SvOK(coderef) || ! SvROK(coderef) ||
+            SvTYPE( SvRV(coderef) ) != SVt_PVCV)
+        {
+            croak("set_fetch_callback must be given a reference to a subroutine");
+        }
+
+        lmc_state = LMC_STATE(ptr);
+
+        if (lmc_state->set_cb != NULL)
+            SvREFCNT_dec(lmc_state->set_cb);
+
+        lmc_state->set_cb = SvREFCNT_inc(coderef);
+
+
+
+        
+
