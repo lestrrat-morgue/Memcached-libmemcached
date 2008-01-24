@@ -160,6 +160,7 @@ t/10-set-get.t
 t/15-auto.t
 t/20-set.t
 t/25-get.t
+t/26-get-cb.t
 t/30-prepend-append.t
 t/35-replace.t
 t/40-delete.t

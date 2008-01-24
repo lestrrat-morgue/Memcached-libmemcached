@@ -30,6 +30,7 @@ our @EXPORT = qw(
 my %libmemcached_extra_functions = (
     memcached_errstr => 1,
     memcached_mget_into_hashref => 1,
+    memcached_set_callback_coderefs => 1,
 );
 
 

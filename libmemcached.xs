@@ -54,7 +54,7 @@ struct lmc_state_st {
     int              options;
     memcached_return last_return;
     int              last_errno;
-    SV              *fetch_cb;
+    SV              *get_cb;
     SV              *set_cb;
     /* handy fetch context for fething single items */
     lmc_fetch_context_st *fetch_context; /* points to _fetch_context by default */
@@ -68,6 +68,8 @@ lmc_state_new(SV *memc_sv)
     char *trace = getenv("PERL_LIBMEMCACHED_TRACE");
     lmc_state_st *lmc_state;
     Newz(0, lmc_state, 1, struct lmc_state_st);
+    lmc_state->set_cb   = newSV(0);
+    lmc_state->get_cb = newSV(0);
     lmc_state->fetch_context = &lmc_state->_fetch_context;
     lmc_state->fetch_context->lmc_state = lmc_state;
     if (trace) {
@@ -83,15 +85,11 @@ lmc_state_cleanup(memcached_st *ptr)
     memcached_return rc;
     lmc_state = memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, &rc);
     memcached_callback_set(ptr, MEMCACHED_CALLBACK_USER_DATA, 0);
-
-    if (lmc_state->fetch_cb != NULL)
-        SvREFCNT_dec(lmc_state->fetch_cb);
-
-    if (lmc_state->set_cb != NULL)
-        SvREFCNT_dec(lmc_state->set_cb);
-
     if (lmc_state->trace_level >= 2)
         warn("lmc_state_cleanup(%p) %p", ptr, lmc_state);
+
+    sv_free(lmc_state->get_cb);
+    sv_free(lmc_state->set_cb);
     Safefree(lmc_state);
 }
 
@@ -173,29 +171,38 @@ _cb_store_into_sv(memcached_st *ptr, memcached_result_st *result, void *context)
 }
 
 static unsigned int
-_cb_fire_perl_fetch_cb(memcached_st *ptr, memcached_result_st *result, void *context)
+_cb_fire_perl_get_cb(memcached_st *ptr, memcached_result_st *result, void *context)
 {
     /* Called after _cb_store_into_sv when perl callbacks are used */
     lmc_fetch_context_st *lmc_fetch_context = context;
     lmc_state_st *lmc_state = lmc_fetch_context->lmc_state;
-    if (lmc_state->fetch_cb) {
-        SV *flags_sv = newSViv(*lmc_fetch_context->flags_ptr);
+    if (SvOK(lmc_state->get_cb)) {
         int items;
         dSP;
+        SV *key_sv   = newSVpv(memcached_result_key_value(result), memcached_result_key_length(result));
+        SV *flags_sv = newSVuv(*lmc_fetch_context->flags_ptr);
+
         ENTER;
         SAVETMPS;
 
+        SAVE_DEFSV; /* local($_) = $value */
+        DEFSV = lmc_fetch_context->dest_sv;
+
         PUSHMARK(SP);
-        EXTEND(SP, 3);
-        PUSHs(sv_2mortal(newSVpv(memcached_result_key_value(result), memcached_result_key_length(result))));
+        EXTEND(SP, 2);
+        PUSHs(sv_2mortal(key_sv));
         PUSHs(sv_2mortal(flags_sv));
         PUTBACK;
 
-        items = call_sv(lmc_state->fetch_cb, G_ARRAY);
+        items = call_sv(lmc_state->get_cb, G_ARRAY);
         SPAGAIN;
 
         if (items) /* may use returned items for signalling later */
             croak("fetch callback returned non-empty list");
+
+        /* recover potentially modified values */
+        *lmc_fetch_context->flags_ptr = SvUV(flags_sv);
+        /* dest_sv would have been modified in-place */
 
         FREETMPS;
         LEAVE;
@@ -214,7 +221,7 @@ _fetch_all_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
     unsigned int (*callback[])(memcached_st *ptr, memcached_result_st *result, void *context) = {
         _cb_prep_store_into_sv_of_hv,
         _cb_store_into_sv,
-        _cb_fire_perl_fetch_cb,
+        _cb_fire_perl_get_cb,
     };
 
     /* rc is the return code from the preceeding mget */
@@ -347,7 +354,7 @@ memcached_get(Memcached__libmemcached ptr, \
     PREINIT:
         unsigned int (*callbacks[])(memcached_st *ptr, memcached_result_st *result, void *context) = {
             _cb_store_into_sv,
-            _cb_fire_perl_fetch_cb,
+            _cb_fire_perl_get_cb,
         };
         lmc_fetch_context_st *lmc_fetch_context;
     CODE:
@@ -491,42 +498,14 @@ _memcached_version(Memcached__libmemcached ptr)
         XSRETURN(3);
 
 void
-memcached_set_fetch_callback(Memcached__libmemcached ptr, SV *coderef)
+memcached_set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get_cb)
     PREINIT:
         lmc_state_st *lmc_state;
     CODE:
-        if (! SvOK(coderef) || ! SvROK(coderef) ||
-            SvTYPE( SvRV(coderef) ) != SVt_PVCV)
-        {
-            croak("set_fetch_callback must be given a reference to a subroutine");
-        }
-
+        if (SvOK(set_cb) && !(SvROK(set_cb) && SvTYPE(SvRV(set_cb)) == SVt_PVCV))
+            croak("set_cb is not a reference to a subroutine");
+        if (SvOK(get_cb) && !(SvROK(get_cb) && SvTYPE(SvRV(get_cb)) == SVt_PVCV))
+            croak("get_cb is not a reference to a subroutine");
         lmc_state = LMC_STATE(ptr);
-
-        if (lmc_state->fetch_cb != NULL)
-            SvREFCNT_dec(lmc_state->fetch_cb);
-
-        lmc_state->fetch_cb = SvREFCNT_inc(coderef);
-
-void
-memcached_set_set_callback(Memcached__libmemcached ptr, SV *coderef)
-    PREINIT:
-        lmc_state_st *lmc_state;
-    CODE:
-        if (! SvOK(coderef) || ! SvROK(coderef) ||
-            SvTYPE( SvRV(coderef) ) != SVt_PVCV)
-        {
-            croak("set_fetch_callback must be given a reference to a subroutine");
-        }
-
-        lmc_state = LMC_STATE(ptr);
-
-        if (lmc_state->set_cb != NULL)
-            SvREFCNT_dec(lmc_state->set_cb);
-
-        lmc_state->set_cb = SvREFCNT_inc(coderef);
-
-
-
-        
-
+        sv_setsv(lmc_state->set_cb, set_cb);
+        sv_setsv(lmc_state->get_cb, get_cb);

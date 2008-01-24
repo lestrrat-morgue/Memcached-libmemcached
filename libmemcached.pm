@@ -424,6 +424,20 @@ See also L<Memcached::libmemcached::memcached_strerror>.
 This function is rarely needed in the Perl interface because the return code is
 a I<dualvar> that already contains the error string.
 
+=head3 memcached_set_callback_coderefs
+
+  memcached_set_callback_coderefs($memc, \&set_callback, \&get_callback);
+
+This interface is I<experimental> and I<likely to change>.
+Currently only the get calback works.
+
+Specify functions which will be executed when values are set and/or get using $memc. 
+
+When the callbacks are executed $_ is the value and the arguments are the key
+and flags value. Both $_ and the flags may be modified.
+
+Currently the functions must return an empty list.
+
 =cut
 
 =head2 Unsupported Functions
