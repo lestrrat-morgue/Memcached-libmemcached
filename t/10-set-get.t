@@ -46,7 +46,7 @@ if ($flags == 0xCAFE) {
     warn "You're limited to 16 bit flags\n";
     $flags = 0xDEADCAFE;
 }
-is $flags, 0xDEADCAFE;
+is sprintf("0x%X",$flags), '0xDEADCAFE', 'flags should be unchanged';
 
 sleep 1;
 
