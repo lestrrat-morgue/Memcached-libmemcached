@@ -314,15 +314,32 @@ memcached_behavior_set(Memcached__libmemcached ptr, memcached_behavior flag, voi
 memcached_return
 memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags= 0)
 
+memcached_return
+memcached_set_by_key(Memcached__libmemcached ptr, char *master_key, size_t length(master_key), char *key, size_t length(key), char *value, size_t value_length, lmc_expiration expiration=0, lmc_data_flags_t flags=0)
+
+memcached_return
+memcached_add (Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
+
+memcached_return
+memcached_add_by_key(Memcached__libmemcached ptr, char *master_key, size_t length(master_key), char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration=0, lmc_data_flags_t flags=0)
 
 memcached_return
 memcached_append(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
 
 memcached_return
+memcached_append_by_key(Memcached__libmemcached ptr, char *master_key, size_t length(master_key), char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration=0, lmc_data_flags_t flags=0)
+
+memcached_return
 memcached_prepend(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
 
 memcached_return
+memcached_prepend_by_key(Memcached__libmemcached ptr, char *master_key, size_t length(master_key), char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration=0, lmc_data_flags_t flags=0)
+
+memcached_return
 memcached_replace(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
+
+memcached_return
+memcached_replace_by_key(Memcached__libmemcached ptr, char *master_key, size_t length(master_key), char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration=0, lmc_data_flags_t flags=0)
 
 memcached_return
 memcached_cas(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0, uint64_t cas)
