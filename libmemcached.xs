@@ -454,6 +454,9 @@ memcached_delete(Memcached__libmemcached ptr, char *key, size_t length(key), lmc
 
 =cut
 
+memcached_return
+memcached_flush(Memcached__libmemcached ptr, time_t expiration)
+
 char *
 memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 
