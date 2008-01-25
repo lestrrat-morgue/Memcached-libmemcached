@@ -63,8 +63,7 @@ T_PV
 
 INPUT
 T_KEY
-        /* treat undef as null pointer */
-        $var = (SvOK($arg)) ? ($type)SvPV_nolen($arg) : NULL;
+        $var = ($type)SvPV($arg, $length_var);
 
 OUTPUT
 T_KEY
@@ -74,8 +73,7 @@ T_KEY
 
 INPUT
 T_VALUE
-        /* treat undef as null pointer */
-        $var = (SvOK($arg)) ? ($type)SvPV_nolen($arg) : NULL;
+        $var = ($type)SvPV($arg, $length_var);
 
 OUTPUT
 T_VALUE

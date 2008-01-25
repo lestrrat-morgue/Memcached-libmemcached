@@ -1122,10 +1122,10 @@ sub INPUT_handler {
 
     # Process the length(foo) declarations
     if (s/^([^=]*?) (\b byte|\b utf8|) \s+ length \(\s*(\w+)\s*\)\s*$/$1 XSauto_length_of_$3=NO_INIT/x) {
-      print "\tSTRLEN\tSTRLEN_length_of_$3;\n";
-      $lengthof{$3} = $2;   # '' or 'byte' or 'utf8'
-      # $islengthof{$name} = $1;
-      $deferred .= "\n\tXSauto_length_of_$3 = STRLEN_length_of_$3;";
+      my $length_var = "STRLEN_length_of_$3";
+      $lengthof{$3} = [ $2, $length_var, $3 ];   # '' or 'byte' or 'utf8'
+      print "\tSTRLEN\t$length_var;\n";
+      $deferred .= "\n\tXSauto_length_of_$3 = $length_var;";
     }
 
     # check for optional initialisation code
@@ -1703,6 +1703,7 @@ sub generate_init {
   local($argoff) = $num - 1;
   local($ntype);
   local($tk);
+  local($length_var);   # name of STRLEN C var to use if $lengthof{$var} is true
 
   $type = TidyType($type) ;
   blurt("Error: '$type' not in typemap"), return
@@ -1712,18 +1713,26 @@ sub generate_init {
   ($subtype = $ntype) =~ s/(?:Array)?(?:Ptr)?$//;
   $tk = $type_kind{$type};
   $tk =~ s/OBJ$/REF/ if $func_name =~ /DESTROY$/;
-  if ($tk eq 'T_PV' and exists $lengthof{$var}) {
-    my $encoding = $lengthof{$var}; # '' or 'byte' or 'utf8'
-    print "\t$var" unless $name_printed;
-    print " = ($type)SvPV$encoding($arg, STRLEN_length_of_$var);\n";
-    die "default value not supported with length(NAME) supplied"
-      if defined $defaults{$var};
-    return;
-  }
+
   $type =~ tr/:/_/ unless $hiertype;
-  blurt("Error: No INPUT definition for type '$type', typekind '$type_kind{$type}' found"), return
-    unless defined $input_expr{$tk} ;
   $expr = $input_expr{$tk};
+  blurt("Error: No INPUT definition for type '$type', typekind '$type_kind{$type}' found"), return
+    unless defined $expr;
+
+  if ($lengthof{$var}) {
+    # encoding is '' or 'byte' or 'utf8'
+    (my $encoding, $length_var, my $related_var) = @{ $lengthof{$var} };
+    if ($tk eq 'T_PV') { # hardwired support for plain T_PV (char *)
+      print "\t$var" unless $name_printed;
+      print " = ($type)SvPV$encoding($arg, $length_var);\n";
+      die "default value not supported with length(NAME) supplied"
+        if defined $defaults{$var};
+      return;
+    }
+    die "length($var) not supported for $var type '$type' ($tk) because it doesn't contain \$length_var\n"
+      if $expr !~ m/\$length_var\b/;
+  }
+
   if ($expr =~ /DO_ARRAY_ELEM/) {
     blurt("Error: '$subtype' not in typemap"), return
       unless defined($type_kind{$subtype});

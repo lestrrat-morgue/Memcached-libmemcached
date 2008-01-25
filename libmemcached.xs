@@ -347,7 +347,7 @@ memcached_behavior_set(Memcached__libmemcached ptr, memcached_behavior flag, voi
 =cut
 
 memcached_return
-memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), SV *value_sv, lmc_expiration expiration= 0, lmc_data_flags_t flags= 0)
+memcached_set(Memcached__libmemcached ptr, lmc_key key, size_t length(key), SV *value_sv, lmc_expiration expiration= 0, lmc_data_flags_t flags= 0)
     PREINIT:
         SV *key_sv, *dest_sv, *flags_sv;
         char *value;
@@ -359,65 +359,74 @@ memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), SV *va
         _cb_fire_perl_set_cb(ptr, key_sv, dest_sv, flags_sv);
         value = SvPV(value_sv, value_len);
         flags = SvUV(flags_sv);
-
         RETVAL = memcached_set(ptr, key, XSauto_length_of_key, value, value_len, expiration, flags);
     OUTPUT:
         RETVAL
 
 memcached_return
 memcached_set_by_key(Memcached__libmemcached ptr, \
-                     char *master_key, \
-                     size_t length(master_key), \
-                     char *key, \
-                     size_t length(key), \
-                     SV *value_sv, \
-                     lmc_expiration expiration=0, \
-                     lmc_data_flags_t flags=0)
-    PREINIT:
-        SV *key_sv, *master_key_sv, *dest_sv, *flags_sv;
-        char *value;
-        size_t value_len;
-    CODE:
-        key_sv          = newSVpv(key, XSauto_length_of_key);
-        master_key_sv   = newSVpv(master_key, XSauto_length_of_key);
-        dest_sv         = newSVsv(value_sv);
-        flags_sv        = newSVuv(flags);
-        _cb_fire_perl_set_cb(ptr, key_sv, dest_sv, flags_sv);
-        /* ok, need to check with Tim on this */
-        _cb_fire_perl_set_cb(ptr, master_key_sv, dest_sv, flags_sv);
-        value = SvPV(value_sv, value_len);
-        flags = SvUV(flags_sv);
-
-        RETVAL = memcached_set_by_key(ptr, master_key, XSauto_length_of_key, key, XSauto_length_of_key, value, value_len, expiration, flags);
-    OUTPUT:
-        RETVAL
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key   key,      size_t length(key), \
+        lmc_value value,    size_t length(value), \
+        lmc_expiration expiration=0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_add (Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
+memcached_add (Memcached__libmemcached ptr, \
+        lmc_key   key,   size_t length(key), \
+        lmc_value value, size_t length(value), \
+        lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_add_by_key(Memcached__libmemcached ptr, char *master_key, size_t length(master_key), char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration=0, lmc_data_flags_t flags=0)
+memcached_add_by_key(Memcached__libmemcached ptr, \
+        lmc_key   master_key, size_t length(master_key), \
+        lmc_key   key,        size_t length(key), \
+        lmc_value value,      size_t length(value), \
+        lmc_expiration expiration=0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_append(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
+memcached_append(Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key),\
+        lmc_value value, size_t length(value),\
+        lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_append_by_key(Memcached__libmemcached ptr, char *master_key, size_t length(master_key), char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration=0, lmc_data_flags_t flags=0)
+memcached_append_by_key(Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        lmc_value value, size_t length(value), \
+        lmc_expiration expiration=0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_prepend(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
+memcached_prepend(Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key), \
+        lmc_value value, size_t length(value), \
+        lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_prepend_by_key(Memcached__libmemcached ptr, char *master_key, size_t length(master_key), char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration=0, lmc_data_flags_t flags=0)
+memcached_prepend_by_key(Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        lmc_value value, size_t length(value), \
+        lmc_expiration expiration=0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_replace(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
+memcached_replace(Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key), \
+        lmc_value value, size_t length(value), \
+        lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_replace_by_key(Memcached__libmemcached ptr, char *master_key, size_t length(master_key), char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration=0, lmc_data_flags_t flags=0)
+memcached_replace_by_key(Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        lmc_value value, size_t length(value), \
+        lmc_expiration expiration=0, lmc_data_flags_t flags=0)
 
 memcached_return
-memcached_cas(Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0, uint64_t cas)
+memcached_cas(Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key), \
+        lmc_value value, size_t length(value), \
+        lmc_expiration expiration= 0, lmc_data_flags_t flags=0, uint64_t cas)
 
 
 =head2 Functions for Incrementing and Decrementing Values from memcached
@@ -425,10 +434,14 @@ memcached_cas(Memcached__libmemcached ptr, char *key, size_t length(key), char *
 =cut
 
 memcached_return
-memcached_increment(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset, IN_OUT uint64_t value=NO_INIT)
+memcached_increment(Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, IN_OUT uint64_t value=NO_INIT)
 
 memcached_return
-memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), unsigned int offset, IN_OUT uint64_t value=NO_INIT)
+memcached_decrement(Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, IN_OUT uint64_t value=NO_INIT)
 
 
 
@@ -440,7 +453,7 @@ memcached_decrement(Memcached__libmemcached ptr, char *key, size_t length(key), 
 
 SV *
 memcached_get(Memcached__libmemcached ptr, \
-        char *key, size_t length(key), \
+        lmc_key key, size_t length(key), \
         IN_OUT lmc_data_flags_t flags=0, \
         IN_OUT memcached_return error=0)
     PREINIT:
@@ -563,7 +576,9 @@ memcached_fetch_result(Memcached__libmemcached ptr,\
 =cut
 
 memcached_return
-memcached_delete(Memcached__libmemcached ptr, char *key, size_t length(key), lmc_expiration expiration= 0)
+memcached_delete(Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key), \
+        lmc_expiration expiration= 0)
 
 
 
