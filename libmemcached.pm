@@ -273,12 +273,31 @@ See L<Memcached::libmemcached::memcached_set>.
 Set $value as the value of $key.
 $expiration and $flags are both optional and default to 0.
 
+=head3 memcached_set_by_key
+
+  memcached_set_by_key($memc, $master_key, $key, $value);
+  memcached_set_by_key($memc, $master_key, $key, $value, $expiration, $flags);
+
+Set $value as the value of $key, using $master_key to map the stored
+object to a particular server. $expiration and $flags are both optional
+and default to 0.
+
+
 =head3 memcached_append
 
   memcached_append($memc, $key, $value);
   memcached_append($memc, $key, $value, $expiration, $flags);
 
 Append $value to the value of $key. $key must already exist.
+$expiration and $flags are both optional and default to 0.
+
+=head3 memcached_append_by_key
+
+  memcached_append_by_key($memc, $master_key, $key, $value);
+  memcached_append_by_key($memc, $master_key, $key, $value, $expiration, $flags);
+
+Append $value to the value of $key, using $master_key to map the 
+object to a particular server. $key must already exist.
 $expiration and $flags are both optional and default to 0.
 
 =head3 memcached_prepend
@@ -289,6 +308,16 @@ $expiration and $flags are both optional and default to 0.
 Prepend $value to the value of $key. $key must already exist.
 $expiration and $flags are both optional and default to 0.
 
+=head3 memcached_prepend_by_key
+
+  memcached_prepend_by_key($memc, $master_key, $key, $value)
+  memcached_prepend_by_key($memc, $master_key, $key, $value, $expiration, $flags)
+
+Prepend $value to the value of $key, using $master_key to map the
+object to a particular server. $key must already exist.
+$expiration and $flags are both optional and default to 0.
+
+
 =head3 memcached_replace
 
   memcached_replace($memc, $key, $value)
@@ -296,6 +325,16 @@ $expiration and $flags are both optional and default to 0.
 
 Replace with $value the existing value of the value stored with
 $key. $key must already exist.  $expiration and $flags are both
+optional and default to 0.
+
+=head3 memcached_replace_by_key
+
+  memcached_replace_by_key($memc, $master_key, $key, $value)
+  memcached_replace_by_key($memc, $master_key, $key, $value, $expiration, $flags)
+
+Replace with $value the existing value of the value stored with
+$key, using $master_key to map the object to a particular server.
+$key must already exist. $expiration and $flags are both
 optional and default to 0.
 
 =head3 memcached_cas
