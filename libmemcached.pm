@@ -279,8 +279,8 @@ $expiration and $flags are both optional and default to 0.
   memcached_set_by_key($memc, $master_key, $key, $value, $expiration, $flags);
 
 Set $value as the value of $key, using $master_key to map the stored
-object to a particular server. $expiration and $flags are both optional
-and default to 0.
+object to a particular server if key partitioning is being used. 
+$expiration and $flags are both optional and default to 0.
 
 
 =head3 memcached_append
@@ -297,8 +297,9 @@ $expiration and $flags are both optional and default to 0.
   memcached_append_by_key($memc, $master_key, $key, $value, $expiration, $flags);
 
 Append $value to the value of $key, using $master_key to map the 
-object to a particular server. $key must already exist.
-$expiration and $flags are both optional and default to 0.
+object to a particular server if key partitioning is being used. 
+$key must already exist. $expiration and $flags are both optional
+and default to 0.
 
 =head3 memcached_prepend
 
@@ -314,8 +315,9 @@ $expiration and $flags are both optional and default to 0.
   memcached_prepend_by_key($memc, $master_key, $key, $value, $expiration, $flags)
 
 Prepend $value to the value of $key, using $master_key to map the
-object to a particular server. $key must already exist.
-$expiration and $flags are both optional and default to 0.
+object to a particular server if key paritioning is being used.
+$key must already exist.  $expiration and $flags are both 
+optional and default to 0.
 
 
 =head3 memcached_replace
@@ -333,9 +335,9 @@ optional and default to 0.
   memcached_replace_by_key($memc, $master_key, $key, $value, $expiration, $flags)
 
 Replace with $value the existing value of the value stored with
-$key, using $master_key to map the object to a particular server.
-$key must already exist. $expiration and $flags are both
-optional and default to 0.
+$key, using $master_key to map the object to a particular server
+if key partitioning is being used. $key must already exist. 
+$expiration and $flags are both optional and default to 0.
 
 =head3 memcached_cas
 
@@ -365,6 +367,21 @@ Get and return the value of $key.  Returns undef on error.
 
 Also updates $flags to the value of the flags stored with $value,
 and updates $rc with the return code.
+
+=head3 memcached_get_by_key
+
+  $value = memcached_get_by_key($memc, $master_key, $key);
+  $value = memcached_get_by_key($memc, $master_key, $key, $flags, $rc);
+
+Get and return the value of $key, $master_key. The $master_key is used for
+determining which server an object was stored if key partitioning was used
+for storage. 
+
+Returns undef on error.
+
+Also updates $flags to the value of the flags stored with $value,
+and updates $rc with the return code.
+
 
 =head3 memcached_mget
 
@@ -439,6 +456,16 @@ See L<Memcached::libmemcached::memcached_delete>.
 
 Delete $key. If $expiration is greater than zero then the key is deleted by
 memcached after that many seconds.
+
+=head3 memcached_delete_by_key
+
+  memcached_delete_by_key($memc, $master_key, $key);
+  memcached_delete_by_key($memc, $master_key, $key, $expiration);
+
+Delete $key, $master_key. $master_key is used to refer to a particular
+server if key-partitioning was used to store the object. If $expiration
+is greater than zero then the key is deleted by memcached after that 
+many seconds.
 
 =cut
 

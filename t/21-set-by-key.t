@@ -21,8 +21,9 @@ use Memcached::libmemcached
 use lib 't/lib';
 use libmemcached_test;
 
+my $m1= 'master-key';
 my $memc = libmemcached_test_create();
 
 plan tests => 1;
 
-ok memcached_set_by_key($memc, 'master_abc', 'abc', "this is a test");
+ok memcached_set_by_key($memc, $m1, 'abc', "this is a test");

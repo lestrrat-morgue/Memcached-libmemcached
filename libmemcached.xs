@@ -580,6 +580,14 @@ memcached_delete(Memcached__libmemcached ptr, \
         lmc_key key, size_t length(key), \
         lmc_expiration expiration= 0)
 
+memcached_return
+memcached_delete_by_key (Memcached__libmemcached ptr, \
+                           char *master_key, \
+                           size_t length(master_key), \
+                           char *key, \
+                           size_t length(key), \
+                           time_t expiration)
+
 
 
 =head2 Functions for Accessing Statistics from memcached

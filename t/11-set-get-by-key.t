@@ -29,7 +29,7 @@ plan tests => 13;
 
 my ($rv, $rc, $flags, $tmp);
 my $t1= time();
-my $m1= "$0-test-master-key-$t1"; # can't have spaces
+my $m1= "master-key"; # can't have spaces
 my $k1= "$0-test-key-$t1"; # can't have spaces
 my $v1= "$0 test value $t1";
 
