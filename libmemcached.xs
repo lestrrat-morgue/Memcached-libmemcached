@@ -36,10 +36,10 @@ typedef time_t               lmc_expiration;
 
 
 typedef struct lmc_state_st lmc_state_st;
-typedef struct lmc_fetch_context_st lmc_fetch_context_st;
+typedef struct lmc_cb_context_st lmc_cb_context_st;
 
-/* context information for memcached_fetch_execute */
-struct lmc_fetch_context_st {
+/* context information for callbacks */
+struct lmc_cb_context_st {
     lmc_state_st *lmc_state;
     SV *dest_sv;
     HV *dest_hv;
@@ -57,8 +57,8 @@ struct lmc_state_st {
     SV              *get_cb;
     SV              *set_cb;
     /* handy fetch context for fething single items */
-    lmc_fetch_context_st *fetch_context; /* points to _fetch_context by default */
-    lmc_fetch_context_st _fetch_context;
+    lmc_cb_context_st *cb_context; /* points to _cb_context by default */
+    lmc_cb_context_st _cb_context;
 };
 
 
@@ -70,8 +70,8 @@ lmc_state_new(SV *memc_sv)
     Newz(0, lmc_state, 1, struct lmc_state_st);
     lmc_state->set_cb   = newSV(0);
     lmc_state->get_cb = newSV(0);
-    lmc_state->fetch_context = &lmc_state->_fetch_context;
-    lmc_state->fetch_context->lmc_state = lmc_state;
+    lmc_state->cb_context = &lmc_state->_cb_context;
+    lmc_state->cb_context->lmc_state = lmc_state;
     if (trace) {
         lmc_state->trace_level = atoi(trace);
     }
@@ -152,21 +152,21 @@ _cb_prep_store_into_sv_of_hv(memcached_st *ptr, memcached_result_st *result, voi
 {
     /* Set dest_sv to the appropriate sv in dest_hv              */
     /* Called before _cb_store_into_sv when fetching into a hash */
-    lmc_fetch_context_st *lmc_fetch_context = context;
-    SV **svp = hv_fetch( lmc_fetch_context->dest_hv, memcached_result_key_value(result), memcached_result_key_length(result), 1);
-    lmc_fetch_context->dest_sv = *svp;
+    lmc_cb_context_st *lmc_cb_context = context;
+    SV **svp = hv_fetch( lmc_cb_context->dest_hv, memcached_result_key_value(result), memcached_result_key_length(result), 1);
+    lmc_cb_context->dest_sv = *svp;
     return 0;
 }
 
 static unsigned int
 _cb_store_into_sv(memcached_st *ptr, memcached_result_st *result, void *context) 
 {
-    /* Store result value and flags into places specified by lmc_fetch_context */
+    /* Store result value and flags into places specified by lmc_cb_context */
     /* This is the 'core' fetch callback. Increments result_count.             */
-    lmc_fetch_context_st *lmc_fetch_context = context;
-    ++lmc_fetch_context->result_count;
-    *lmc_fetch_context->flags_ptr = memcached_result_flags(result);
-    sv_setpvn(lmc_fetch_context->dest_sv, memcached_result_value(result), memcached_result_length(result));
+    lmc_cb_context_st *lmc_cb_context = context;
+    ++lmc_cb_context->result_count;
+    *lmc_cb_context->flags_ptr = memcached_result_flags(result);
+    sv_setpvn(lmc_cb_context->dest_sv, memcached_result_value(result), memcached_result_length(result));
     return 0;
 }
 
@@ -222,14 +222,14 @@ static unsigned int
 _cb_fire_perl_get_cb(memcached_st *ptr, memcached_result_st *result, void *context)
 {
     /* Called after _cb_store_into_sv when perl callbacks are used */
-    lmc_fetch_context_st *lmc_fetch_context = context;
-    lmc_state_st *lmc_state = lmc_fetch_context->lmc_state;
+    lmc_cb_context_st *lmc_cb_context = context;
+    lmc_state_st *lmc_state = lmc_cb_context->lmc_state;
     if (SvOK(lmc_state->get_cb)) {
         SV *key   = newSVpv(memcached_result_key_value(result), memcached_result_key_length(result));
-        SV *value = lmc_fetch_context->dest_sv;
-        SV *flags = newSVuv(*lmc_fetch_context->flags_ptr);
+        SV *value = lmc_cb_context->dest_sv;
+        SV *flags = newSVuv(*lmc_cb_context->flags_ptr);
         _cb_fire_perl_cb(ptr, key, value, flags, lmc_state->get_cb);
-        *lmc_fetch_context->flags_ptr = SvUV(flags);
+        *lmc_cb_context->flags_ptr = SvUV(flags);
     }
     return 0;
 }
@@ -251,7 +251,7 @@ _cb_fire_perl_set_cb(memcached_st *ptr, SV *key, SV *value, SV *flags)
 static memcached_return
 _fetch_all_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
 {
-    lmc_fetch_context_st *lmc_fetch_context;
+    lmc_cb_context_st *lmc_cb_context;
     lmc_data_flags_t flags;
     unsigned int (*callback[])(memcached_st *ptr, memcached_result_st *result, void *context) = {
         _cb_prep_store_into_sv_of_hv,
@@ -271,13 +271,13 @@ _fetch_all_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
         return rc;
     }
 
-    lmc_fetch_context = LMC_STATE(ptr)->fetch_context;
-    lmc_fetch_context->dest_hv   = dest_ref;
-    lmc_fetch_context->flags_ptr = &flags;  /* local, not returned to caller */
-    lmc_fetch_context->rc_ptr    = &rc;     /* local, not returned to caller */
-    lmc_fetch_context->result_count = 0;
+    lmc_cb_context = LMC_STATE(ptr)->cb_context;
+    lmc_cb_context->dest_hv   = dest_ref;
+    lmc_cb_context->flags_ptr = &flags;  /* local, not returned to caller */
+    lmc_cb_context->rc_ptr    = &rc;     /* local, not returned to caller */
+    lmc_cb_context->result_count = 0;
 
-    return memcached_fetch_execute(ptr, callback, (void *)lmc_fetch_context, 3);
+    return memcached_fetch_execute(ptr, callback, (void *)lmc_cb_context, 3);
 }
 
 
@@ -461,19 +461,19 @@ memcached_get(Memcached__libmemcached ptr, \
             _cb_store_into_sv,
             _cb_fire_perl_get_cb,
         };
-        lmc_fetch_context_st *lmc_fetch_context;
+        lmc_cb_context_st *lmc_cb_context;
     CODE:
         /* rc is the return code from the preceeding mget */
         error = memcached_mget_by_key(ptr, NULL, 0, &key, &XSauto_length_of_key, 1);
-        lmc_fetch_context = LMC_STATE(ptr)->fetch_context;
-        lmc_fetch_context->dest_sv   = newSV(0);
-        lmc_fetch_context->flags_ptr = &flags;
-        lmc_fetch_context->rc_ptr    = &error;
-        lmc_fetch_context->result_count = 0;
-        error = memcached_fetch_execute(ptr, callbacks, lmc_fetch_context, 2);
-        if (lmc_fetch_context->result_count == 0 && error == MEMCACHED_SUCCESS)
+        lmc_cb_context = LMC_STATE(ptr)->cb_context;
+        lmc_cb_context->dest_sv   = newSV(0);
+        lmc_cb_context->flags_ptr = &flags;
+        lmc_cb_context->rc_ptr    = &error;
+        lmc_cb_context->result_count = 0;
+        error = memcached_fetch_execute(ptr, callbacks, lmc_cb_context, 2);
+        if (lmc_cb_context->result_count == 0 && error == MEMCACHED_SUCCESS)
             error = MEMCACHED_NOTFOUND; /* to match memcached_get behaviour */
-        RETVAL = lmc_fetch_context->dest_sv;
+        RETVAL = lmc_cb_context->dest_sv;
     OUTPUT:
         RETVAL
 
@@ -490,19 +490,19 @@ memcached_get_by_key(Memcached__libmemcached ptr, \
             _cb_store_into_sv,
             _cb_fire_perl_get_cb,
         };
-        lmc_fetch_context_st *lmc_fetch_context;
+        lmc_cb_context_st *lmc_cb_context;
     CODE:
         /* rc is the return code from the preceeding mget */
         error = memcached_mget_by_key(ptr, master_key, XSauto_length_of_key, &key, &XSauto_length_of_key, 1);
-        lmc_fetch_context = LMC_STATE(ptr)->fetch_context;
-        lmc_fetch_context->dest_sv   = newSV(0);
-        lmc_fetch_context->flags_ptr = &flags;
-        lmc_fetch_context->rc_ptr    = &error;
-        lmc_fetch_context->result_count = 0;
-        error = memcached_fetch_execute(ptr, callbacks, lmc_fetch_context, 2);
-        if (lmc_fetch_context->result_count == 0 && error == MEMCACHED_SUCCESS)
+        lmc_cb_context = LMC_STATE(ptr)->cb_context;
+        lmc_cb_context->dest_sv   = newSV(0);
+        lmc_cb_context->flags_ptr = &flags;
+        lmc_cb_context->rc_ptr    = &error;
+        lmc_cb_context->result_count = 0;
+        error = memcached_fetch_execute(ptr, callbacks, lmc_cb_context, 2);
+        if (lmc_cb_context->result_count == 0 && error == MEMCACHED_SUCCESS)
             error = MEMCACHED_NOTFOUND; /* to match memcached_get behaviour */
-        RETVAL = lmc_fetch_context->dest_sv;
+        RETVAL = lmc_cb_context->dest_sv;
     OUTPUT:
         RETVAL
 
