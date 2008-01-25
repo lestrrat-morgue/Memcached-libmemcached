@@ -365,7 +365,32 @@ memcached_set(Memcached__libmemcached ptr, char *key, size_t length(key), SV *va
         RETVAL
 
 memcached_return
-memcached_set_by_key(Memcached__libmemcached ptr, char *master_key, size_t length(master_key), char *key, size_t length(key), char *value, size_t value_length, lmc_expiration expiration=0, lmc_data_flags_t flags=0)
+memcached_set_by_key(Memcached__libmemcached ptr, \
+                     char *master_key, \
+                     size_t length(master_key), \
+                     char *key, \
+                     size_t length(key), \
+                     SV *value_sv, \
+                     lmc_expiration expiration=0, \
+                     lmc_data_flags_t flags=0)
+    PREINIT:
+        SV *key_sv, *master_key_sv, *dest_sv, *flags_sv;
+        char *value;
+        size_t value_len;
+    CODE:
+        key_sv          = newSVpv(key, XSauto_length_of_key);
+        master_key_sv   = newSVpv(master_key, XSauto_length_of_key);
+        dest_sv         = newSVsv(value_sv);
+        flags_sv        = newSVuv(flags);
+        _cb_fire_perl_set_cb(ptr, key_sv, dest_sv, flags_sv);
+        /* ok, need to check with Tim on this */
+        _cb_fire_perl_set_cb(ptr, master_key_sv, dest_sv, flags_sv);
+        value = SvPV(value_sv, value_len);
+        flags = SvUV(flags_sv);
+
+        RETVAL = memcached_set_by_key(ptr, master_key, XSauto_length_of_key, key, XSauto_length_of_key, value, value_len, expiration, flags);
+    OUTPUT:
+        RETVAL
 
 memcached_return
 memcached_add (Memcached__libmemcached ptr, char *key, size_t length(key), char *value, size_t length(value), lmc_expiration expiration= 0, lmc_data_flags_t flags=0)
@@ -438,6 +463,36 @@ memcached_get(Memcached__libmemcached ptr, \
         RETVAL = lmc_fetch_context->dest_sv;
     OUTPUT:
         RETVAL
+
+SV *
+memcached_get_by_key(Memcached__libmemcached ptr, \
+        char *master_key, \
+        size_t length(master_key), \
+        char *key, \
+        size_t length(key), \
+        IN_OUT lmc_data_flags_t flags=0, \
+        IN_OUT memcached_return error=0)
+    PREINIT:
+        unsigned int (*callbacks[])(memcached_st *ptr, memcached_result_st *result, void *context) = {
+            _cb_store_into_sv,
+            _cb_fire_perl_get_cb,
+        };
+        lmc_fetch_context_st *lmc_fetch_context;
+    CODE:
+        /* rc is the return code from the preceeding mget */
+        error = memcached_mget_by_key(ptr, master_key, 0, &key, &XSauto_length_of_key, 1);
+        lmc_fetch_context = LMC_STATE(ptr)->fetch_context;
+        lmc_fetch_context->dest_sv   = newSV(0);
+        lmc_fetch_context->flags_ptr = &flags;
+        lmc_fetch_context->rc_ptr    = &error;
+        lmc_fetch_context->result_count = 0;
+        error = memcached_fetch_execute(ptr, callbacks, lmc_fetch_context, 2);
+        if (lmc_fetch_context->result_count == 0 && error == MEMCACHED_SUCCESS)
+            error = MEMCACHED_NOTFOUND; /* to match memcached_get behaviour */
+        RETVAL = lmc_fetch_context->dest_sv;
+    OUTPUT:
+        RETVAL
+
 
 
 memcached_return
