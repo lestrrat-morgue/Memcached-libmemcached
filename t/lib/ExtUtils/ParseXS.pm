@@ -645,6 +645,7 @@ EOF
       $thisdone = 0;
       $retvaldone = 0;
       $deferred = "";
+      $deferred_precall = "";
       %arg_list = () ;
       $gotRETVAL = 0;
 	
@@ -693,6 +694,8 @@ EOF
 	
         process_keyword("INIT|ALIAS|ATTRS|PROTOTYPE|INTERFACE_MACRO|INTERFACE|C_ARGS|OVERLOAD") ;
 	
+	print $deferred_precall;
+
 	if (check_keyword("PPCODE")) {
 	  print_section();
 	  death ("PPCODE must be last thing") if @line;
@@ -1125,7 +1128,7 @@ sub INPUT_handler {
       my $length_var = "STRLEN_length_of_$3";
       $lengthof{$3} = [ $2, $length_var, $3 ];   # '' or 'byte' or 'utf8'
       print "\tSTRLEN\t$length_var;\n";
-      $deferred .= "\n\tXSauto_length_of_$3 = $length_var;";
+      $deferred_precall .= "\tXSauto_length_of_$3 = $length_var;\n";
     }
 
     # check for optional initialisation code

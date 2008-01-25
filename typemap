@@ -34,16 +34,19 @@ Memcached__libmemcached                 T_PTROBJ_RVIV
 
 INPUT
 T_RETURN
+        /* T_RETURN */
         $var = (SvOK($arg)) ? ($type)SvIV($arg) : 0;
 
 OUTPUT
 T_RETURN:init
+        /* T_RETURN:init */
         if (LMC_TRACE_LEVEL(ptr)) {
             if (LMC_TRACE_LEVEL(ptr) > 1 || !LMC_RETURN_OK($var))
                 warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
         }
         RECORD_RETURN_ERR(ptr, $var);
 T_RETURN
+        /* T_RETURN */
         if (!SvREADONLY($arg)) {
             if (LMC_RETURN_OK($var)) {
                 sv_setsv($arg, &PL_sv_yes);
@@ -63,41 +66,64 @@ T_PV
 
 INPUT
 T_KEY
+        /* T_KEY */
         $var = ($type)SvPV($arg, $length_var);
 
 OUTPUT
 T_KEY
+        /* T_KEY */
         /* assumes the existance of a key_length variable holding the length */
         if (!SvREADONLY($arg))
             sv_setpvn((SV*)$arg, $var, key_length);
 
 INPUT
 T_VALUE
+        /* T_VALUE */
         $var = ($type)SvPV($arg, $length_var);
+        if (SvOK(LMC_STATE(ptr)->cb_context->set_cb)) {
+            /* XXX ignoring flags till we have a better mechanism */
+            SV *key_sv, *value_sv, *flags_sv;
+            /* these SVs may get cached inside lmc_cb_context_st and reused across calls */
+            /* which would save the create,mortalize,destroy costs for each invocation  */
+            key_sv   = sv_2mortal(newSVpv(key,   STRLEN_length_of_key));
+            value_sv = sv_2mortal(newSVpv(value, $length_var));
+            flags_sv = sv_2mortal(newSVuv(flags));
+            SvREADONLY_on(key_sv); /* just to be sure for now, may allow later */
+            _cb_fire_perl_set_cb(ptr, key_sv, value_sv, flags_sv);
+            /* recover possibly modified values (except key) */
+            value = SvPV(value_sv, $length_var);
+            flags = SvUV(flags_sv);
+        }
+        
 
 OUTPUT
 T_VALUE
+        /* T_VALUE */
         /* assumes the existance of a value_length variable holding the length */
         if (!SvREADONLY($arg))
             sv_setpvn((SV*)$arg, $var, value_length);
 
 INPUT
 T_FLAGS
+        /* T_FLAGS */
         $var = (SvOK($arg)) ? ($type)SvUV($arg) : 0;
 
 OUTPUT
 T_FLAGS
+        /* T_FLAGS */
         if (!SvREADONLY($arg))
             sv_setuv($arg, (UV)$var);
 
 INPUT
 T_EXPIRATION
+        /* T_EXPIRATION */
         /* XXX add logic for default expiration */
         $var = ($type)SvUV($arg)
 
 
 INPUT
 T_PTROBJ_RVIV
+        /* T_PTROBJ_RVIV */
         if (!SvOK($arg)) {  /* undef         */
             $var = NULL;    /* treat as null */
         }
@@ -117,6 +143,7 @@ T_PTROBJ_RVIV
 
 OUTPUT
 T_PTROBJ_RVIV
+        /* T_PTROBJ_RVIV */
         if (!$var)          /* if null */
             SvOK_off($arg); /* then return as undef instead of reaf to undef */
         else {

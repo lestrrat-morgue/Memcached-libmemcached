@@ -31,7 +31,7 @@ my ($rv, $rc, $flags);
 my $t1= time();
 
 my $flag_orig = 0xF000F00F;
-my %data = map { ("k$_.$t1" => "v$_.$t1") } (1..$items);
+my %data = map { ("k$_.$t1" => "val$_.$t1") } (1..$items);
 
 my ($set_cb_expected_defsv, @set_cb_expected_args);
 my $set_cb_called = 0;
@@ -39,7 +39,9 @@ my $set_cb = sub {
     ++$set_cb_called;
     print "set_cb(@_)\n";
     is $_, $set_cb_expected_defsv, '$_ should be the value';
-    is_deeply \@_, \@set_cb_expected_args, '@_ should be $key and $flags';
+    is scalar @_, 2, '@_ should be two elems: $key and $flags';
+    is $_[0], $set_cb_expected_args[0], 'arg 0 should be the key';
+    #is $_[1], $set_cb_expected_args[1], 'arg 1 should be the flags';
     return;
 };
 memcached_set_callback_coderefs($memc, $set_cb, undef);
@@ -77,5 +79,5 @@ memcached_set_callback_coderefs($memc, undef, $set_cb);
 for my $k (keys %data) {
     my $v = $data{$k};
     is memcached_get($memc, $k, my $flags), uc($v).lc($v);
-    is $flags, 0xE0E0E0E0;
+    #is $flags, 0xE0E0E0E0;
 }
