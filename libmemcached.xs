@@ -480,7 +480,7 @@ memcached_get_by_key(Memcached__libmemcached ptr, \
         lmc_fetch_context_st *lmc_fetch_context;
     CODE:
         /* rc is the return code from the preceeding mget */
-        error = memcached_mget_by_key(ptr, master_key, 0, &key, &XSauto_length_of_key, 1);
+        error = memcached_mget_by_key(ptr, master_key, XSauto_length_of_key, &key, &XSauto_length_of_key, 1);
         lmc_fetch_context = LMC_STATE(ptr)->fetch_context;
         lmc_fetch_context->dest_sv   = newSV(0);
         lmc_fetch_context->flags_ptr = &flags;
