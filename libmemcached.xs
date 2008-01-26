@@ -475,10 +475,8 @@ memcached_get(Memcached__libmemcached ptr, \
 
 SV *
 memcached_get_by_key(Memcached__libmemcached ptr, \
-        char *master_key, \
-        size_t length(master_key), \
-        char *key, \
-        size_t length(key), \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
         IN_OUT lmc_data_flags_t flags=0, \
         IN_OUT memcached_return error=0)
     PREINIT:
@@ -489,7 +487,7 @@ memcached_get_by_key(Memcached__libmemcached ptr, \
         lmc_cb_context_st *lmc_cb_context;
     CODE:
         /* rc is the return code from the preceeding mget */
-        error = memcached_mget_by_key(ptr, master_key, XSauto_length_of_key, &key, &XSauto_length_of_key, 1);
+        error = memcached_mget_by_key(ptr, master_key, XSauto_length_of_master_key, &key, &XSauto_length_of_key, 1);
         lmc_cb_context = LMC_STATE(ptr)->cb_context;
         lmc_cb_context->dest_sv   = newSV(0);
         lmc_cb_context->flags_ptr = &flags;
@@ -501,7 +499,6 @@ memcached_get_by_key(Memcached__libmemcached ptr, \
         RETVAL = lmc_cb_context->dest_sv;
     OUTPUT:
         RETVAL
-
 
 
 memcached_return
