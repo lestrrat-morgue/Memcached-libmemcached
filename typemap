@@ -79,22 +79,27 @@ T_KEY
 INPUT
 T_VALUE
         /* T_VALUE */
-        $var = ($type)SvPV($arg, $length_var);
-        if (SvOK(LMC_STATE(ptr)->cb_context->set_cb)) {
+        if (! SvOK(LMC_STATE(ptr)->cb_context->set_cb)) {
+            $var = ($type)SvPV($arg, $length_var);
+        } else {
             /* XXX ignoring flags till we have a better mechanism */
             SV *key_sv, *value_sv, *flags_sv;
             /* these SVs may get cached inside lmc_cb_context_st and reused across calls */
             /* which would save the create,mortalize,destroy costs for each invocation  */
             key_sv   = sv_2mortal(newSVpv(key,   STRLEN_length_of_key));
-            value_sv = sv_2mortal(newSVpv(value, $length_var));
             flags_sv = sv_2mortal(newSVuv(flags));
+            if (SvROK($arg)) {
+                value_sv = sv_2mortal(newSVsv($arg));
+            } else {
+                value_sv = sv_2mortal(newSVsv($arg));
+            }
             SvREADONLY_on(key_sv); /* just to be sure for now, may allow later */
+
             _cb_fire_perl_set_cb(ptr, key_sv, value_sv, flags_sv);
             /* recover possibly modified values (except key) */
-            value = SvPV(value_sv, $length_var);
+            $var = SvPV(value_sv, $length_var);
             flags = SvUV(flags_sv);
         }
-        
 
 OUTPUT
 T_VALUE
