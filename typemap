@@ -78,7 +78,10 @@ T_KEY
 
 INPUT
 T_VALUE
-        /* T_VALUE */
+        /* T_VALUE - main code in T_VALUE:pre_call below (so it can access/modify flags) */
+        /* mention $length_var here to keep ParseXS happy for now */
+T_VALUE:pre_call
+        /* T_VALUE:pre_call */
         if (SvOK(LMC_STATE(ptr)->cb_context->set_cb)) {
             /* XXX ignoring flags till we have a better mechanism */
             SV *key_sv, *value_sv, *flags_sv;

@@ -644,8 +644,7 @@ EOF
       # do initialization of input variables
       $thisdone = 0;
       $retvaldone = 0;
-      $deferred = "";
-      $deferred_precall = "";
+      %deferred;
       %arg_list = () ;
       $gotRETVAL = 0;
 	
@@ -690,11 +689,12 @@ EOF
 	  $processing_arg_with_types = 1;
 	  INPUT_handler() ;
 	}
-	print $deferred;
+	print delete $deferred{post_input};
 	
         process_keyword("INIT|ALIAS|ATTRS|PROTOTYPE|INTERFACE_MACRO|INTERFACE|C_ARGS|OVERLOAD") ;
 	
-	print $deferred_precall;
+	print delete $deferred{pre_call};
+	print delete $deferred{auto_length_init};
 
 	if (check_keyword("PPCODE")) {
 	  print_section();
@@ -813,6 +813,7 @@ EOF
       }
       last if $_ eq "$END:";
       death(/^$BLOCK_re/o ? "Misplaced `$1:'" : "Junk at end of function");
+      warn "internal error: deferred '$_' not consumed\n" for keys %deferred;
     }
     
     print Q(<<"EOF") if $except;
@@ -1128,7 +1129,7 @@ sub INPUT_handler {
       my $length_var = "STRLEN_length_of_$3";
       $lengthof{$3} = [ $2, $length_var, $3 ];   # '' or 'byte' or 'utf8'
       print "\tSTRLEN\t$length_var;\n";
-      $deferred_precall .= "\tXSauto_length_of_$3 = $length_var;\n";
+      $deferred{auto_length_init} .= "\tXSauto_length_of_$3 = $length_var;\n";
     }
 
     # check for optional initialisation code
@@ -1675,7 +1676,7 @@ sub output_init {
       warn $@   if  $@;
       $init =~ s/^;//;
     }
-    $deferred .= eval qq/"\\n\\t$init\\n"/;
+    $deferred{post_input} .= eval qq/"\\n\\t$init\\n"/;
     warn $@   if  $@;
   }
 }
@@ -1763,9 +1764,9 @@ sub generate_init {
       warn $@   if  $@;
     }
     if ($defaults{$var} eq 'NO_INIT') {
-      $deferred .= eval qq/"\\n\\tif (items >= $num) {\\n$expr;\\n\\t}\\n"/;
+      $deferred{post_input} .= eval qq/"\\n\\tif (items >= $num) {\\n$expr;\\n\\t}\\n"/;
     } else {
-      $deferred .= eval qq/"\\n\\tif (items < $num)\\n\\t    $var = $defaults{$var};\\n\\telse {\\n$expr;\\n\\t}\\n"/;
+      $deferred{post_input} .= eval qq/"\\n\\tif (items < $num)\\n\\t    $var = $defaults{$var};\\n\\telse {\\n$expr;\\n\\t}\\n"/;
     }
     warn $@   if  $@;
   } elsif ($ScopeThisXSUB or $expr !~ /^\s*\$var =/) {
@@ -1775,13 +1776,17 @@ sub generate_init {
       eval qq/print "\\t$var;\\n"/;
       warn $@   if  $@;
     }
-    $deferred .= eval qq/"\\n$expr;\\n"/;
+    $deferred{post_input} .= eval qq/"\\n$expr;\\n"/;
     warn $@   if  $@;
   } else {
     die "panic: do not know how to handle this branch for function pointers"
       if $name_printed;
     eval qq/print "$expr;\\n"/;
     warn $@   if  $@;
+  }
+  if ($expr = $input_expr{$tk.":pre_call"}) {
+      $deferred{pre_call} .= eval "qq\a$expr;\n\a";
+      warn $@ if $@;
   }
 }
 

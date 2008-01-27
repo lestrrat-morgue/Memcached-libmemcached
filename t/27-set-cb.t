@@ -25,7 +25,7 @@ use libmemcached_test;
 my $memc = libmemcached_test_create();
 
 my $items = 2;
-plan tests => 15;
+plan tests => 17;
 
 my ($rv, $rc, $flags);
 my $t1= time();
@@ -41,7 +41,7 @@ my $set_cb = sub {
     is $_, $set_cb_expected_defsv, '$_ should be the value';
     is scalar @_, 2, '@_ should be two elems: $key and $flags';
     is $_[0], $set_cb_expected_args[0], 'arg 0 should be the key';
-    #is $_[1], $set_cb_expected_args[1], 'arg 1 should be the flags';
+    is $_[1], $set_cb_expected_args[1], 'arg 1 should be the flags';
     return;
 };
 memcached_set_callback_coderefs($memc, $set_cb, undef);
@@ -54,8 +54,8 @@ for my $k (keys %data) {
 }
 
 for my $k (keys %data) {
-#    $set_cb_expected_defsv = $data{$k};
-#    @set_cb_expected_args  = ( $k, $flag_orig );
+    $set_cb_expected_defsv = $data{$k};
+    @set_cb_expected_args  = ( $k, $flag_orig );
     is memcached_get($memc, $k), $data{$k};
 }
 is $set_cb_called, scalar keys %data;
