@@ -4,11 +4,12 @@ Memcached::libmemcached::Changes - List of significant changes
 
 As of $Date: 2008-01-08 15:54:15 +0000 (Tue, 08 Jan 2008) $ $Revision$
 
-=head2 Changes in 0.1402 (svn r101) 27th Jan 2008
+=head2 Changes in 0.1402 (svn r102) 27th Jan 2008
 
   Added tracing via PERL_LIBMEMCACHED_TRACE env var.
   Added perl callbacks for get and set.
   Added many more functions and improved the docs.
+  Reenable perl 5.006 as we supply our own xsubpp now.
 
 =head2 Changes in 0.1401
 
