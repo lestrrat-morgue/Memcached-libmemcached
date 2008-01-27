@@ -475,21 +475,8 @@ Currently the functions must return an empty list.
 
 =head2 Unsupported Functions
 
-=head3 memcached_cas 
-=cut
-
 =head3 (stats)   
 =cut
-
-=head3 (disconnect/quit)
-=cut
-
-=head3 memcached_flush 
-=cut
-
-=head3 memcached_replace
-=cut
-
 
 =head2 Grouping Keys On Servers
 
@@ -532,6 +519,8 @@ By-key variants of L</Functions for Setting Values>:
 =head3 memcached_add_by_key
 
 =head3 memcached_append_by_key
+
+=head3 memcached_cas_by_key
 
 =head3 memcached_prepend_by_key
 

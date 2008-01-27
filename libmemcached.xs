@@ -461,6 +461,13 @@ memcached_cas(Memcached__libmemcached ptr, \
         lmc_value value, size_t length(value), \
         lmc_expiration expiration= 0, lmc_data_flags_t flags=0, uint64_t cas)
 
+memcached_return
+memcached_cas_by_key(Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        lmc_value value, size_t length(value), \
+        lmc_expiration expiration= 0, lmc_data_flags_t flags=0, uint64_t cas)
+
 
 =head2 Functions for Incrementing and Decrementing Values from memcached
 

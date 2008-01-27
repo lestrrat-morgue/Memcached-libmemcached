@@ -18,7 +18,7 @@ BEGIN {
 my $lmcd_src = "src/libmemcached";
 my $lmcd_inst = abs_path("src_inst");
 my $lmcd_built_lib = "$lmcd_inst/lib/libmemcached$Config{lib_ext}";
-my @lmcd_pod = <$lmcd_src/docs/memcached_*.pod>;
+my @lmcd_pod = sort <$lmcd_src/docs/memcached_*.pod>;
 my $is_developer = (-d ".svn");
 
 my ($lmcd_h) = eval { build_libmemcached() };
@@ -180,9 +180,11 @@ sub extract_libmemcached_functions {
     warn "Reading libmemcached pod docs to find all public functions\n";
     for my $src_pod (@lmcd_pod) {
         open my $fh, "<$src_pod" or die "Can't open $src_pod: $!";
+        #warn $src_pod;
         while (<$fh>) {
-            next unless /\b(memcached_\w+)\s*\(/;
+            next unless /\b(memcached_\w+)\s*\([^3]/;
             $libmemcached_func{$1} = 1;
+            #warn "\t$1\t$_";
         }
     }
 
