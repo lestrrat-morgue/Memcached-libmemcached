@@ -596,6 +596,9 @@ memcached_flush(Memcached__libmemcached ptr, lmc_expiration expiration=0)
 char *
 memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 
+void
+memcached_quit(Memcached__libmemcached ptr)
+
 SV *
 memcached_errstr(Memcached__libmemcached ptr)
     PREINIT:
