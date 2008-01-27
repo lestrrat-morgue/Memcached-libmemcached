@@ -25,7 +25,7 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 13;
+plan tests => 14;
 
 my ($rv, $rc, $flags, $tmp);
 my $t1= time();
@@ -39,6 +39,7 @@ is scalar memcached_get($memc, $k1, $flags=0, $rc=0), undef,
 
 # test set with expiry and flags
 ok memcached_set($memc, $k1, $v1, 1, 0xDEADCAFE);
+is memcached_errstr($memc), 'SUCCESS';
 
 is memcached_get($memc, $k1, $flags=0, $rc=0), $v1;
 ok $rc;
