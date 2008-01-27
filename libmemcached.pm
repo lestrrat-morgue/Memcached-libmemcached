@@ -479,6 +479,12 @@ See L<Memcached::libmemcached::memcached_stats>.
 
 =head2 Miscellaneous Functions
 
+=head2 memcached_quit
+
+  memcached_quit($memc)
+
+Disconnects from all servers
+
 =head3 memcached_strerror
 
   $string = memcached_strerror($memc, $return_code)
