@@ -1,8 +1,21 @@
 =head1 NAME
 
-Memcached::libmemcached::Changes - List of significant changes to Memcached::libmemcached
+Memcached::libmemcached::Changes - List of significant changes
 
-(As of $Date: 2008-01-08 15:54:15 +0000 (Tue, 08 Jan 2008) $ $Revision$)
+As of $Date: 2008-01-08 15:54:15 +0000 (Tue, 08 Jan 2008) $ $Revision$
+
+=head2 Changes in 0.1402 (svn r101) 27th Jan 2008
+
+  Added tracing via PERL_LIBMEMCACHED_TRACE env var.
+  Added perl callbacks for get and set.
+  Added many more functions and improved the docs.
+
+=head2 Changes in 0.1401
+
+  Added memcached_errstr and related $memc state management.
+  Changes functions to return simple boolean code.
+  Added memcached_replace, memcached_cas
+  More tests.
 
 =head2 Changes in 0.1308
 

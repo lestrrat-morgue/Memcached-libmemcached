@@ -17,11 +17,10 @@ my %covered = map { $_=>1 } $pc->covered;
 
 my @todo;
 for my $func (libmemcached_functions()) {
-    next if $func =~ m/^memcached_server_list/; # deprecated
     push @todo, $func unless $covered{$func};
 }
 if (@todo) {
-    warn scalar(@todo)." Functions not yet implemented and documented:\n";
+    warn "  ".scalar(@todo)." Functions not yet implemented and documented:\n";
     warn "\t$_\n" for @todo;
 }
 

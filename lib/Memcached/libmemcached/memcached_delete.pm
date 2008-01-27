@@ -1,4 +1,5 @@
 package Memcached::libmemcached::memcached_delete;
+
 =head1 NAME
 
 memcached_delete

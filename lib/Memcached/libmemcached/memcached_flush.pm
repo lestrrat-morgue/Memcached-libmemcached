@@ -1,4 +1,5 @@
 package Memcached::libmemcached::memcached_flush;
+
 =head1 NAME
 
 memcached_flush

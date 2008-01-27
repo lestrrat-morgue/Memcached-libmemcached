@@ -9,11 +9,11 @@ Memcached::libmemcached - Thin fast full interface to the libmemcached client AP
 
 =head1 VERSION
 
-Version 0.1401
+Version 0.1402 (with libmemcached-0.14 embedded)
 
 =cut
 
-our $VERSION = '0.1401';
+our $VERSION = '0.1402';
 
 use Carp;
 use base qw(Exporter);
@@ -183,14 +183,6 @@ See L<Memcached::libmemcached::memcached_servers>.
 
 Returns a count of the number of servers
 associated with $memc.
-See L<Memcached::libmemcached::memcached_servers>.
-
-=head3 memcached_server_list
-
-  $server_list= memcached_server_list($memc);
-
-Returns the server list structure associated with $memc.
-XXX Not currently recommended for use.
 See L<Memcached::libmemcached::memcached_servers>.
 
 =head3 memcached_server_add
@@ -548,14 +540,14 @@ XXX expand with details from typemap file
 
 =head1 AUTHOR
 
-Tim Bunce, C<< <Tim.Bunce@pobox.com> >> with help from Patrick Galbraith.
+Tim Bunce, C<< <Tim.Bunce@pobox.com> >> with help from Patrick Galbraith and Daisuke Maki.
 
 L<http://www.tim.bunce.name>
 
 =head1 ACKNOWLEDGEMENTS
 
 Larry Wall for Perl, Brad Fitzpatrick for memcached, Brian Aker for libmemcached,
-and Patrick Galbraith for helping with the implementation.
+and Patrick Galbraith and Daisuke Maki for helping with the implementation.
 
 =head1 PORTABILITY
 
@@ -571,6 +563,11 @@ C<bug-memcached-libmemcached@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Memcached-libmemcached>.
 I will be notified, and then you'll automatically be notified of progress on
 your bug as I make changes.
+
+=head1 CONTRIBUTING
+
+The source is hosted at L<http://perl-libmemcached.googlecode.com/>
+Patches and volunteers always welcome.
 
 =head1 COPYRIGHT & LICENSE
 

@@ -1,4 +1,5 @@
 package Memcached::libmemcached::memcached_verbosity;
+
 =head1 NAME
 
 memcached_verbosity

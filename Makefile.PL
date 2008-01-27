@@ -8,7 +8,7 @@ use Data::Dumper;
 use Cwd qw(abs_path);
 
 BEGIN {
-    my $min = 5.008; # needed for XS length(other_arg) syntax
+    my $min = 5.006;
     if ($] < $min) {
         warn "Perl version $] is below minimum $min required.\n";
         exit 0;
@@ -162,7 +162,7 @@ sub sync_libmemcached_pod {
         (my $dst_pkg = $dst_pod) =~ s{/}{::}g;
         $dst_pkg =~ s{ lib:: (.*?) \.\w+ $ }{$1}x;
 
-        print $dst "package $dst_pkg;\n"; # for search.cpan.org
+        print $dst "package $dst_pkg;\n\n"; # for search.cpan.org
         while (<$src>) {
             print $dst $_;
         }

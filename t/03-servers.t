@@ -11,10 +11,8 @@ use_ok( 'Memcached::libmemcached',
 #   functions explicitly tested by this file
 qw(
     memcached_server_count
-    memcached_server_list
     memcached_server_add
     memcached_server_add_unix_socket
-    memcached_server_push
 ),
 #   other functions used by the tests
 qw(
