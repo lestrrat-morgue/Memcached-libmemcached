@@ -261,7 +261,7 @@ system call error, then the string returned by strerror() is appended.
 =cut
 
 
-=head2 Functions for Setting Values in memcached
+=head2 Functions for Setting Values
 
 See L<Memcached::libmemcached::memcached_set>.
 
@@ -273,15 +273,29 @@ See L<Memcached::libmemcached::memcached_set>.
 Set $value as the value of $key.
 $expiration and $flags are both optional and default to 0.
 
-=head3 memcached_set_by_key
+=head3 memcached_add
 
-  memcached_set_by_key($memc, $master_key, $key, $value);
-  memcached_set_by_key($memc, $master_key, $key, $value, $expiration, $flags);
+  memcached_add($memc, $key, $value);
+  memcached_add($memc, $key, $value, $expiration, $flags);
 
-Set $value as the value of $key, using $master_key to map the stored
-object to a particular server if key partitioning is being used. 
+Like L</memcached_set> except that an error is returned if $key I<is> already
+stored in the server.
+
+=head3 memcached_replace
+
+  memcached_replace($memc, $key, $value);
+  memcached_replace($memc, $key, $value, $expiration, $flags);
+
+Like L</memcached_set> except that an error is returned if $key I<is not> already
+error is returned.
+
+=head3 memcached_prepend
+
+  memcached_prepend($memc, $key, $value);
+  memcached_prepend($memc, $key, $value, $expiration, $flags);
+
+Prepend $value to the value of $key. $key must already exist.
 $expiration and $flags are both optional and default to 0.
-
 
 =head3 memcached_append
 
@@ -291,72 +305,26 @@ $expiration and $flags are both optional and default to 0.
 Append $value to the value of $key. $key must already exist.
 $expiration and $flags are both optional and default to 0.
 
-=head3 memcached_append_by_key
-
-  memcached_append_by_key($memc, $master_key, $key, $value);
-  memcached_append_by_key($memc, $master_key, $key, $value, $expiration, $flags);
-
-Append $value to the value of $key, using $master_key to map the 
-object to a particular server if key partitioning is being used. 
-$key must already exist. $expiration and $flags are both optional
-and default to 0.
-
-=head3 memcached_prepend
-
-  memcached_prepend($memc, $key, $value)
-  memcached_prepend($memc, $key, $value, $expiration, $flags)
-
-Prepend $value to the value of $key. $key must already exist.
-$expiration and $flags are both optional and default to 0.
-
-=head3 memcached_prepend_by_key
-
-  memcached_prepend_by_key($memc, $master_key, $key, $value)
-  memcached_prepend_by_key($memc, $master_key, $key, $value, $expiration, $flags)
-
-Prepend $value to the value of $key, using $master_key to map the
-object to a particular server if key paritioning is being used.
-$key must already exist.  $expiration and $flags are both 
-optional and default to 0.
-
-
-=head3 memcached_replace
-
-  memcached_replace($memc, $key, $value)
-  memcached_replace($memc, $key, $value, $expiration, $flags)
-
-Replace with $value the existing value of the value stored with
-$key. $key must already exist.  $expiration and $flags are both
-optional and default to 0.
-
-=head3 memcached_replace_by_key
-
-  memcached_replace_by_key($memc, $master_key, $key, $value)
-  memcached_replace_by_key($memc, $master_key, $key, $value, $expiration, $flags)
-
-Replace with $value the existing value of the value stored with
-$key, using $master_key to map the object to a particular server
-if key partitioning is being used. $key must already exist. 
-$expiration and $flags are both optional and default to 0.
-
 =head3 memcached_cas
 
   memcached_cas($memc, $key, $value, $expiration, $flags, $cas)
 
 Overwrites data in the server stored as $key as long as $cas
-is still the same in the server. Cas is still buggy in memached.
-Turning on support for it in libmemcached is optional.
-Please see memcached_behavior_set() for information on how to do this.
+still has the same value in the server.
+
+Cas is still buggy in memached.  Turning on support for it in libmemcached is
+optional.  Please see memcached_behavior_set() for information on how to do this.
 
 XXX and the memcached_result_cas() function isn't implemented yet
 so you can't get the $cas to use.
 
 =cut
 
-
-=head2 Functions for Fetching Values from memcached
+=head2 Functions for Fetching Values
 
 See L<Memcached::libmemcached::memcached_get>.
+
+The memcached_fetch_result() and 
 
 =head3 memcached_get
 
@@ -364,20 +332,6 @@ See L<Memcached::libmemcached::memcached_get>.
   $value = memcached_get($memc, $key, $flags, $rc);
 
 Get and return the value of $key.  Returns undef on error.
-
-Also updates $flags to the value of the flags stored with $value,
-and updates $rc with the return code.
-
-=head3 memcached_get_by_key
-
-  $value = memcached_get_by_key($memc, $master_key, $key);
-  $value = memcached_get_by_key($memc, $master_key, $key, $flags, $rc);
-
-Get and return the value of $key, $master_key. The $master_key is used for
-determining which server an object was stored if key partitioning was used
-for storage. 
-
-Returns undef on error.
 
 Also updates $flags to the value of the flags stored with $value,
 and updates $rc with the return code.
@@ -416,23 +370,27 @@ Returns undef if there are no more values.
 If $flag is given then it will be updated to whatever flags were stored with the value.
 If $rc is given then it will be updated to the return code.
 
+This is similar to L<memcached_get> except its fetching the results from the previous
+call to L</memcached_mget> and $key is an output parameter instead of an input.
+Usually you'd just use L</memcached_mget_into_hashref> instead.
+
 =cut
 
 
-=head2 Functions for Incrementing and Decrementing Values from memcached
+=head2 Functions for Incrementing and Decrementing Values
 
 =head3 memcached_increment
 
-  $return = memcached_increment( $key, $offset, $new_value_out );
+  memcached_increment( $key, $offset, $new_value_out );
 
-Increments the value associated with $key by $offset and returns the new value in $new_value_out.
+Increments the integer value associated with $key by $offset and returns the new value in $new_value_out.
 See also L<Memcached::libmemcached::memcached_auto>.
 
 =head3 memcached_decrement 
 
   memcached_decrement( $key, $offset, $new_value_out );
 
-Decrements the value associated with $key by $offset and returns the new value in $new_value_out.
+Decrements the integer value associated with $key by $offset and returns the new value in $new_value_out.
 See also L<Memcached::libmemcached::memcached_auto>.
 
 =cut
@@ -457,16 +415,6 @@ See L<Memcached::libmemcached::memcached_delete>.
 Delete $key. If $expiration is greater than zero then the key is deleted by
 memcached after that many seconds.
 
-=head3 memcached_delete_by_key
-
-  memcached_delete_by_key($memc, $master_key, $key);
-  memcached_delete_by_key($memc, $master_key, $key, $expiration);
-
-Delete $key, $master_key. $master_key is used to refer to a particular
-server if key-partitioning was used to store the object. If $expiration
-is greater than zero then the key is deleted by memcached after that 
-many seconds.
-
 =cut
 
 
@@ -478,6 +426,19 @@ See L<Memcached::libmemcached::memcached_stats>.
 
 
 =head2 Miscellaneous Functions
+
+=head2 memcached_lib_version
+
+  $version = memcached_lib_version()
+
+Returns a simple version string, like "0.15", representing the libmemcached
+version (version of the client library, not server).
+
+=head2 memcached_verbosity
+
+  memcached_verbosity($memc, $verbosity)
+
+Modifies the "verbosity" of the memcached servers associated with $memc.
 
 =head2 memcached_quit
 
@@ -529,6 +490,52 @@ Currently the functions must return an empty list.
 =head3 memcached_replace
 =cut
 
+
+=head2 Grouping Keys On Servers
+
+Normally libmemcached hashes the $key value to select which memcached server to
+communicate with. If you have several keys relating to a single object then
+it's very likely that the corresponding values will be stored in different
+memcached servers.
+
+It would be more efficient, in general, when setting and getting multiple
+related values, if it was possible to specify a different value to be hashed to
+select which memcached server to communicate with. With libmemcached, you can.
+
+Most of the functions for setting and getting values have C<*_by_key> variants
+for exactly this reason.  These all have an extra $master_key parameter
+immediately after the $memc parameter. For example:
+
+    memcached_mget($memc, \%keys, \%dest);
+
+    memcached_mget_by_key($memc, $maskey_key, \%keys, \%dest);
+
+The C<*_by_key> variants all work in exactly the same way as the corresponding
+plain function, except that libmemcached hashes $master_key instead of $key to
+which memcached server to communicate with.
+
+If $master_key is undef then the functions behave the same as their non-by-key
+variants, i.e., $key is used for hashing.
+
+By-key variants of L</Functions for Fetching Values>:
+
+=head3 memcached_get_by_key
+
+=head3 memcached_mget_by_key
+
+By-key variants of L</Functions for Setting Values>:
+
+=head3 memcached_set_by_key
+
+=head3 memcached_replace_by_key
+
+=head3 memcached_add_by_key
+
+=head3 memcached_append_by_key
+
+=head3 memcached_prepend_by_key
+
+=head3 memcached_delete_by_key
 
 =head1 EXTRA INFORMATION
 

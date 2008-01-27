@@ -1,8 +1,8 @@
 General:
 
-Add ability for typemap entries to specify a chunk should be output closer to the function call.
-
 memcached_get whith no memcached servers running returns 'not found' - is that appropriate?
+Add cas to callback
+Need memcached_mget_by_key_into_hashref
 
 Refactor memcached_get_by_key and memcached_get to factor out common code.
 
@@ -38,3 +38,7 @@ Compatibility:
     Like BerkeleyDB filters: http://search.cpan.org/~pmqs/BerkeleyDB/BerkeleyDB.pod#DBM_Filters
     Write Cache::Memcached* emulations and run their test suites.
 
+Random thoughts...
+
+    For *_by_key functions, if $master_key is undef then use some per-$memc mechanism,
+    such as a pre-stored scalar, or a callback, to get the value.

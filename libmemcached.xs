@@ -517,6 +517,21 @@ memcached_mget(Memcached__libmemcached ptr, SV *keys_rv)
         RETVAL
 
 memcached_return
+memcached_mget_by_key(Memcached__libmemcached ptr, lmc_key master_key, size_t length(master_key), SV *keys_rv)
+    PREINIT:
+        char **keys;
+        size_t *key_length;
+        unsigned int number_of_keys;
+    CODE:
+        if ((RETVAL = _prep_keys_lengths(ptr, keys_rv, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
+            RETVAL = memcached_mget_by_key(ptr, master_key, XSauto_length_of_master_key, keys, key_length, number_of_keys);
+            Safefree(keys);
+            Safefree(key_length);
+        }
+    OUTPUT:
+        RETVAL
+
+memcached_return
 memcached_mget_into_hashref(Memcached__libmemcached ptr, SV *keys_ref, HV *dest_ref)
     PREINIT:
         char **keys;
@@ -591,13 +606,16 @@ memcached_delete_by_key (Memcached__libmemcached ptr, \
 =cut
 
 memcached_return
-memcached_flush(Memcached__libmemcached ptr, lmc_expiration expiration=0)
+memcached_verbosity(Memcached__libmemcached ptr, unsigned int verbosity)
 
-char *
-memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
+memcached_return
+memcached_flush(Memcached__libmemcached ptr, lmc_expiration expiration=0)
 
 void
 memcached_quit(Memcached__libmemcached ptr)
+
+char *
+memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 
 SV *
 memcached_errstr(Memcached__libmemcached ptr)
@@ -616,6 +634,13 @@ memcached_errstr(Memcached__libmemcached ptr)
     OUTPUT:
         RETVAL
 
+const char *
+memcached_lib_version() 
+
+=pod not in 0.14
+memcached_return
+memcached_version(Memcached__libmemcached ptr)
+=cut
 
 SV *
 _memcached_version(Memcached__libmemcached ptr)
