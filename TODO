@@ -1,13 +1,9 @@
 General:
 
 memcached_get whith no memcached servers running returns 'not found' - is that appropriate?
-Add cas to callback
 Need memcached_mget_by_key_into_hashref
-
-Refactor memcached_get_by_key and memcached_get to factor out common code.
-
+Add stats api
 Document all typedef actions on input and output
-All version api and add tests to cross-check the pm $VERSION
 
 Resolve mapping of error codes to booleans
 (see parse_*_reply in http://search.cpan.org/src/KROKI/Cache-Memcached-Fast-0.07/src/client.c)
@@ -17,11 +13,13 @@ so people can see which tag to use to import a constant.
 
 Structure:
     Aim to be at least thread-safe and ideally thread-hot.
-    Add MEMCACHED_BEHAVIOR_USER_DATA structure
-        will also hold PrintError & RaiseError flags
-    Resolve uint64_t issues (esp re cas)
+    Add hold PrintError & RaiseError flags
+    Add cas support - if sizeof(uint64_t) <= sizeof(UV) then use UV else use a newSV(sizeof(uint64_t))
+    and store the uint64_t as a binary string.
+    Resolve other uint64_t issues, esp increment/decrement
 
 Tests:
+    Add test coverage target
 
 CPAN:
     Find out how to get more info into a cpan-testers NA report.

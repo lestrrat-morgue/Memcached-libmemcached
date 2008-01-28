@@ -9,11 +9,11 @@ Memcached::libmemcached - Thin fast full interface to the libmemcached client AP
 
 =head1 VERSION
 
-Version 0.1402 (with libmemcached-0.14 embedded)
+Version 0.1403 (with libmemcached-0.14 embedded)
 
 =cut
 
-our $VERSION = '0.1402';
+our $VERSION = '0.1403';
 
 use Carp;
 use base qw(Exporter);
@@ -43,7 +43,7 @@ XSLoader::load('Memcached::libmemcached', $VERSION);
 =head1 DESCRIPTION
 
 Memcached::libmemcached is a very thin, highly efficient, wrapper around the
-libmemcached library.
+libmemcached library. It's implemented almost entirely in C.
 
 It gives full access to the rich functionality offered by libmemcached.
 libmemcached is fast, light on memory usage, thread safe, and provide full
@@ -89,7 +89,7 @@ documentation, with two exceptions:
 
 * There are no I<length> arguments. Wherever the libmemcached documentation
 shows a length argument (input or output) the corresponding argument doesn't
-exist in the Perl API, because it's not needed.
+exist in the Perl API because it's not needed.
 
 * Some arguments are optional.
 
