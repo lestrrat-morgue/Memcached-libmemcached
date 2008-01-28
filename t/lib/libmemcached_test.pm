@@ -10,6 +10,7 @@ use Test::More;
 
 our @EXPORT = qw(
     libmemcached_test_create
+    libmemcached_test_key
 );
 
 use Memcached::libmemcached qw(
@@ -58,6 +59,15 @@ sub libmemcached_version_ge {
         return 0 if $memcached_version[$_] < $min_version[$_];
     }
     return 1; # identical versions
+}
+
+
+sub libmemcached_test_key {
+    # return a value suitable for use as a memcached key
+    # that is unique for each run of the script
+    # but returns the same value for the life of the script
+    our $time_rand ||= ($^T + rand());
+    return $time_rand;
 }
 
 1;

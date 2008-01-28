@@ -5,7 +5,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Time::HiRes qw(time);
 
 use Memcached::libmemcached
     #   functions explicitly tested by this file
@@ -23,7 +22,7 @@ use lib 't/lib';
 use libmemcached_test;
 
 my $m1= "master-key";
-my $k1= "replace-".time();
+my $k1= "replace-".libmemcached_test_key();
 my $orig= 'original content';
 my $repl= 'replaced stuff';
 my $flags;

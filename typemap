@@ -10,6 +10,11 @@
 
 TYPEMAP
 
+# --- some basic types not in the perl 5.6 typemap
+const char *           T_PV
+size_t                 T_UV
+
+
 # --- simple types ---
 memcached_behavior                      T_IV
 memcached_return                        T_RETURN
@@ -31,6 +36,12 @@ lmc_data_flags_t                        T_FLAGS
 # XXX memory management may be reworked to store structure in scalars
 Memcached__libmemcached                 T_PTROBJ_RVIV
 
+
+INPUT
+T_HVREF
+    if (!SvROK($arg) || !SvTYPE(SvRV($arg))==SVt_PVHV)
+        Perl_croak(aTHX_ \"$var is not a hash reference\");
+    $var = (HV*)SvRV($arg);
 
 INPUT
 T_RETURN

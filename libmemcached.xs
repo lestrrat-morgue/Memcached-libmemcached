@@ -127,7 +127,7 @@ _prep_keys_lengths(memcached_st *ptr, SV *keys_rv, char ***out_keys, size_t **ou
         number_of_keys = HvKEYS(keys_sv);
         Newx(keys,       number_of_keys, char *);
         Newx(key_length, number_of_keys, size_t);
-        while ( (he = hv_iternext_flags((HV*)keys_sv, 0)) ) {
+        while ( (he = hv_iternext((HV*)keys_sv)) ) {
             keys[i] = hv_iterkey(he, &retlen);
             key_length[i++] = retlen;
         }
