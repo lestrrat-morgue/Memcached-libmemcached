@@ -27,7 +27,7 @@ my $memc = libmemcached_test_create();
 my $items = 5;
 plan tests => $items + 3
     + 2 * (1 + $items * 2 + 1)
-    + $items + 4;
+    + $items + 6;
 
 my ($rv, $rc, $flags);
 my $t1= time();
@@ -81,6 +81,12 @@ my %extra = ( foo => 'bar' );
 # reset got data, but not to empty so we check the hash isn't erased
 my %got = %extra;
 ok memcached_mget_into_hashref($memc, [ keys %data ], \%got),
+    'should return true';
+
+is_deeply \%got, { %data, %extra };
+
+# refetch with duplicate keys, mainly to trigger realloc of key buffers
+ok memcached_mget_into_hashref($memc, [ (keys %data) x 10 ], \%got),
     'should return true';
 
 is_deeply \%got, { %data, %extra };

@@ -48,6 +48,10 @@ struct lmc_cb_context_st {
     UV  result_count;
     SV  *get_cb;
     SV  *set_cb;
+    /* current set of keys for mget */
+    char   **key_strings;
+    size_t  *key_lengths;
+    IV       key_alloc_count;
 };
 
 /* perl api state information associated with an individual memcached_st */
@@ -81,20 +85,51 @@ lmc_state_new(SV *memc_sv)
 static void
 lmc_state_cleanup(memcached_st *ptr)
 {
-    lmc_state_st *lmc_state = 0;
     memcached_return rc;
+    lmc_cb_context_st *lmc_cb_context;
+    lmc_state_st *lmc_state = 0;
     lmc_state = memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, &rc);
     memcached_callback_set(ptr, MEMCACHED_CALLBACK_USER_DATA, 0);
+
     if (lmc_state->trace_level >= 2)
         warn("lmc_state_cleanup(%p) %p", ptr, lmc_state);
 
-    sv_free(lmc_state->cb_context->get_cb);
-    sv_free(lmc_state->cb_context->set_cb);
+    lmc_cb_context = lmc_state->cb_context;
+    sv_free(lmc_cb_context->get_cb);
+    sv_free(lmc_cb_context->set_cb);
+    Safefree(lmc_cb_context->key_strings);
+    Safefree(lmc_cb_context->key_lengths);
     Safefree(lmc_state);
 }
 
 
 /* ====================================================================================== */
+
+
+static void
+_prep_keys_buffer(lmc_cb_context_st *lmc_cb_context, int keys_needed)
+{
+    int trace_level = lmc_cb_context->lmc_state->trace_level;
+    if (keys_needed <= lmc_cb_context->key_alloc_count) {
+        if (trace_level >= 9)
+            warn("reusing keys buffer");
+        return;
+    }
+    if (!lmc_cb_context->key_strings) {
+        Newx(lmc_cb_context->key_strings, keys_needed, char *);
+        Newx(lmc_cb_context->key_lengths, keys_needed, size_t);
+        if (trace_level >= 3)
+            warn("new keys buffer");
+    }
+    else {
+        keys_needed *= 1.2;
+        Renew(lmc_cb_context->key_strings, keys_needed, char *);
+        Renew(lmc_cb_context->key_lengths, keys_needed, size_t);
+        if (trace_level >= 3)
+            warn("growing keys buffer %d->%d", lmc_cb_context->key_alloc_count, keys_needed);
+    }
+    lmc_cb_context->key_alloc_count = keys_needed;
+}
 
 
 static memcached_return
@@ -106,6 +141,9 @@ _prep_keys_lengths(memcached_st *ptr, SV *keys_rv, char ***out_keys, size_t **ou
     size_t *key_length;
     int i = 0;
 
+    lmc_state_st *lmc_state = LMC_STATE(ptr);
+    lmc_cb_context_st *lmc_cb_context = lmc_state->cb_context;
+
     if (!SvROK(keys_rv))
         return MEMCACHED_NO_KEY_PROVIDED;
     keys_sv = SvRV(keys_rv);
@@ -114,8 +152,10 @@ _prep_keys_lengths(memcached_st *ptr, SV *keys_rv, char ***out_keys, size_t **ou
 
     if (SvTYPE(keys_sv) == SVt_PVAV) {
         number_of_keys = AvFILL(keys_sv)+1;
-        Newx(keys,       number_of_keys, char *);
-        Newx(key_length, number_of_keys, size_t);
+        if (number_of_keys > lmc_cb_context->key_alloc_count)
+            _prep_keys_buffer(lmc_cb_context, number_of_keys);
+        keys       = lmc_cb_context->key_strings;
+        key_length = lmc_cb_context->key_lengths;
         for (i = 0; i < number_of_keys; i++) {
             keys[i] = SvPV(AvARRAY(keys_sv)[i], key_length[i]);
         }
@@ -125,8 +165,10 @@ _prep_keys_lengths(memcached_st *ptr, SV *keys_rv, char ***out_keys, size_t **ou
         I32 retlen;
         hv_iterinit((HV*)keys_sv);
         number_of_keys = HvKEYS(keys_sv);
-        Newx(keys,       number_of_keys, char *);
-        Newx(key_length, number_of_keys, size_t);
+        if (number_of_keys > lmc_cb_context->key_alloc_count)
+            _prep_keys_buffer(lmc_cb_context, number_of_keys);
+        keys       = lmc_cb_context->key_strings;
+        key_length = lmc_cb_context->key_lengths;
         while ( (he = hv_iternext((HV*)keys_sv)) ) {
             keys[i] = hv_iterkey(he, &retlen);
             key_length[i++] = retlen;
@@ -542,8 +584,6 @@ memcached_mget(Memcached__libmemcached ptr, SV *keys_rv)
     CODE:
         if ((RETVAL = _prep_keys_lengths(ptr, keys_rv, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
             RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
-            Safefree(keys);
-            Safefree(key_length);
         }
     OUTPUT:
         RETVAL
@@ -557,8 +597,6 @@ memcached_mget_by_key(Memcached__libmemcached ptr, lmc_key master_key, size_t le
     CODE:
         if ((RETVAL = _prep_keys_lengths(ptr, keys_rv, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
             RETVAL = memcached_mget_by_key(ptr, master_key, XSauto_length_of_master_key, keys, key_length, number_of_keys);
-            Safefree(keys);
-            Safefree(key_length);
         }
     OUTPUT:
         RETVAL
@@ -572,8 +610,6 @@ memcached_mget_into_hashref(Memcached__libmemcached ptr, SV *keys_ref, HV *dest_
     CODE:
         if ((RETVAL = _prep_keys_lengths(ptr, keys_ref, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
             RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
-            Safefree(keys);
-            Safefree(key_length);
             RETVAL = _fetch_all_into_hashref(ptr, RETVAL, dest_ref);
         }
     OUTPUT:
