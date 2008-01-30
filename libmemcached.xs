@@ -22,7 +22,7 @@ typedef time_t               lmc_expiration;
 #define LMC_TRACE_LEVEL(ptr) \
     ((ptr) ? LMC_STATE(ptr)->trace_level : 0)
 #define LMC_RETURN_OK(ret) \
-    (ret==MEMCACHED_SUCCESS || ret==MEMCACHED_END || ret==MEMCACHED_BUFFERED)
+    (ret==MEMCACHED_SUCCESS || ret==MEMCACHED_STORED || ret==MEMCACHED_DELETED || ret==MEMCACHED_END || ret==MEMCACHED_BUFFERED)
 
 #define RECORD_RETURN_ERR(ptr, ret) \
     STMT_START {    \

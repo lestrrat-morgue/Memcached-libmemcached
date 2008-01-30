@@ -20,6 +20,7 @@ Structure:
 
 Tests:
     Add test coverage target
+    test errno errstr
 
 CPAN:
     Find out how to get more info into a cpan-testers NA report.
