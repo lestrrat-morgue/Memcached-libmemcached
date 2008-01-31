@@ -25,7 +25,7 @@ use libmemcached_test;
 my $memc = libmemcached_test_create();
 
 my $items = 2;
-plan tests => 17;
+plan tests => 21;
 
 my ($rv, $rc, $flags);
 my $t1= time();
@@ -69,15 +69,17 @@ is_deeply \%got, \%data;
 
 print "test modification of values by callback\n";
 
+my $expected_flags = 0xE0E0E0E0;
 $set_cb = sub {
     $_ = uc($_).lc($_);
-    $_[1] = 0xE0E0E0E0;
+    $_[1] = $expected_flags;
     return;
 };
 memcached_set_callback_coderefs($memc, undef, $set_cb);
 
 for my $k (keys %data) {
     my $v = $data{$k};
+    ok memcached_set($memc, $k, $v);
     is memcached_get($memc, $k, my $flags), uc($v).lc($v);
-    #is $flags, 0xE0E0E0E0;
+    is $flags, $expected_flags, "flags is $flags (expected $expected_flags)" ;
 }
