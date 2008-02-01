@@ -4,16 +4,23 @@ use warnings;
 use ExtUtils::MakeMaker;
 use Config;
 
+use Getopt::Long;
 use Data::Dumper;
 use Cwd qw(abs_path);
 
 BEGIN {
     my $min = 5.006;
     if ($] < $min) {
-        warn "Perl version $] is below minimum $min required.\n";
+        warn "Perl version $] is below minimum $min required. Upgrade!\n";
         exit 0;
     }
 }
+
+
+GetOptions(
+    'g!'    => \my $opt_g,      # enable debugging
+    'pg!'   => \my $opt_pg,     # enable profiling
+) or exit 1;
 
 my $lmcd_src = "src/libmemcached";
 my $lmcd_inst = abs_path("src_inst");
@@ -41,6 +48,9 @@ if (my $gccversion = $Config{gccversion}) {     # ask gcc to be more pedantic
         $opts{DEFINE} .= ' -Wmissing-prototypes';
     }
 }
+$opts{OPTIMIZE} = "-g"  if $opt_g;
+$opts{CCFLAGS}  = "-pg" if $opt_pg;
+
 
 WriteMakefile(
     NAME                => 'Memcached::libmemcached',
@@ -57,6 +67,10 @@ WriteMakefile(
     LDFROM           => '$(OBJECT)'." $lmcd_built_lib",
     PREREQ_PM           => {
         'Test::More' => 0,
+    },
+    dynamic_lib         => {
+        OTHERLDFLAGS => ($opt_pg ? "-pg " : "")
+                      . ($opt_g  ? "-g "  : ""), 
     },
     dist                => {
         COMPRESS => 'gzip -9f', SUFFIX => 'gz',
@@ -141,11 +155,11 @@ sub build_libmemcached {
     mkdir $lmcd_inst, 0775 unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
     my $configure_args = '--with-pic'; #'--disable-shared';
+    $configure_args .= ' --enable-debug' if $opt_g;
+    $configure_args .= ' CFLAGS=-pg LDFLAGS=-pg' if $opt_pg;
     if ($is_developer) {    # XXX make a Makefile.PL argument/option
-        #$configure_args .= ' --enable-debug';
-        warn "libmemcached configure $configure_args";
     }
-    run("cd $lmcd_src && ./configure $configure_args --prefix=$lmcd_inst");
+    run("cd $lmcd_src && ./configure --prefix=$lmcd_inst $configure_args");
     #run("cd $lmcd_src && make test") if $is_developer; # XXX
     run("cd $lmcd_src && make install");
 }
