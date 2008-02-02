@@ -8,6 +8,8 @@ use Getopt::Long;
 use Data::Dumper;
 use Cwd qw(abs_path);
 
+my $has_coverage = eval { require ExtUtils::MakeMaker::Coverage };
+
 BEGIN {
     my $min = 5.006;
     if ($] < $min) {
@@ -48,8 +50,15 @@ if (my $gccversion = $Config{gccversion}) {     # ask gcc to be more pedantic
         $opts{DEFINE} .= ' -Wmissing-prototypes';
     }
 }
-$opts{OPTIMIZE} = "-g"  if $opt_g;
-$opts{CCFLAGS}  = "-pg" if $opt_pg;
+$opts{OPTIMIZE} = "-g" if $opt_g;
+my $coverage_flags = "";
+if ($opt_pg) {
+    $opts{OPTIMIZE} = "-O0";
+    # http://search.cpan.org/~pjcj/Devel-Cover/gcov2perl
+    $coverage_flags = "-fprofile-arcs -ftest-coverage"
+        if $Config{gccversion} && $has_coverage;
+    $opts{CCFLAGS}  = "-pg $coverage_flags";
+}
 
 
 WriteMakefile(
@@ -69,7 +78,7 @@ WriteMakefile(
         'Test::More' => 0,
     },
     dynamic_lib         => {
-        OTHERLDFLAGS => ($opt_pg ? "-pg " : "")
+        OTHERLDFLAGS => ($opt_pg ? "-pg $coverage_flags" : "")
                       . ($opt_g  ? "-g "  : ""), 
     },
     dist                => {
@@ -88,7 +97,12 @@ WriteMakefile(
 {   package MY;
 
 sub postamble {
-return qq{
+    my $coverage_frag = "";
+    if ($has_coverage) {
+        my $conf = ExtUtils::MakeMaker::Coverage->config;
+        $coverage_frag = ExtUtils::MakeMaker::Coverage::testcover();
+    }
+return $coverage_frag.qq{
 LMCD_SRC=$lmcd_src
 LMCD_INST=$lmcd_inst
 LMCD_BUILT_LIB=$lmcd_built_lib
