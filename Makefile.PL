@@ -8,8 +8,6 @@ use Getopt::Long;
 use Data::Dumper;
 use Cwd qw(abs_path);
 
-my $has_coverage = eval { require ExtUtils::MakeMaker::Coverage };
-
 BEGIN {
     my $min = 5.006;
     if ($] < $min) {
@@ -22,6 +20,7 @@ BEGIN {
 GetOptions(
     'g!'    => \my $opt_g,      # enable debugging
     'pg!'   => \my $opt_pg,     # enable profiling
+    'cov!'  => \my $opt_cov,    # enable test coverage analysis
 ) or exit 1;
 
 my $lmcd_src = "src/libmemcached";
@@ -50,14 +49,14 @@ if (my $gccversion = $Config{gccversion}) {     # ask gcc to be more pedantic
         $opts{DEFINE} .= ' -Wmissing-prototypes';
     }
 }
-$opts{OPTIMIZE} = "-g" if $opt_g;
+$opts{OPTIMIZE} = "-g"  if $opt_g;
+$opts{CCFLAGS}  = "-pg" if $opt_pg;
 my $coverage_flags = "";
-if ($opt_pg) {
+if ($opt_cov) {
     $opts{OPTIMIZE} = "-O0";
     # http://search.cpan.org/~pjcj/Devel-Cover/gcov2perl
-    $coverage_flags = "-fprofile-arcs -ftest-coverage"
-        if $Config{gccversion} && $has_coverage;
-    $opts{CCFLAGS}  = "-pg $coverage_flags";
+    $coverage_flags = "-fprofile-arcs -ftest-coverage";
+    $opts{CCFLAGS}  = $coverage_flags;
 }
 
 
@@ -78,8 +77,9 @@ WriteMakefile(
         'Test::More' => 0,
     },
     dynamic_lib         => {
-        OTHERLDFLAGS => ($opt_pg ? "-pg $coverage_flags" : "")
-                      . ($opt_g  ? "-g "  : ""), 
+        OTHERLDFLAGS => ($opt_pg ? "-pg " : "")
+                      . ($opt_g  ? "-g "  : "") 
+                      . $coverage_flags,
     },
     dist                => {
         COMPRESS => 'gzip -9f', SUFFIX => 'gz',
@@ -97,16 +97,21 @@ WriteMakefile(
 {   package MY;
 
 sub postamble {
-    my $coverage_frag = "";
-    if ($has_coverage) {
-        my $conf = ExtUtils::MakeMaker::Coverage->config;
-        $coverage_frag = ExtUtils::MakeMaker::Coverage::testcover();
-    }
-return $coverage_frag.qq{
+return qq{
+COVER = cover
 LMCD_SRC=$lmcd_src
 LMCD_INST=$lmcd_inst
 LMCD_BUILT_LIB=$lmcd_built_lib
 }.q{
+coverclean:
+	$(COVER) -delete
+
+testcover: coverclean pure_all
+	HARNESS_PERL_SWITCHES='-MDevel::Cover=-coverage,branch,-coverage,condition,-coverage,pod,-coverage,statement,-coverage,subroutine' PERL_DL_NONLAZY=1 $(FULLPERLRUN) "-MExtUtils::Command::MM" "-e" "test_harness($(TEST_VERBOSE), '$(INST_LIB)','$(INST_ARCHLIB)')" $(TEST_FILES)
+	gcov libmemcached.xs
+	gcov2perl *.gcov
+	$(COVER) 
+
 clean ::
 
 realclean ::
