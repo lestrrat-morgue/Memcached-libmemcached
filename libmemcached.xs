@@ -16,19 +16,37 @@ typedef char*                lmc_key;
 typedef char*                lmc_value;
 typedef time_t               lmc_expiration;
 
-/* XXX quick hack for now */
-#define LMC_STATE(ptr) \
-    ((lmc_state_st*)memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, NULL))
-#define LMC_PTR_FROM_SV(sv) \
+/* pointer chasing:
+ *
+ * $memc is a scalar (SV) containing a reference (RV) to a hash (HV) with magic (mg):
+ *
+ * RV -> HV -> mg -> lmc_state -> memcached_st (-> MEMCACHED_CALLBACK_USER_DATA points back to lmc_state)
+ *
+ */
+
+/* get a memcached_st structure from a $memc */
+#define LMC_STATE_FROM_SV(sv) \
     (mg_find(SvRV(sv), '~')->mg_obj)
-#define LMC_TRACE_LEVEL(ptr) \
-    ((ptr) ? LMC_STATE(ptr)->trace_level : 0)
+
+#define LMC_PTR_FROM_SV(sv) \
+    ((lmc_state_st*)LMC_STATE_FROM_SV(sv))->ptr
+
+/* get our lmc_state structure from a memcached_st ptr */
+#define LMC_STATE_FROM_PTR(ptr) \
+    ((lmc_state_st*)memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, NULL))
+
+/* get trace level from memcached_st ptr */
+#define LMC_TRACE_LEVEL_FROM_PTR(ptr) \
+    ((ptr) ? LMC_STATE_FROM_PTR(ptr)->trace_level : 0)
+
+/* check memcached_return value counts as success */
 #define LMC_RETURN_OK(ret) \
     (ret==MEMCACHED_SUCCESS || ret==MEMCACHED_STORED || ret==MEMCACHED_DELETED || ret==MEMCACHED_END || ret==MEMCACHED_BUFFERED)
 
-#define RECORD_RETURN_ERR(ptr, ret) \
+/* store memcached_return value in our lmc_state structure */
+#define LMC_RECORD_RETURN_ERR(ptr, ret) \
     STMT_START {    \
-        lmc_state_st* lmc_state = LMC_STATE(ptr); \
+        lmc_state_st* lmc_state = LMC_STATE_FROM_PTR(ptr); \
         lmc_state->last_return = ret;   \
         lmc_state->last_errno  = ptr->cached_errno; /* if MEMCACHED_ERRNO */ \
     } STMT_END
@@ -58,6 +76,8 @@ struct lmc_cb_context_st {
 
 /* perl api state information associated with an individual memcached_st */
 struct lmc_state_st {
+    memcached_st    *ptr;
+    HV              *hv;    /* pointer back to HV (not refcntd) */
     int              trace_level;
     int              options;
     memcached_return last_return;
@@ -69,11 +89,13 @@ struct lmc_state_st {
 
 
 static lmc_state_st *
-lmc_state_new(SV *memc_sv)
+lmc_state_new(memcached_st *ptr, HV *memc_hv)
 {
     char *trace = getenv("PERL_LIBMEMCACHED_TRACE");
     lmc_state_st *lmc_state;
     Newz(0, lmc_state, 1, struct lmc_state_st);
+    lmc_state->ptr = ptr;
+    lmc_state->hv  = memc_hv;
     lmc_state->cb_context = &lmc_state->_cb_context;
     lmc_state->cb_context->lmc_state = lmc_state;
     lmc_state->cb_context->set_cb = newSV(0);
@@ -82,26 +104,6 @@ lmc_state_new(SV *memc_sv)
         lmc_state->trace_level = atoi(trace);
     }
     return lmc_state;
-}
-
-static void
-lmc_state_cleanup(memcached_st *ptr)
-{
-    memcached_return rc;
-    lmc_cb_context_st *lmc_cb_context;
-    lmc_state_st *lmc_state = 0;
-    lmc_state = memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, &rc);
-    memcached_callback_set(ptr, MEMCACHED_CALLBACK_USER_DATA, 0);
-
-    if (lmc_state->trace_level >= 2)
-        warn("lmc_state_cleanup(%p) %p", ptr, lmc_state);
-
-    lmc_cb_context = lmc_state->cb_context;
-    sv_free(lmc_cb_context->get_cb);
-    sv_free(lmc_cb_context->set_cb);
-    Safefree(lmc_cb_context->key_strings);
-    Safefree(lmc_cb_context->key_lengths);
-    Safefree(lmc_state);
 }
 
 
@@ -143,7 +145,7 @@ _prep_keys_lengths(memcached_st *ptr, SV *keys_rv, char ***out_keys, size_t **ou
     size_t *key_length;
     int i = 0;
 
-    lmc_state_st *lmc_state = LMC_STATE(ptr);
+    lmc_state_st *lmc_state = LMC_STATE_FROM_PTR(ptr);
     lmc_cb_context_st *lmc_cb_context = lmc_state->cb_context;
 
     if (!SvROK(keys_rv))
@@ -262,7 +264,7 @@ static unsigned int
 _cb_fire_perl_set_cb(memcached_st *ptr, SV *key_sv, SV *value_sv, SV *flags_sv)
 {
     /* XXX note different api to _cb_fire_perl_get_cb */
-    lmc_state_st *lmc_state = LMC_STATE(ptr);
+    lmc_state_st *lmc_state = LMC_STATE_FROM_PTR(ptr);
     lmc_cb_context_st *lmc_cb_context = lmc_state->cb_context;
     unsigned int status;
 
@@ -323,7 +325,7 @@ memcached_callback_fp lmc_store_sv_get[3][3] = {
 static SV *
 _fetch_one_sv(memcached_st *ptr, lmc_data_flags_t *flags_ptr, memcached_return *error_ptr)
 {
-    lmc_cb_context_st *lmc_cb_context = LMC_STATE(ptr)->cb_context;
+    lmc_cb_context_st *lmc_cb_context = LMC_STATE_FROM_PTR(ptr)->cb_context;
 
     int callback_ix = 0;
     memcached_callback_fp callbacks[5];
@@ -352,7 +354,7 @@ _fetch_one_sv(memcached_st *ptr, lmc_data_flags_t *flags_ptr, memcached_return *
 static memcached_return
 _fetch_all_into_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
 {
-    lmc_cb_context_st *lmc_cb_context = LMC_STATE(ptr)->cb_context;
+    lmc_cb_context_st *lmc_cb_context = LMC_STATE_FROM_PTR(ptr)->cb_context;
     lmc_data_flags_t flags;
 
     int callback_ix = 0;
@@ -419,15 +421,35 @@ memcached_server_add_unix_socket(Memcached__libmemcached ptr, char *socket)
 
 void
 memcached_free(Memcached__libmemcached ptr)
-    ALIAS:
-        DESTROY = 1
     INIT:
         if (!ptr)   /* garbage or already freed this sv */
             XSRETURN_EMPTY;
-        PERL_UNUSED_VAR(ix);
     POSTCALL:
-        if (ptr)    /* mark to avoid duplicate free */
-            LMC_PTR_FROM_SV(ST(0)) = NULL;
+        LMC_STATE_FROM_PTR(ptr)->ptr = NULL;
+
+void
+DESTROY(SV *sv)
+    PPCODE:
+    lmc_state_st *lmc_state;
+    lmc_cb_context_st *lmc_cb_context;
+
+    lmc_state = (lmc_state_st*)LMC_STATE_FROM_SV(sv);
+    if (lmc_state->trace_level >= 2) {
+        warn("DESTROY sv %p, state %p, ptr %p", SvRV(sv), lmc_state, lmc_state->ptr);
+        if (lmc_state->trace_level >= 9)
+            sv_dump(sv);
+    }
+    if (lmc_state->ptr)
+        memcached_free(lmc_state->ptr);
+
+    lmc_cb_context = lmc_state->cb_context;
+    sv_free(lmc_cb_context->get_cb);
+    sv_free(lmc_cb_context->set_cb);
+    Safefree(lmc_cb_context->key_strings);
+    Safefree(lmc_cb_context->key_lengths);
+
+    sv_unmagic(SvRV(sv), '~'); /* disconnect lmc_state from HV */
+    Safefree(lmc_state);
 
 UV
 memcached_behavior_get(Memcached__libmemcached ptr, memcached_behavior flag)
@@ -692,8 +714,10 @@ memcached_errstr(Memcached__libmemcached ptr)
     PREINIT:
         lmc_state_st* lmc_state;
     CODE:
+        if (!ptr)
+            XSRETURN_UNDEF;
         RETVAL = newSV(0);
-        lmc_state = LMC_STATE(ptr);
+        lmc_state = LMC_STATE_FROM_PTR(ptr);
         /* setup return value as a dualvar with int err code and string error message */
         sv_setiv(RETVAL, lmc_state->last_return);
         sv_setpv(RETVAL, memcached_strerror(ptr, lmc_state->last_return));
@@ -743,6 +767,6 @@ memcached_set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get
             croak("set_cb is not a reference to a subroutine");
         if (SvOK(get_cb) && !(SvROK(get_cb) && SvTYPE(SvRV(get_cb)) == SVt_PVCV))
             croak("get_cb is not a reference to a subroutine");
-        lmc_state = LMC_STATE(ptr);
+        lmc_state = LMC_STATE_FROM_PTR(ptr);
         sv_setsv(lmc_state->cb_context->set_cb, set_cb);
         sv_setsv(lmc_state->cb_context->get_cb, get_cb);

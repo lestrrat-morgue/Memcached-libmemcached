@@ -51,11 +51,11 @@ T_RETURN
 OUTPUT
 T_RETURN:init
         /* T_RETURN:init */
-        if (LMC_TRACE_LEVEL(ptr)) {
-            if (LMC_TRACE_LEVEL(ptr) > 1 || !LMC_RETURN_OK($var))
+        if (LMC_TRACE_LEVEL_FROM_PTR(ptr)) {
+            if (LMC_TRACE_LEVEL_FROM_PTR(ptr) > 1 || !LMC_RETURN_OK($var))
                 warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
         }
-        RECORD_RETURN_ERR(ptr, $var);
+        LMC_RECORD_RETURN_ERR(ptr, $var);
 T_RETURN
         /* T_RETURN */
         if (!SvREADONLY($arg)) {
@@ -93,7 +93,7 @@ T_VALUE
         /* mention $length_var here to keep ParseXS happy for now */
 T_VALUE:pre_call
         /* T_VALUE:pre_call */
-        if (SvOK(LMC_STATE(ptr)->cb_context->set_cb)) {
+        if (SvOK(LMC_STATE_FROM_PTR(ptr)->cb_context->set_cb)) {
             /* XXX ignoring flags till we have a better mechanism */
             SV *key_sv, *value_sv, *flags_sv;
             /* these SVs may get cached inside lmc_cb_context_st and reused across calls */
@@ -148,17 +148,16 @@ T_MEMCACHED
             sv_setsv($arg, newRV_noinc((SV*)hv));
             (void)sv_bless($arg, gv_stashpv(classname, TRUE));
 
+            /* allocate an lmc_state struct and attach via MEMCACHED_CALLBACK_USER_DATA */
+            lmc_state_st *lmc_state = lmc_state_new($var, hv);
+            memcached_callback_set($var, MEMCACHED_CALLBACK_USER_DATA, lmc_state);
+
             /* now attach $var to the HV */
             /* done as two steps to avoid sv_magic SvREFCNT_inc and MGf_REFCOUNTED */
             sv_magic((SV*)hv, NULL, '~', NULL, 0);
-            LMC_PTR_FROM_SV($arg) = (void*)$var;
-
-            /* allocate an lmc_state struct and attach via MEMCACHED_CALLBACK_USER_DATA */
-            lmc_state_st *lmc_state = lmc_state_new($arg);
-            memcached_callback_set($var, MEMCACHED_CALLBACK_USER_DATA,        lmc_state);
-            memcached_callback_set($var, MEMCACHED_CALLBACK_CLEANUP_FUNCTION, lmc_state_cleanup);
+            LMC_STATE_FROM_SV($arg) = (void*)lmc_state;
         }
-        if (LMC_TRACE_LEVEL($var) >= 2)
+        if (LMC_TRACE_LEVEL_FROM_PTR($var) >= 2)
             warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
 INPUT
@@ -177,6 +176,6 @@ T_MEMCACHED
         }
         else
             croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\");
-        if (LMC_TRACE_LEVEL($var) >= 2)
+        if (LMC_TRACE_LEVEL_FROM_PTR($var) >= 2)
             warn(\"\t=> %s(%s %s = 0x%p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
