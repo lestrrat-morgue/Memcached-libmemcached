@@ -19,6 +19,8 @@ typedef time_t               lmc_expiration;
 /* XXX quick hack for now */
 #define LMC_STATE(ptr) \
     ((lmc_state_st*)memcached_callback_get(ptr, MEMCACHED_CALLBACK_USER_DATA, NULL))
+#define LMC_PTR_FROM_SV(sv) \
+    (mg_find(SvRV(sv), '~')->mg_obj)
 #define LMC_TRACE_LEVEL(ptr) \
     ((ptr) ? LMC_STATE(ptr)->trace_level : 0)
 #define LMC_RETURN_OK(ret) \
@@ -424,8 +426,8 @@ memcached_free(Memcached__libmemcached ptr)
             XSRETURN_EMPTY;
         PERL_UNUSED_VAR(ix);
     POSTCALL:
-        if (ptr)    /* mark as undef to avoid duplicate free */
-            SvOK_off((SV*)SvRV(ST(0)));
+        if (ptr)    /* mark to avoid duplicate free */
+            LMC_PTR_FROM_SV(ST(0)) = NULL;
 
 UV
 memcached_behavior_get(Memcached__libmemcached ptr, memcached_behavior flag)

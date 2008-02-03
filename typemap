@@ -34,7 +34,7 @@ lmc_data_flags_t                        T_FLAGS
 
 # --- complex types (incl. objects, typedef name encodes class name) ---
 # XXX memory management may be reworked to store structure in scalars
-Memcached__libmemcached                 T_PTROBJ_RVIV
+Memcached__libmemcached                 T_MEMCACHED
 
 
 INPUT
@@ -136,19 +136,42 @@ T_EXPIRATION
         /* XXX add logic for default expiration */
         $var = ($type)SvUV($arg)
 
+OUTPUT
+T_MEMCACHED
+        /* T_MEMCACHED */
+        if (!$var)          /* if null */
+            SvOK_off($arg); /* then return as undef instead of reaf to undef */
+        else {
+            /* setup $arg as a ref to a blessed hash hv */
+            char *classname = \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\";
+            HV *hv = newHV();
+            sv_setsv($arg, newRV_noinc((SV*)hv));
+            (void)sv_bless($arg, gv_stashpv(classname, TRUE));
+
+            /* now attach $var to the HV */
+            /* done as two steps to avoid sv_magic SvREFCNT_inc and MGf_REFCOUNTED */
+            sv_magic((SV*)hv, NULL, '~', NULL, 0);
+            LMC_PTR_FROM_SV($arg) = (void*)$var;
+
+            /* allocate an lmc_state struct and attach via MEMCACHED_CALLBACK_USER_DATA */
+            lmc_state_st *lmc_state = lmc_state_new($arg);
+            memcached_callback_set($var, MEMCACHED_CALLBACK_USER_DATA,        lmc_state);
+            memcached_callback_set($var, MEMCACHED_CALLBACK_CLEANUP_FUNCTION, lmc_state_cleanup);
+        }
+        if (LMC_TRACE_LEVEL($var) >= 2)
+            warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
 INPUT
-T_PTROBJ_RVIV
-        /* T_PTROBJ_RVIV */
+T_MEMCACHED
+        /* T_MEMCACHED */
         if (!SvOK($arg)) {  /* undef         */
             $var = NULL;    /* treat as null */
         }
         else if (sv_derived_from($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\")) {
-            if (SvROK($arg) && SvOK(SvRV($arg))) {
-                IV tmp = SvIV((SV*)SvRV($arg));
-                $var = INT2PTR($type, tmp);
+            if (SvROK($arg)) {
+                $var = (memcached_st*)LMC_PTR_FROM_SV($arg);
             }
-            else { /* already freed */
+            else { /* memcached_st ptr already freed or is a class name */
                 $var = NULL;
             }
         }
@@ -157,16 +180,3 @@ T_PTROBJ_RVIV
         if (LMC_TRACE_LEVEL($var) >= 2)
             warn(\"\t=> %s(%s %s = 0x%p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
 
-OUTPUT
-T_PTROBJ_RVIV
-        /* T_PTROBJ_RVIV */
-        if (!$var)          /* if null */
-            SvOK_off($arg); /* then return as undef instead of reaf to undef */
-        else {
-            lmc_state_st *lmc_state = lmc_state_new($arg);
-            sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", $var);
-            memcached_callback_set($var, MEMCACHED_CALLBACK_USER_DATA,        lmc_state);
-            memcached_callback_set($var, MEMCACHED_CALLBACK_CLEANUP_FUNCTION, lmc_state_cleanup);
-        }
-        if (LMC_TRACE_LEVEL($var) >= 2)
-            warn(\"\t<= %s(%s %s = %p)\", \"${func_name}\", \"${ntype}\", \"${var}\", (void*)$var);
