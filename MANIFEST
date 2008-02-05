@@ -152,6 +152,7 @@ src/libmemcached/tests/test.h
 t/00-load.t
 t/01-import.t
 t/02-create.t
+t/02-subclass.t
 t/03-servers.t
 t/04-strerror.t
 t/05-behavior.t

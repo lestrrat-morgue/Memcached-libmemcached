@@ -400,12 +400,19 @@ INCLUDE: const-xs.inc
 
 Memcached__libmemcached
 memcached_create(Memcached__libmemcached ptr=NULL)
+    ALIAS:
+        new = 1
+    PREINIT:
+        SV *class_sv = (items >= 1) ? ST(0) : NULL;
     INIT:
         ptr = NULL; /* force null even if arg provided */
+        PERL_UNUSED_VAR(ix);
 
 
 Memcached__libmemcached
 memcached_clone(Memcached__libmemcached clone, Memcached__libmemcached source)
+    PREINIT:
+        SV *class_sv = (items >= 1) ? ST(0) : NULL;
     INIT:
         clone = NULL; /* force null even if arg provided */
 

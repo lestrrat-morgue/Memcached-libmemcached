@@ -88,7 +88,7 @@ WriteMakefile(
     },
     # see also MY::postamble below
     clean               => {
-        FILES => 'Memcached-libmemcached-* lib/Memcached/libmemcached/*_hash.pl',
+        FILES => 'Memcached-libmemcached-* lib/Memcached/libmemcached/*_hash.pl *.gcov libmemcached.gcda libmemcached.gcno',
     },
     %opts,
 );

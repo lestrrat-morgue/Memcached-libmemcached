@@ -523,6 +523,19 @@ By-key variants of L</Functions for Setting Values>:
 
 =head3 memcached_delete_by_key
 
+=head1 OBJECT-ORIENTED INTERFACE
+
+=head2 Methods
+
+=head3 new
+
+    $memc = $class->new; # same as memcached_create()
+
+=head2 Reference
+
+The $memc variable 
+
+
 =head1 EXTRA INFORMATION
 
 =head2 Tracing Execution
