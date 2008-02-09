@@ -2,7 +2,6 @@ General:
 
 memcached_get whith no memcached servers running returns 'not found' - is that appropriate?
 rename perl-only functions to not have memcached_ prefix?
-Turn them into methods?
 Align with Cache:: API
 Need memcached_mget_by_key_into_hashref?
 Add stats api

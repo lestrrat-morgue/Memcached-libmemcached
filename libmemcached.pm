@@ -137,7 +137,7 @@ otherwise indicated.
 
 The actual C<memcached_return> integer value, and corresponding error message,
 for the last libmemcached function call can be accessed via the
-L</memcached_errstr> function, or as $memc->{errstr}.
+L</errstr> method.
 
 =head2 Unimplemented Functions
 
@@ -147,7 +147,7 @@ likely to be deprecated by libmemcached.
 
 Functions relating to iterating through results (memcached_result_*) have not
 been implemented yet. They're not a priority because similar functionality is
-available via the callbacks. See L</memcached_set_callback_coderefs>.
+available via the callbacks. See L</set_callback_coderefs>.
 
 Functions relating to stats should be implemented soonish. Patches welcome!
 
@@ -234,21 +234,6 @@ See L<Memcached::libmemcached::memcached_behavior>.
 
 Get the value of a particular option.
 See L<Memcached::libmemcached::memcached_behavior>.
-
-=head3 memcached_errstr
-
-  $errstr = memcached_errstr($memc);
-
-Returns the error message and code from the most recent call to any
-libmemcached function that returns a C<memcached_return>, which most do.
-
-The return value is a I<dualvar>, like $!, which means it has separate numeric
-and string values. The numeric value is the memcached_return integer value,
-and the string value is the corresponding error message what memcached_strerror()
-would return.
-
-As a special case, if the memcached_return is MEMCACHED_ERRNO, indicating a
-system call error, then the string returned by strerror() is appended.
 
 =cut
 
@@ -339,17 +324,7 @@ operations it is always faster to use this function. You I<must> then use
 memcached_fetch() or memcached_fetch_result() to retrieve any keys found.
 No error is given on keys that are not found.
 
-Instead of this function, you'd normally use L</memcached_mget_into_hashref>.
-
-=head3 memcached_mget_into_hashref
-
-  memcached_mget_into_hashref($memc, $keys_ref, \%dest_hash);
-
-Combines memcached_mget() and a memcached_fetch() loop into a single highly
-efficient call.
-
-Fetched values are stored in \%dest_hash, updating existing values or adding
-new ones as appropriate.
+Instead of this function, you'd normally use the L</mget_into_hashref> method.
 
 =head3 memcached_fetch
 
@@ -362,9 +337,9 @@ Returns undef if there are no more values.
 If $flag is given then it will be updated to whatever flags were stored with the value.
 If $rc is given then it will be updated to the return code.
 
-This is similar to L<memcached_get> except its fetching the results from the previous
+This is similar to L</memcached_get> except its fetching the results from the previous
 call to L</memcached_mget> and $key is an output parameter instead of an input.
-Usually you'd just use L</memcached_mget_into_hashref> instead.
+Usually you'd just use the L</mget_into_hashref> method instead.
 
 =cut
 
@@ -454,20 +429,6 @@ See also L<Memcached::libmemcached::memcached_strerror>.
 This function is rarely needed in the Perl interface because the return code is
 a I<dualvar> that already contains the error string.
 
-=head3 memcached_set_callback_coderefs
-
-  memcached_set_callback_coderefs($memc, \&set_callback, \&get_callback);
-
-This interface is I<experimental> and I<likely to change>.
-Currently only the get calback works.
-
-Specify functions which will be executed when values are set and/or get using $memc. 
-
-When the callbacks are executed $_ is the value and the arguments are the key
-and flags value. Both $_ and the flags may be modified.
-
-Currently the functions must return an empty list.
-
 =cut
 
 =head2 Unsupported Functions
@@ -529,7 +490,58 @@ By-key variants of L</Functions for Setting Values>:
 
 =head3 new
 
-    $memc = $class->new; # same as memcached_create()
+  $memc = $class->new; # same as memcached_create()
+
+=head3 errstr
+
+  $errstr = $memc->errstr;
+
+Returns the error message and code from the most recent call to any
+libmemcached function that returns a C<memcached_return>, which most do.
+
+The return value is a I<dualvar>, like $!, which means it has separate numeric
+and string values. The numeric value is the memcached_return integer value,
+and the string value is the corresponding error message what memcached_strerror()
+would return.
+
+As a special case, if the memcached_return is MEMCACHED_ERRNO, indicating a
+system call error, then the string returned by strerror() is appended.
+
+This method is also currently callable as memcached_errstr() for compatibility
+with an earlier version, but that deprecated alias will start warning and then
+cease to exist in future versions.
+
+=head3 mget_into_hashref
+
+  $memc->mget_into_hashref(keys_ref, \%dest_hash);
+
+Combines memcached_mget() and a memcached_fetch() loop into a single highly
+efficient call.
+
+Fetched values are stored in \%dest_hash, updating existing values or adding
+new ones as appropriate.
+
+This method is also currently callable as memcached_mget_into_hashref() for
+compatibility with an earlier version, but that deprecated alias will start
+warning and then cease to exist in future versions.
+
+=head3 set_callback_coderefs
+
+  $memc->set_callback_coderefs(\&set_callback, \&get_callback);
+
+This interface is I<experimental> and I<likely to change>. (It's also currently
+used by Cache::libmemcached, so don't use it if you're using that module.)
+
+Specify functions which will be executed when values are set and/or get using $memc. 
+
+When the callbacks are executed $_ is the value and the arguments are the key
+and flags value. Both $_ and the flags may be modified.
+
+Currently the functions must return an empty list.
+
+This method is also currently callable as memcached_set_callback_coderefs() for
+compatibility with an earlier version, but that deprecated alias will start
+warning and then cease to exist in future versions.
 
 =head2 Reference
 
@@ -555,6 +567,24 @@ For pointer arguments, undef is mapped to null on input and null is mapped to
 undef on output.
 
 XXX expand with details from typemap file
+
+=head2 Deprecated Functions
+
+The following functions are available but deprecated in this release.
+In the next release they'll generate warnings.
+In a future release they'll be removed.
+
+=head3 memcached_errstr
+
+Use L</errstr> instead.
+
+=head3 memcached_mget_into_hashref
+
+Use L</mget_into_hashref> instead.
+
+=head3 memcached_set_callback_coderefs
+
+Use L</set_callback_coderefs> instead.
 
 =head1 AUTHOR
 

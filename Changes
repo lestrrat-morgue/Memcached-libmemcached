@@ -6,6 +6,11 @@ As of $Date: 2008-01-08 15:54:15 +0000 (Tue, 08 Jan 2008) $ $Revision$
 
 =head2 Changes in 0.1405 (svn rXXX)
 
+  Added official object-oriented API for perl-specific extensions.
+  Deprecated perl-specific functions superceeded by methods:
+    memcached_errstr                - now $memc->errstr
+    memcached_mget_into_hashref     - now $memc->mget_into_hashref
+    memcached_set_callback_coderefs - now $memc->set_callback_coderefs
   Added -g/-pg options to Makefile.PL to enable debug/profiling.
   Changed memcache object to be blessed hash instead of blessed int.
 

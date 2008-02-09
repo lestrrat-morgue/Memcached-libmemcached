@@ -23,7 +23,7 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 5;
+plan tests => 6;
 
 is memcached_strerror($memc, 0), 'SUCCESS';
 is memcached_strerror($memc, 1), 'FAILURE';
@@ -32,9 +32,11 @@ is memcached_strerror($memc, 1), 'FAILURE';
 my $rc = memcached_server_add_unix_socket($memc, undef); # should fail
 ok !defined($rc), 'rc should not be defined';
 
-my $errstr = memcached_errstr($memc);
+my $errstr = $memc->errstr;
 #use Devel::Peek; Dump($errstr);
 cmp_ok $errstr, '==', MEMCACHED_FAILURE(),
     'should be MEMCACHED_FAILURE integer in numeric context';
 cmp_ok $errstr, 'eq', "FAILURE",
     'should be "FAILURE" string in string context';
+
+is $errstr, memcached_errstr($memc);

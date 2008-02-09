@@ -10,7 +10,6 @@ use Test::More;
 use Memcached::libmemcached
     #   functions explicitly tested by this file
     qw(
-        memcached_set_callback_coderefs
     ),
     #   other functions used by the tests
     qw(
@@ -44,7 +43,7 @@ my $get_cb = sub {
     is_deeply \@_, \@get_cb_expected_args, '@_ should be $key and $flags';
     return;
 };
-memcached_set_callback_coderefs($memc, undef, $get_cb);
+$memc->set_callback_coderefs(undef, $get_cb);
 
 print "test read-only access to values from callback\n";
 ok memcached_set($memc, $_, $data{$_}, 0, $flag_orig)
@@ -58,7 +57,7 @@ for my $k (keys %data) {
 is $get_cb_called, scalar keys %data;
 
 $get_cb_called = 0;
-memcached_set_callback_coderefs($memc, undef, sub { ++$get_cb_called; return });
+$memc->set_callback_coderefs(undef, sub { ++$get_cb_called; return });
 my %got;
 ok memcached_mget_into_hashref($memc, [ keys %data ], \%got);
 is_deeply \%got, \%data;
@@ -71,7 +70,7 @@ $get_cb = sub {
     $_[1] = 0xE0E0E0E0;
     return;
 };
-memcached_set_callback_coderefs($memc, undef, $get_cb);
+$memc->set_callback_coderefs(undef, $get_cb);
 
 for my $k (keys %data) {
     my $v = $data{$k};

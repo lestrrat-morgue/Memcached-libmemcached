@@ -12,7 +12,6 @@ use Memcached::libmemcached
     qw(
         memcached_mget
         memcached_fetch
-        memcached_mget_into_hashref
     ),
     #   other functions used by the tests
     qw(
@@ -62,7 +61,7 @@ for my $keys_ref (
     is_deeply \%got, \%data;
 }
 
-print "memcached_mget_into_hashref\n";
+print "mget_into_hashref\n";
 
 # tweak data so it's different from previous tests
 %data = map { $_ . "a" } %data;
@@ -71,22 +70,22 @@ print "memcached_mget_into_hashref\n";
 ok memcached_set($memc, $_, $data{$_})
     for keys %data;
 
-ok memcached_mget_into_hashref($memc, [ ], {}),
+ok $memc->mget_into_hashref([ ], {}),
     'should return true, even if no keys';
 
-ok memcached_mget_into_hashref($memc, [ 'none such foo' ], {}),
+ok $memc->mget_into_hashref([ 'none such foo' ], {}),
     'should return true, even if no results';
 
 my %extra = ( foo => 'bar' );
 # reset got data, but not to empty so we check the hash isn't erased
 my %got = %extra;
-ok memcached_mget_into_hashref($memc, [ keys %data ], \%got),
+ok $memc->mget_into_hashref([ keys %data ], \%got),
     'should return true';
 
 is_deeply \%got, { %data, %extra };
 
 # refetch with duplicate keys, mainly to trigger realloc of key buffers
-ok memcached_mget_into_hashref($memc, [ (keys %data) x 10 ], \%got),
+ok $memc->mget_into_hashref([ (keys %data) x 10 ], \%got),
     'should return true';
 
 is_deeply \%got, { %data, %extra };

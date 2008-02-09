@@ -632,20 +632,6 @@ memcached_mget_by_key(Memcached__libmemcached ptr, lmc_key master_key, size_t le
     OUTPUT:
         RETVAL
 
-memcached_return
-memcached_mget_into_hashref(Memcached__libmemcached ptr, SV *keys_ref, HV *dest_ref)
-    PREINIT:
-        char **keys;
-        size_t *key_length;
-        unsigned int number_of_keys;
-    CODE:
-        if ((RETVAL = _prep_keys_lengths(ptr, keys_ref, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
-            RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
-            RETVAL = _fetch_all_into_hashref(ptr, RETVAL, dest_ref);
-        }
-    OUTPUT:
-        RETVAL
-
 
 
 lmc_value
@@ -716,25 +702,6 @@ memcached_quit(Memcached__libmemcached ptr)
 char *
 memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 
-SV *
-memcached_errstr(Memcached__libmemcached ptr)
-    PREINIT:
-        lmc_state_st* lmc_state;
-    CODE:
-        if (!ptr)
-            XSRETURN_UNDEF;
-        RETVAL = newSV(0);
-        lmc_state = LMC_STATE_FROM_PTR(ptr);
-        /* setup return value as a dualvar with int err code and string error message */
-        sv_setiv(RETVAL, lmc_state->last_return);
-        sv_setpv(RETVAL, memcached_strerror(ptr, lmc_state->last_return));
-        if (lmc_state->last_return == MEMCACHED_ERRNO) {
-            sv_catpvf(RETVAL, " %s", strerror(lmc_state->last_errno));
-        }
-        SvIOK_on(RETVAL); /* set as dualvar */
-    OUTPUT:
-        RETVAL
-
 const char *
 memcached_lib_version() 
 
@@ -765,8 +732,53 @@ _memcached_version(Memcached__libmemcached ptr)
         mXPUSHi(ptr->hosts[0].micro_version);
         XSRETURN(3);
 
+
+=head2 Memcached::libmemcached Methods
+
+=cut
+
+SV *
+errstr(Memcached__libmemcached ptr)
+    ALIAS:
+        memcached_errstr = 1
+    PREINIT:
+        lmc_state_st* lmc_state;
+    CODE:
+        if (!ptr)
+            XSRETURN_UNDEF;
+        RETVAL = newSV(0);
+        lmc_state = LMC_STATE_FROM_PTR(ptr);
+        /* setup return value as a dualvar with int err code and string error message */
+        sv_setiv(RETVAL, lmc_state->last_return);
+        sv_setpv(RETVAL, memcached_strerror(ptr, lmc_state->last_return));
+        if (lmc_state->last_return == MEMCACHED_ERRNO)
+            sv_catpvf(RETVAL, " %s", strerror(lmc_state->last_errno));
+        SvIOK_on(RETVAL); /* set as dualvar */
+    OUTPUT:
+        RETVAL
+
+
+memcached_return
+mget_into_hashref(Memcached__libmemcached ptr, SV *keys_ref, HV *dest_ref)
+    ALIAS:
+        memcached_mget_into_hashref = 1
+    PREINIT:
+        char **keys;
+        size_t *key_length;
+        unsigned int number_of_keys;
+    CODE:
+        if ((RETVAL = _prep_keys_lengths(ptr, keys_ref, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
+            RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
+            RETVAL = _fetch_all_into_hashref(ptr, RETVAL, dest_ref);
+        }
+    OUTPUT:
+        RETVAL
+
+
 void
-memcached_set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get_cb)
+set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get_cb)
+    ALIAS:
+        memcached_set_callback_coderefs = 1
     PREINIT:
         lmc_state_st *lmc_state;
     CODE:
