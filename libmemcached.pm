@@ -513,7 +513,8 @@ cease to exist in future versions.
 
 =head3 mget_into_hashref
 
-  $memc->mget_into_hashref(keys_ref, \%dest_hash);
+  $memc->mget_into_hashref( \@keys, \%dest_hash); # keys from array
+  $memc->mget_into_hashref( \%keys, \%dest_hash); # keys from hash
 
 Combines memcached_mget() and a memcached_fetch() loop into a single highly
 efficient call.
@@ -524,6 +525,39 @@ new ones as appropriate.
 This method is also currently callable as memcached_mget_into_hashref() for
 compatibility with an earlier version, but that deprecated alias will start
 warning and then cease to exist in future versions.
+
+=head3 get_multi
+
+  $hash_ref = $memc->get_multi( @keys );
+
+Effectively the same as:
+
+  $memc->mget_into_hashref( \@keys, $hash_ref = { } )
+
+So it's very similar to L</mget_into_hashref> but less efficient for large
+numbers of keys (because the keys have to be pushed onto the argument stack)
+and less flexible (because you can't add/update elements into an existing hash).
+
+This method is provided to optimize subclasses that want to provide a
+Cache::Memcached compatible API with maximum efficiency.
+Note, however, that C<get_multi> does I<not> support the L<Cache::Memcached>
+feature where a key can be a reference to an array [ $master_key, $key ].
+Use L</memcached_mget_by_key> directly if you need that feature.
+  
+=head3 get
+
+  $value = $memc->get( $key );
+
+Effectively the same as:
+
+  $vaue = memcached_get( $memc, $key );
+
+The C<get> method also supports the L<Cache::Memcached> feature where $key can
+be a reference to an array [ $master_key, $key ]. In which case the call is
+effectively the same as:
+
+  $vaue = memcached_get_by_key( $memc, $key->[0], $key->[1] )
+
 
 =head3 set_callback_coderefs
 

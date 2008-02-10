@@ -213,6 +213,9 @@ _cb_store_into_sv(memcached_st *ptr, memcached_result_st *result, void *context)
     ++lmc_cb_context->result_count;
     *lmc_cb_context->flags_ptr = memcached_result_flags(result);
     sv_setpvn(lmc_cb_context->dest_sv, memcached_result_value(result), memcached_result_length(result));
+    if (lmc_cb_context->lmc_state->trace_level >= 2)
+        warn("fetched %s (value len %d, flags %lu)\n",
+            memcached_result_key_value(result), memcached_result_length(result), memcached_result_flags(result));
     return 0;
 }
 
@@ -252,7 +255,7 @@ _cb_fire_perl_cb(lmc_cb_context_st *lmc_cb_context, SV *callback_sv, SV *key_sv,
     SPAGAIN;
 
     if (items) /* may use returned items for signalling later */
-        croak("fetch callback returned non-empty list");
+        croak("callback returned non-empty list");
 
     FREETMPS;
     LEAVE;
@@ -365,6 +368,10 @@ _fetch_all_into_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
         callbacks[callback_ix++] = _cb_fire_perl_get_cb;
     callbacks[callback_ix  ] = NULL;
 
+    lmc_cb_context->dest_hv   = dest_ref;
+    lmc_cb_context->flags_ptr = &flags;  /* local, not safe for caller */
+    lmc_cb_context->rc_ptr    = &rc;     /* local, not safe for caller */
+    lmc_cb_context->result_count = 0;
 
     /* rc is the return code from the preceeding mget */
     if (!LMC_RETURN_OK(rc)) {
@@ -377,11 +384,6 @@ _fetch_all_into_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
         }
         return rc;
     }
-
-    lmc_cb_context->dest_hv   = dest_ref;
-    lmc_cb_context->flags_ptr = &flags;  /* local, not returned to caller */
-    lmc_cb_context->rc_ptr    = &rc;     /* local, not returned to caller */
-    lmc_cb_context->result_count = 0;
 
     return memcached_fetch_execute(ptr, callbacks, (void *)lmc_cb_context, callback_ix);
 }
@@ -756,6 +758,60 @@ errstr(Memcached__libmemcached ptr)
         SvIOK_on(RETVAL); /* set as dualvar */
     OUTPUT:
         RETVAL
+
+
+SV *
+get(Memcached__libmemcached ptr, SV *key_sv)
+    PREINIT:
+        char *master_key = NULL;
+        size_t master_key_len = 0;
+        char *key;
+        size_t key_len;
+        memcached_return error;
+        uint32_t flags;
+    CODE:
+        if (SvROK(key_sv) && SvTYPE(SvRV(key_sv)) == SVt_PVAV) {
+            AV *av = (AV*)SvRV(key_sv);
+            master_key = SvPV(AvARRAY(key_sv)[0], master_key_len);
+            key_sv = AvARRAY(key_sv)[1];
+        }
+        key = SvPV(key_sv, key_len);
+        error = memcached_mget_by_key(ptr, master_key, master_key_len, &key, &key_len, 1);
+        RETVAL = _fetch_one_sv(ptr, &flags, &error);
+    OUTPUT:
+        RETVAL
+
+
+void
+get_multi(Memcached__libmemcached ptr, ...)
+    PREINIT:
+        HV *hv = newHV();
+        SV *dest_ref = sv_2mortal(newRV_noinc((SV*)hv));
+        char **keys;
+        size_t *key_length;
+        unsigned int number_of_keys = --items;
+        memcached_return ret;
+        lmc_cb_context_st *lmc_cb_context;
+    PPCODE:
+        /* XXX does not support keys being [ $master_key, $key ] */
+        lmc_cb_context = LMC_STATE_FROM_PTR(ptr)->cb_context;
+
+        if (number_of_keys > lmc_cb_context->key_alloc_count)
+            _prep_keys_buffer(lmc_cb_context, number_of_keys);
+        keys       = lmc_cb_context->key_strings;
+        key_length = lmc_cb_context->key_lengths;
+        while (--items >= 0) {
+            keys[items] = SvPV(ST(items+1), key_length[items]);
+        }
+
+        ret = memcached_mget(ptr, keys, key_length, number_of_keys);
+        _fetch_all_into_hashref(ptr, ret, hv);
+        if (lmc_cb_context->lmc_state->trace_level)
+            warn("get_multi of %d keys: mget %s, fetched %d",
+                number_of_keys, memcached_strerror(ptr,ret), lmc_cb_context->result_count);
+        PUSHs(dest_ref);
+        XSRETURN(1);
+
 
 
 memcached_return
