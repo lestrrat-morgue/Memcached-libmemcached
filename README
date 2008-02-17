@@ -55,3 +55,23 @@ Copyright (C) 2008 Tim Bunce
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
+DEVELOPER TOOLS
+
+Debugging
+
+    make realclean # if perl Makefile.PL already run
+    perl Makefile.PL -g
+
+Profiling
+
+    make realclean # if perl Makefile.PL already run
+    perl Makefile.PL -pg
+
+Test coverage analysis
+
+    make realclean # if perl Makefile.PL already run
+    perl Makefile.PL -cov
+    make
+    make testcover
+
+

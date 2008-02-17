@@ -171,6 +171,8 @@ functions, for example, you can use:
 
   use Memcached::libmemcached qw(/^memcached/);
 
+Refer to L<Memcached::libmemcached::constants> for a full list of the available
+constants and the tags they are grouped by.
 
 =head1 FUNCTIONS
 
