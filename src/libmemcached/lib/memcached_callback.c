@@ -61,7 +61,8 @@ void *memcached_callback_get(memcached_st *ptr,
 {
   memcached_return local_error;
   if (!error)
-      error = &local_error;
+    error = &local_error;
+
   switch (flag)
   {
   case MEMCACHED_CALLBACK_USER_DATA:

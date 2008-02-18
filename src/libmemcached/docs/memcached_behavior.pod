@@ -76,7 +76,8 @@ Modify the timeout value that is used by poll(). The default value is -1. An sig
 =item MEMCACHED_BEHAVIOR_USER_DATA
 
 This allows you to store a pointer to a specifc piece of data. This can be
-retrieved from inside of memcached_fetch_exectue(). Cloning a memcached_st
+retrieved from inside of memcached_fetch_execute(). Cloning a memcached_st
+
 will copy the pointer to the clone. This was deprecated in 0.14 in favor
 of memcached_callback_set(3). This will be removed in 0.15.
 
@@ -86,6 +87,16 @@ Enabling buffered IO causes commands to "buffer" instead of being sent. Any
 action that gets data causes this buffer to be be sent to the remote
 connection. Quiting the connection or closing down the connection will also
 cause the buffered data to be pushed to the remote connection. 
+
+=item MEMCACHED_BEHAVIOR_VERIFY_KEY
+
+Enabling this will cause libmemcached(3) to test all keys to verify that they 
+are valid keys.
+
+=item MEMCACHED_BEHAVIOR_SORT_HOSTS
+
+Enabling this will cause hosts that are added to be placed in the host list in 
+sorted order. This will defeat consisten hashing.
 
 =back
 

@@ -26,10 +26,10 @@
 #define PROGRAM_DESCRIPTION "Generates a load against a memcached custer of servers."
 
 /* Global Thread counter */
-unsigned int thread_counter;
+volatile unsigned int thread_counter;
 pthread_mutex_t counter_mutex;
 pthread_cond_t count_threshhold;
-unsigned int master_wakeup;
+volatile unsigned int master_wakeup;
 pthread_mutex_t sleeper_mutex;
 pthread_cond_t sleep_threshhold;
 
@@ -96,7 +96,10 @@ int main(int argc, char *argv[])
     if ((temp= getenv("MEMCACHED_SERVERS")))
       opt_servers= strdup(temp);
     else
+    {
+      fprintf(stderr, "No Servers provided\n");
       exit(1);
+    }
   }
 
   servers= memcached_servers_parse(opt_servers);
@@ -174,7 +177,7 @@ void scheduler(memcached_server_st *servers, conclusions_st *conclusion)
 
     if (opt_test == SET_TEST)
     {
-      context->execute_pairs= pairs_generate(opt_execute_number);
+      context->execute_pairs= pairs_generate(opt_execute_number, 400);
       context->execute_number= opt_execute_number;
     }
 
@@ -376,7 +379,7 @@ pairs_st *load_create_data(memcached_st *memc, unsigned int number_of,
   /* We always used non-blocking IO for load since it is faster */
   memcached_behavior_set(clone, MEMCACHED_BEHAVIOR_NO_BLOCK, NULL );
 
-  pairs= pairs_generate(number_of);
+  pairs= pairs_generate(number_of, 400);
   *actual_loaded= execute_set(clone, pairs, number_of);
 
   memcached_free(clone);

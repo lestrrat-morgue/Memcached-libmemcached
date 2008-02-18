@@ -32,7 +32,7 @@ extern "C" {
 #define MEMCACHED_DEFAULT_TIMEOUT INT32_MAX
 
 /* string value */
-#define LIBMEMCACHED_VERSION_STRING "0.14"
+#define LIBMEMCACHED_VERSION_STRING "0.16"
 
 typedef enum {
   MEMCACHED_SUCCESS,
@@ -67,6 +67,7 @@ typedef enum {
   MEMCACHED_FETCH_NOTFINISHED,
   MEMCACHED_TIMEOUT,
   MEMCACHED_BUFFERED,
+  MEMCACHED_BAD_KEY_PROVIDED,
   MEMCACHED_MAXIMUM_RETURN, /* Always add new error code before */
 } memcached_return;
 
@@ -99,6 +100,8 @@ typedef enum {
   MEMCACHED_BEHAVIOR_DISTRIBUTION,
   MEMCACHED_BEHAVIOR_BUFFER_REQUESTS,
   MEMCACHED_BEHAVIOR_USER_DATA,
+  MEMCACHED_BEHAVIOR_SORT_HOSTS,
+  MEMCACHED_BEHAVIOR_VERIFY_KEY,
 } memcached_behavior;
 
 typedef enum {
@@ -169,7 +172,7 @@ struct memcached_stat_st {
   uint32_t rusage_system_microseconds;
   uint32_t curr_items;
   uint32_t total_items;
-  uint32_t limit_maxbytes;
+  uint64_t limit_maxbytes;
   uint32_t curr_connections;
   uint32_t total_connections;
   uint32_t connection_structures;
@@ -433,7 +436,7 @@ size_t memcached_result_length(memcached_result_st *ptr);
 #define WATCHPOINT_STRING(A) fprintf(stderr, "\nWATCHPOINT %s:%d (%s) %s\n", __FILE__, __LINE__,__func__,A);fflush(stdout);
 #define WATCHPOINT_STRING_LENGTH(A,B) fprintf(stderr, "\nWATCHPOINT %s:%d (%s) %.*s\n", __FILE__, __LINE__,__func__,(int)B,A);fflush(stdout);
 #define WATCHPOINT_NUMBER(A) fprintf(stderr, "\nWATCHPOINT %s:%d (%s) %zu\n", __FILE__, __LINE__,__func__,(size_t)(A));fflush(stdout);
-#define WATCHPOINT_ERRNO(A) fprintf(stderr, "\nWATCHPOINT %s:%d (%s) %s\n", __FILE__, __LINE__,__func__, strerror(A));A= 0;fflush(stdout);
+#define WATCHPOINT_ERRNO(A) fprintf(stderr, "\nWATCHPOINT %s:%d (%s) %s\n", __FILE__, __LINE__,__func__, strerror(A));fflush(stdout);
 #define WATCHPOINT_ASSERT(A) assert((A));
 #else
 #define WATCHPOINT

@@ -61,11 +61,11 @@ am_libmemcached_la_OBJECTS = crc.lo hsieh_hash.lo memcached.lo \
 	memcached_connect.lo memcached_delete.lo memcached_do.lo \
 	memcached_fetch.lo memcached_fetch_execute.lo \
 	memcached_flush.lo memcached_get.lo memcached_hash.lo \
-	memcached_hosts.lo memcached_io.lo md5.lo memcached_quit.lo \
-	memcached_parse.lo memcached_response.lo memcached_result.lo \
-	memcached_storage.lo memcached_string.lo memcached_stats.lo \
-	memcached_strerror.lo memcached_verbosity.lo \
-	memcached_version.lo
+	memcached_hosts.lo memcached_io.lo md5.lo memcached_key.lo \
+	memcached_quit.lo memcached_parse.lo memcached_response.lo \
+	memcached_result.lo memcached_storage.lo memcached_string.lo \
+	memcached_stats.lo memcached_strerror.lo \
+	memcached_verbosity.lo memcached_version.lo
 libmemcached_la_OBJECTS = $(am_libmemcached_la_OBJECTS)
 libmemcached_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -248,6 +248,7 @@ libmemcached_la_SOURCES = crc.c \
 			  memcached_hosts.c \
 			  memcached_io.c \
 			  md5.c \
+			  memcached_key.c \
 			  memcached_quit.c \
 			  memcached_parse.c \
 			  memcached_response.c \
@@ -347,6 +348,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_hash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_hosts.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_io.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_key.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_parse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_quit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_response.Plo@am__quote@

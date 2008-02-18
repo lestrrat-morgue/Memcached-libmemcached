@@ -66,6 +66,9 @@ static inline memcached_return memcached_send(memcached_st *ptr,
   if (ptr->number_of_hosts == 0)
     return MEMCACHED_NO_SERVERS;
 
+  if ((ptr->flags & MEM_VERIFY_KEY) && (memcachd_key_test(&key, &key_length, 1) == MEMCACHED_BAD_KEY_PROVIDED))
+    return MEMCACHED_BAD_KEY_PROVIDED;
+
   server_key= memcached_generate_hash(ptr, master_key, master_key_length);
 
   if (cas)
@@ -203,7 +206,7 @@ memcached_return memcached_cas(memcached_st *ptr,
   memcached_return rc;
   rc= memcached_send(ptr, key, key_length, 
                      key, key_length, value, value_length,
-                     expiration, flags, cas, APPEND_OP);
+                     expiration, flags, cas, CAS_OP);
   return rc;
 }
 
@@ -294,6 +297,6 @@ memcached_return memcached_cas_by_key(memcached_st *ptr,
   memcached_return rc;
   rc= memcached_send(ptr, key, key_length, 
                      key, key_length, value, value_length,
-                     expiration, flags, cas, APPEND_OP);
+                     expiration, flags, cas, CAS_OP);
   return rc;
 }

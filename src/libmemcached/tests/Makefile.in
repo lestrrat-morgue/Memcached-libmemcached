@@ -34,7 +34,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-noinst_PROGRAMS = testapp$(EXEEXT) testplus$(EXEEXT)
+noinst_PROGRAMS = testapp$(EXEEXT) testplus$(EXEEXT) udptest$(EXEEXT) \
+	atomsmasher$(EXEEXT) startservers$(EXEEXT)
 subdir = tests
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -47,13 +48,23 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/libmemcached_config.h
 CONFIG_CLEAN_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
+am_atomsmasher_OBJECTS = test.$(OBJEXT) atomsmasher.$(OBJEXT) \
+	server.$(OBJEXT) generator.$(OBJEXT) execute.$(OBJEXT)
+atomsmasher_OBJECTS = $(am_atomsmasher_OBJECTS)
+atomsmasher_DEPENDENCIES = $(LDADDS)
+am_startservers_OBJECTS = start.$(OBJEXT) server.$(OBJEXT)
+startservers_OBJECTS = $(am_startservers_OBJECTS)
+startservers_DEPENDENCIES = $(LDADDS)
 am_testapp_OBJECTS = test.$(OBJEXT) function.$(OBJEXT) \
-	generator.$(OBJEXT) execute.$(OBJEXT)
+	generator.$(OBJEXT) execute.$(OBJEXT) server.$(OBJEXT)
 testapp_OBJECTS = $(am_testapp_OBJECTS)
 testapp_DEPENDENCIES = $(LDADDS)
-am_testplus_OBJECTS = test.$(OBJEXT) plus.$(OBJEXT)
+am_testplus_OBJECTS = test.$(OBJEXT) plus.$(OBJEXT) server.$(OBJEXT)
 testplus_OBJECTS = $(am_testplus_OBJECTS)
-testplus_DEPENDENCIES = $(LDADDS) ../lib/libmemcached.la
+testplus_DEPENDENCIES = $(LDADDS)
+am_udptest_OBJECTS = test.$(OBJEXT) udp.$(OBJEXT) server.$(OBJEXT)
+udptest_OBJECTS = $(am_udptest_OBJECTS)
+udptest_DEPENDENCIES = $(LDADDS)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)/include@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -75,8 +86,10 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(testapp_SOURCES) $(testplus_SOURCES)
-DIST_SOURCES = $(testapp_SOURCES) $(testplus_SOURCES)
+SOURCES = $(atomsmasher_SOURCES) $(startservers_SOURCES) \
+	$(testapp_SOURCES) $(testplus_SOURCES) $(udptest_SOURCES)
+DIST_SOURCES = $(atomsmasher_SOURCES) $(startservers_SOURCES) \
+	$(testapp_SOURCES) $(testplus_SOURCES) $(udptest_SOURCES)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -216,11 +229,17 @@ EXTRA_DIST = output.res output2.res\
 		t/memslap.test\
 		t/memstat.test
 
-noinst_HEADERS = test.h
-testapp_SOURCES = test.c function.c ../src/generator.c ../src/execute.c
+noinst_HEADERS = test.h server.h
+testapp_SOURCES = test.c function.c ../src/generator.c ../src/execute.c server.c
 testapp_LDADD = $(LDADDS)
-testplus_SOURCES = test.c plus.cpp
-testplus_LDADD = $(LDADDS) ../lib/libmemcached.la
+testplus_SOURCES = test.c plus.cpp server.c
+testplus_LDADD = $(LDADDS)
+udptest_SOURCES = test.c udp.c server.c
+udptest_LDADD = $(LDADDS)
+atomsmasher_SOURCES = test.c atomsmasher.c server.c ../src/generator.c ../src/execute.c
+atomsmasher_LDADD = $(LDADDS)
+startservers_SOURCES = start.c server.c
+startservers_LDADD = $(LDADDS)
 all: all-am
 
 .SUFFIXES:
@@ -261,12 +280,21 @@ clean-noinstPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
+atomsmasher$(EXEEXT): $(atomsmasher_OBJECTS) $(atomsmasher_DEPENDENCIES) 
+	@rm -f atomsmasher$(EXEEXT)
+	$(LINK) $(atomsmasher_OBJECTS) $(atomsmasher_LDADD) $(LIBS)
+startservers$(EXEEXT): $(startservers_OBJECTS) $(startservers_DEPENDENCIES) 
+	@rm -f startservers$(EXEEXT)
+	$(LINK) $(startservers_OBJECTS) $(startservers_LDADD) $(LIBS)
 testapp$(EXEEXT): $(testapp_OBJECTS) $(testapp_DEPENDENCIES) 
 	@rm -f testapp$(EXEEXT)
 	$(LINK) $(testapp_OBJECTS) $(testapp_LDADD) $(LIBS)
 testplus$(EXEEXT): $(testplus_OBJECTS) $(testplus_DEPENDENCIES) 
 	@rm -f testplus$(EXEEXT)
 	$(CXXLINK) $(testplus_OBJECTS) $(testplus_LDADD) $(LIBS)
+udptest$(EXEEXT): $(udptest_OBJECTS) $(udptest_DEPENDENCIES) 
+	@rm -f udptest$(EXEEXT)
+	$(LINK) $(udptest_OBJECTS) $(udptest_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -274,11 +302,15 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atomsmasher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execute.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/function.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/generator.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/plus.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/start.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udp.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

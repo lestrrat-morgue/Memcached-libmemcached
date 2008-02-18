@@ -86,15 +86,18 @@ ssize_t memcached_io_read(memcached_server_st *ptr,
     uint8_t found_eof= 0;
     if (!ptr->read_buffer_length)
     {
-      size_t data_read;
+      ssize_t data_read;
 
       while (1)
       {
         data_read= read(ptr->fd, 
                         ptr->read_buffer, 
                         MEMCACHED_MAX_BUFFER);
-        if (data_read == -1)
+        if (data_read > 0)
+          break;
+        else if (data_read == -1)
         {
+          ptr->cached_errno= errno;
           switch (errno)
           {
           case EAGAIN:
@@ -105,21 +108,15 @@ ssize_t memcached_io_read(memcached_server_st *ptr,
 
               if (rc == MEMCACHED_SUCCESS)
                 continue;
-
-              memcached_quit_server(ptr, 1);
-              return -1;
             }
+          /* fall trough */
           default:
             {
               memcached_quit_server(ptr, 1);
-              ptr->cached_errno= errno;
               return -1;
             }
           }
         }
-        else if (data_read)
-          break;
-        /* If zero, just keep looping unless testing, then assert() */
         else
         {
           WATCHPOINT_ASSERT(0);
@@ -148,10 +145,10 @@ ssize_t memcached_io_read(memcached_server_st *ptr,
     else
     {
       *buffer_ptr= *ptr->read_ptr;
-      length--;
       ptr->read_ptr++;
       ptr->read_buffer_length--;
       buffer_ptr++;
+      break;
     }
 
     if (found_eof)
@@ -164,13 +161,26 @@ ssize_t memcached_io_read(memcached_server_st *ptr,
 ssize_t memcached_io_write(memcached_server_st *ptr,
                            char *buffer, size_t length, char with_flush)
 {
-  unsigned long long x;
+  size_t original_length;
+  char* buffer_ptr;
 
-  for (x= 0; x < length; x++)
+  original_length= length;
+  buffer_ptr= buffer;
+
+  while (length)
   {
-    ptr->write_buffer[ptr->write_buffer_offset]= buffer[x];
-    ptr->write_buffer_offset++;
-    WATCHPOINT_ASSERT(ptr->write_buffer_offset <= MEMCACHED_MAX_BUFFER);
+    char *write_ptr;
+    size_t should_write;
+
+    should_write= MEMCACHED_MAX_BUFFER - ptr->write_buffer_offset;
+    write_ptr= ptr->write_buffer + ptr->write_buffer_offset;
+
+    should_write= (should_write < length) ? should_write : length;
+
+    memcpy(write_ptr, buffer_ptr, should_write);
+    ptr->write_buffer_offset+= should_write;
+    buffer_ptr+= should_write;
+    length-= should_write;
 
     if (ptr->write_buffer_offset == MEMCACHED_MAX_BUFFER)
     {
@@ -192,7 +202,7 @@ ssize_t memcached_io_write(memcached_server_st *ptr,
       return -1;
   }
 
-  return length;
+  return original_length;
 }
 
 memcached_return memcached_io_close(memcached_server_st *ptr)
@@ -203,7 +213,7 @@ memcached_return memcached_io_close(memcached_server_st *ptr)
 }
 
 static ssize_t io_flush(memcached_server_st *ptr,
-                                  memcached_return *error)
+                        memcached_return *error)
 {
   size_t sent_length;
   size_t return_length;
@@ -219,15 +229,39 @@ static ssize_t io_flush(memcached_server_st *ptr,
   if (write_length == MEMCACHED_MAX_BUFFER)
     WATCHPOINT_ASSERT(ptr->write_buffer == local_write_ptr);
   WATCHPOINT_ASSERT((ptr->write_buffer + MEMCACHED_MAX_BUFFER) >= (local_write_ptr + write_length));
+
   return_length= 0;
   while (write_length)
   {
+    WATCHPOINT_ASSERT(write_length > 0);
     sent_length= 0;
     if (ptr->type == MEMCACHED_CONNECTION_UDP)
     {
-      sent_length= sendto(ptr->fd, local_write_ptr, write_length, 0, 
-                          (struct sockaddr *)&ptr->address_info->ai_addr, 
-                          sizeof(struct sockaddr));
+      struct addrinfo *ai;
+
+      ai= ptr->address_info;
+
+      /* Crappy test code */
+      char buffer[HUGE_STRING_LEN + 8];
+      memset(buffer, 0, HUGE_STRING_LEN + 8);
+      memcpy (buffer+8, local_write_ptr, write_length);
+      buffer[0]= 0;
+      buffer[1]= 0;
+      buffer[2]= 0;
+      buffer[3]= 0;
+      buffer[4]= 0;
+      buffer[5]= 1;
+      buffer[6]= 0;
+      buffer[7]= 0;
+      sent_length= sendto(ptr->fd, buffer, write_length + 8, 0, 
+                          (struct sockaddr *)ai->ai_addr, 
+                          ai->ai_addrlen);
+      if (sent_length == -1)
+      {
+        WATCHPOINT_ERRNO(errno);
+        WATCHPOINT_ASSERT(0);
+      }
+      sent_length-= 8; /* We remove the header */
     }
     else
     {
@@ -275,6 +309,5 @@ static ssize_t io_flush(memcached_server_st *ptr,
 */
 void memcached_io_reset(memcached_server_st *ptr)
 {
-  ptr->write_buffer_offset= 0;
   memcached_quit_server(ptr, 0);
 }
