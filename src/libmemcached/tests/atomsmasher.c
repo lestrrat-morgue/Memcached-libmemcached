@@ -113,7 +113,7 @@ infinite:
 
 memcached_return pre_nonblock(memcached_st *memc)
 {
-  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_NO_BLOCK, NULL);
+  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_NO_BLOCK, 0);
 
   return MEMCACHED_SUCCESS;
 }
@@ -121,7 +121,7 @@ memcached_return pre_nonblock(memcached_st *memc)
 memcached_return pre_md5(memcached_st *memc)
 {
   memcached_hash value= MEMCACHED_HASH_MD5;
-  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_HASH, &value);
+  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_HASH, value);
 
   return MEMCACHED_SUCCESS;
 }
@@ -129,7 +129,7 @@ memcached_return pre_md5(memcached_st *memc)
 memcached_return pre_hsieh(memcached_st *memc)
 {
   memcached_hash value= MEMCACHED_HASH_HSIEH;
-  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_HASH, &value);
+  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_HASH, value);
 
   return MEMCACHED_SUCCESS;
 }
@@ -138,7 +138,7 @@ memcached_return enable_consistent(memcached_st *memc)
 {
   memcached_server_distribution value= MEMCACHED_DISTRIBUTION_CONSISTENT;
   memcached_hash hash;
-  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_DISTRIBUTION, &value);
+  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_DISTRIBUTION, value);
   pre_hsieh(memc);
 
   value= (memcached_server_distribution)memcached_behavior_get(memc, MEMCACHED_BEHAVIOR_DISTRIBUTION);
@@ -151,10 +151,55 @@ memcached_return enable_consistent(memcached_st *memc)
   return MEMCACHED_SUCCESS;
 }
 
+/* 
+  Set the value, then quit to make sure it is flushed.
+  Come back in and test that add fails.
+*/
+uint8_t add_test(memcached_st *memc)
+{
+  memcached_return rc;
+  char *key= "foo";
+  char *value= "when we sanitize";
+  unsigned long long setting_value;
+
+  setting_value= memcached_behavior_get(memc, MEMCACHED_BEHAVIOR_NO_BLOCK);
+
+  rc= memcached_set(memc, key, strlen(key), 
+                    value, strlen(value),
+                    (time_t)0, (uint32_t)0);
+  assert(rc == MEMCACHED_SUCCESS || rc == MEMCACHED_BUFFERED);
+  memcached_quit(memc);
+  rc= memcached_add(memc, key, strlen(key), 
+                    value, strlen(value),
+                    (time_t)0, (uint32_t)0);
+
+  /* Too many broken OS'es have broken loopback in async, so we can't be sure of the result */
+  if (setting_value)
+    assert(rc == MEMCACHED_NOTSTORED || MEMCACHED_STORED);
+  else
+    assert(rc == MEMCACHED_NOTSTORED);
+
+  return 0;
+}
+
+/*
+ * repeating add_tests many times
+ * may show a problem in timing
+ */
+uint8_t many_adds(memcached_st *memc)
+{
+  unsigned int i;
+  for (i = 0; i < TEST_COUNTER; i++){
+    add_test(memc);
+  }
+  return 0;
+}
+
 test_st smash_tests[] ={
   {"generate_pairs", 1, generate_pairs },
   {"drizzle", 1, drizzle },
   {"cleanup", 1, cleanup_pairs },
+  {"many_adds", 1, many_adds },
   {0, 0, 0}
 };
 
