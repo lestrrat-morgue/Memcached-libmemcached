@@ -12,14 +12,14 @@ C Client Library for memcached (libmemcached, -lmemcached)
 
   #include <memcached.h>
 
-  unsigned long long
+  uint64_t
     memcached_behavior_get (memcached_st *ptr,
                             memcached_behavior flag);
 
   memcached_return
     memcached_behavior_set (memcached_st *ptr,
                             memcached_behavior flag,
-                            void *data);
+                            uint64_t data);
 
 =head1 DESCRIPTION
 
@@ -100,6 +100,11 @@ are valid keys.
 Enabling this will cause hosts that are added to be placed in the host list in 
 sorted order. This will defeat consisten hashing.
 
+=item MEMCACHED_BEHAVIOR_CONNECT_TIMEOUT
+
+In non-blocking mode this changes the value of the timeout during socket
+connection.
+
 =back
 
 =head1 RETURN
@@ -107,6 +112,11 @@ sorted order. This will defeat consisten hashing.
 memcached_behavior_get() returns either the current value of the get, or 0
 or 1 on simple flag behaviors (1 being enabled). memcached_behavior_set()
 returns whether or not the behavior was enabled.
+
+=head1 NOTES
+
+memcached_behavior_set() in version .17 was changed from taking a pointer
+to data value, to taking a uin64_t. 
 
 =head1 HOME
 

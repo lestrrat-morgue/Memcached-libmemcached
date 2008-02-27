@@ -5,7 +5,6 @@ Makefile.PL
 README
 TODO
 lib/Memcached/libmemcached/API.pm
-lib/Memcached/libmemcached/constants.pm
 lib/Memcached/libmemcached/memcached_auto.pm
 lib/Memcached/libmemcached/memcached_behavior.pm
 lib/Memcached/libmemcached/memcached_callback.pm
@@ -24,6 +23,8 @@ lib/Memcached/libmemcached/memcached_version.pm
 libmemcached.pm
 libmemcached.xs
 ppport.h
+responses.csv
+responses.txt
 src/README
 src/libmemcached/AUTHORS
 src/libmemcached/COPYING
@@ -100,6 +101,7 @@ src/libmemcached/lib/memcached_hash.c
 src/libmemcached/lib/memcached_hosts.c
 src/libmemcached/lib/memcached_io.c
 src/libmemcached/lib/memcached_io.h
+src/libmemcached/lib/memcached_key.c
 src/libmemcached/lib/memcached_parse.c
 src/libmemcached/lib/memcached_quit.c
 src/libmemcached/lib/memcached_response.c
@@ -134,6 +136,7 @@ src/libmemcached/support/libmemcached.spec.in
 src/libmemcached/support/set_benchmark.sh
 src/libmemcached/tests/Makefile.am
 src/libmemcached/tests/Makefile.in
+src/libmemcached/tests/atomsmasher.c
 src/libmemcached/tests/function.c
 src/libmemcached/tests/output.res
 src/libmemcached/tests/output2.res
@@ -143,6 +146,9 @@ src/libmemcached/tests/r/memcp.res
 src/libmemcached/tests/r/memrm.res
 src/libmemcached/tests/r/memslap.res
 src/libmemcached/tests/r/memstat.res
+src/libmemcached/tests/server.c
+src/libmemcached/tests/server.h
+src/libmemcached/tests/start.c
 src/libmemcached/tests/t/memcat.test
 src/libmemcached/tests/t/memcp.test
 src/libmemcached/tests/t/memrm.test
@@ -150,6 +156,7 @@ src/libmemcached/tests/t/memslap.test
 src/libmemcached/tests/t/memstat.test
 src/libmemcached/tests/test.c
 src/libmemcached/tests/test.h
+src/libmemcached/tests/udp.c
 t/00-load.t
 t/01-import.t
 t/02-create.t
@@ -159,13 +166,19 @@ t/04-strerror.t
 t/05-behavior.t
 t/06-verbosity.t
 t/10-set-get.t
+t/11-set-get-by-key.t
 t/15-auto.t
 t/20-set.t
+t/21-set-by-key.t
 t/25-get.t
 t/26-get-cb.t
+t/27-set-cb.t
 t/30-prepend-append.t
+t/31-prepend-append-by-key.t
 t/35-replace.t
+t/36-replace-by-key.t
 t/40-delete.t
+t/41-delete-by-key.t
 t/50-quit.t
 t/51-flush.t
 t/60-stats.t
