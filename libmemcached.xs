@@ -748,6 +748,7 @@ errstr(Memcached__libmemcached ptr)
     CODE:
         if (!ptr)
             XSRETURN_UNDEF;
+        PERL_UNUSED_VAR(ix);
         RETVAL = newSV(0);
         lmc_state = LMC_STATE_FROM_PTR(ptr);
         /* setup return value as a dualvar with int err code and string error message */
@@ -772,7 +773,7 @@ get(Memcached__libmemcached ptr, SV *key_sv)
     CODE:
         if (SvROK(key_sv) && SvTYPE(SvRV(key_sv)) == SVt_PVAV) {
             AV *av = (AV*)SvRV(key_sv);
-            master_key = SvPV(AvARRAY(key_sv)[0], master_key_len);
+            master_key = SvPV(AvARRAY(av)[0], master_key_len);
             key_sv = AvARRAY(key_sv)[1];
         }
         key = SvPV(key_sv, key_len);
@@ -823,6 +824,7 @@ mget_into_hashref(Memcached__libmemcached ptr, SV *keys_ref, HV *dest_ref)
         size_t *key_length;
         unsigned int number_of_keys;
     CODE:
+        PERL_UNUSED_VAR(ix);
         if ((RETVAL = _prep_keys_lengths(ptr, keys_ref, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
             RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
             RETVAL = _fetch_all_into_hashref(ptr, RETVAL, dest_ref);
@@ -838,6 +840,7 @@ set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get_cb)
     PREINIT:
         lmc_state_st *lmc_state;
     CODE:
+        PERL_UNUSED_VAR(ix);
         if (SvOK(set_cb) && !(SvROK(set_cb) && SvTYPE(SvRV(set_cb)) == SVt_PVCV))
             croak("set_cb is not a reference to a subroutine");
         if (SvOK(get_cb) && !(SvROK(get_cb) && SvTYPE(SvRV(get_cb)) == SVt_PVCV))

@@ -327,5 +327,6 @@ sub extract_libmemcached_constants {
     # close up
     print $const_pm_fh "=cut";
     close $const_pm_fh or die "Error closing $const_pm: $!";
+    run("svn add -q $const_pm") if $is_developer;
 }
 

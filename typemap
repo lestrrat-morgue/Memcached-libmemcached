@@ -143,6 +143,7 @@ T_MEMCACHED
             SvOK_off($arg); /* then return as undef instead of reaf to undef */
         else {
             /* setup $arg as a ref to a blessed hash hv */
+            lmc_state_st *lmc_state;
             HV *hv = newHV();
             char *classname = \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\";
             /* take (sub)class name to use from class_sv if appropriate */
@@ -152,7 +153,7 @@ T_MEMCACHED
             (void)sv_bless($arg, gv_stashpv(classname, TRUE));
 
             /* allocate an lmc_state struct and attach via MEMCACHED_CALLBACK_USER_DATA */
-            lmc_state_st *lmc_state = lmc_state_new($var, hv);
+            lmc_state = lmc_state_new($var, hv);
             memcached_callback_set($var, MEMCACHED_CALLBACK_USER_DATA, lmc_state);
 
             /* now attach $var to the HV */
