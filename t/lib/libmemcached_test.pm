@@ -18,6 +18,7 @@ use Memcached::libmemcached qw(
     memcached_server_add
     memcached_get
     memcached_errstr
+    memcached_version
 );
 
 sub libmemcached_test_create {
@@ -51,8 +52,7 @@ sub libmemcached_version_ge {
     my ($memc, $min_version) = @_;
     my @min_version = split /\./, $min_version;
 
-    # XXX uses internal undocumented api
-    my @memcached_version = Memcached::libmemcached::_memcached_version($memc);
+    my @memcached_version = memcached_version($memc);
 
     for (0,1,2) {
         return 1 if $memcached_version[$_] > $min_version[$_];

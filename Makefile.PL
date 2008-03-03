@@ -218,7 +218,8 @@ sub extract_libmemcached_functions {
         #warn $src_pod;
         while (<$fh>) {
             next unless /\b(memcached_\w+)\s*\([^3]/;
-            $libmemcached_func{$1} = 1;
+            $libmemcached_func{$1} = 1
+                unless $1 eq 'memcached_return'; # parsing fooled by callback
             #warn "\t$1\t$_";
         }
     }
@@ -325,7 +326,7 @@ sub extract_libmemcached_constants {
         print $const_pm_fh "";
     }
     # close up
-    print $const_pm_fh "=cut";
+    print $const_pm_fh "=cut\n\n1;\n";
     close $const_pm_fh or die "Error closing $const_pm: $!";
     run("svn add -q $const_pm") if $is_developer;
 }

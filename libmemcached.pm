@@ -13,7 +13,7 @@ Version 0.1601 (with libmemcached-0.16 embedded)
 
 =cut
 
-our $VERSION = '0.1601';
+our $VERSION = '0.1701';
 
 use Carp;
 use base qw(Exporter);
@@ -397,6 +397,21 @@ See L<Memcached::libmemcached::memcached_stats>.
 
 Returns a simple version string, like "0.15", representing the libmemcached
 version (version of the client library, not server).
+
+=head2 memcached_version
+
+  $version = memcached_version($memc)
+  ($major, $minor, $micro) = memcached_version($memc)
+
+Returns the version of the first memcached server (in the list associated with
+$memc) to respond to the version request.
+
+In scalar context returns a simple version string, like "1.2.3".
+In list context returns the individual version component numbers.
+Returns an empty list if there was an error.
+
+Note that the return value differs from that of the underlying libmemcached
+library memcached_version() function.
 
 =head2 memcached_verbosity
 

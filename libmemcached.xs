@@ -464,17 +464,7 @@ UV
 memcached_behavior_get(Memcached__libmemcached ptr, memcached_behavior flag)
 
 memcached_return
-memcached_behavior_set(Memcached__libmemcached ptr, memcached_behavior flag, void *data)
-    INIT:
-        /* catch any special cases */
-        if (flag == MEMCACHED_BEHAVIOR_USER_DATA) {
-            XSRETURN_IV(MEMCACHED_FAILURE);
-        }
-        data = (SvTRUE(ST(2))) ? (void*)1 : (void*)0;
-        if (data && strNE(SvPV_nolen(ST(2)),"1")) {
-            warn("memcached_behavior_set currently only supports boolean behaviors");
-        }   
-
+memcached_behavior_set(Memcached__libmemcached ptr, memcached_behavior flag, uint64_t data)
 
 
 =head2 Functions for Setting Values in memcached
@@ -707,32 +697,35 @@ memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 const char *
 memcached_lib_version() 
 
-=pod not in 0.14
-memcached_return
+void
 memcached_version(Memcached__libmemcached ptr)
-=cut
-
-SV *
-_memcached_version(Memcached__libmemcached ptr)
-    PREINIT:
-        memcached_return memcached_version(memcached_st *); /* declare memcached_version */
     PPCODE:
         /* memcached_version updates ptr->hosts[x].*_version for each
          * associated memcached server that responds to the request.
-         * We use it internally as both a kind of ping and to check
-         * the min version for testing version-specific features.
          */
-        /* XXX internal undocumented api */
-        RETVAL = 0; /* avoid unused warning */
-        if (memcached_version(ptr) != MEMCACHED_SUCCESS)
-            XSRETURN_EMPTY;
         /* XXX assumes first entry in list of hosts responded
+         * XXX should scan to find first non-all-zero
          * and that any other memcached servers have the same version
          */
-        mXPUSHi(ptr->hosts[0].major_version);
-        mXPUSHi(ptr->hosts[0].minor_version);
-        mXPUSHi(ptr->hosts[0].micro_version);
-        XSRETURN(3);
+        memcached_server_st *host = &ptr->hosts[0];
+        if (memcached_version(ptr) != MEMCACHED_SUCCESS)
+            XSRETURN_EMPTY;
+        if (GIMME_V == G_ARRAY) {
+            mXPUSHi(host->major_version);
+            mXPUSHi(host->minor_version);
+            mXPUSHi(host->micro_version);
+            XSRETURN(3);
+        }
+        else {
+            SV *version_sv = sv_newmortal();
+            sv_setpvf(version_sv, "%d.%d.%d",
+                host->major_version,
+                host->minor_version,
+                host->micro_version
+            );
+            XPUSHs(version_sv);
+            XSRETURN(1);
+        }
 
 
 =head2 Memcached::libmemcached Methods

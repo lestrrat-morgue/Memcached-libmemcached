@@ -16,7 +16,9 @@ my $pc = Pod::Coverage->new(package => 'Memcached::libmemcached');
 my %covered = map { $_=>1 } $pc->covered;
 
 my @todo;
+print "libmemcached_functions:\n";
 for my $func (libmemcached_functions()) {
+    print "$func\n";
     push @todo, $func unless $covered{$func};
 }
 if (@todo) {
