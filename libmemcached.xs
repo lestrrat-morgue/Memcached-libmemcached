@@ -841,3 +841,51 @@ set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get_cb)
         lmc_state = LMC_STATE_FROM_PTR(ptr);
         sv_setsv(lmc_state->cb_context->set_cb, set_cb);
         sv_setsv(lmc_state->cb_context->get_cb, get_cb);
+
+memcached_return
+get_stats_into_hashref(Memcached__libmemcached ptr, HV *dest_ref)
+    PREINIT:
+        memcached_return rc;
+        memcached_stat_st *stat;
+        char *val;
+        char **keys;
+        unsigned int i;
+        HV *hv;
+    CODE:
+        stat = memcached_stat(ptr, NULL, &rc);
+        if (stat == NULL || rc != MEMCACHED_SUCCESS) {
+            RETVAL = rc;
+        } else {
+            memcached_server_st *servers = memcached_server_list(ptr);
+            
+            for(i = 0; i < memcached_server_count(ptr); i++) {
+                keys = memcached_stat_get_keys(ptr, &stat[i], &rc);
+                if (keys == NULL || rc != MEMCACHED_SUCCESS) {
+                    RETVAL = rc;
+                    break;
+                }
+                
+                hv = newHV();
+                hv_store_ent( 
+                    dest_ref,
+                    newSVpvf("%s:%d",
+                        memcached_server_name(ptr, servers[i]),
+                        memcached_server_port(ptr, servers[i])
+                    ),
+                    newRV_noinc((SV *) hv),
+                    0
+                );
+                while (*keys != NULL) {
+                    val = memcached_stat_get_value(ptr, stat, *keys, &rc);
+                    if (! val) {
+                        RETVAL = rc;
+                        break;
+                    }
+                    hv_store(hv, *keys, strlen(*keys), newSVpvf("%s", val), 0);
+                    keys++;
+                }
+            }
+        }
+    OUTPUT:
+        RETVAL
+
