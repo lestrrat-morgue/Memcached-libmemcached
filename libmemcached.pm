@@ -581,7 +581,7 @@ effectively the same as:
   $memc->set_callback_coderefs(\&set_callback, \&get_callback);
 
 This interface is I<experimental> and I<likely to change>. (It's also currently
-used by Cache::libmemcached, so don't use it if you're using that module.)
+used by Cache::Memcached::libmemcached, so don't use it if you're using that module.)
 
 Specify functions which will be executed when values are set and/or get using $memc. 
 
