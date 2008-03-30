@@ -851,7 +851,25 @@ get_stats_into_hashref(Memcached__libmemcached ptr, HV *dest_ref)
         char **keys;
         unsigned int i;
         HV *hv;
+        HV *hv_hosts;
     CODE:
+        /* The resulting hash is relatively complex... */
+        /* 
+           $rv = {
+                hosts => {
+                    host:port => {
+                        type => {
+                            name => value
+                        }
+                    }
+                },
+                total => {
+                }
+            }
+        */
+        hv_hosts = newHV();
+        hv_store(dest_ref, "hosts", 5, newRV_noinc((SV *) hv_hosts), 0);
+
         stat = memcached_stat(ptr, NULL, &rc);
         if (stat == NULL || rc != MEMCACHED_SUCCESS) {
             RETVAL = rc;
@@ -867,7 +885,7 @@ get_stats_into_hashref(Memcached__libmemcached ptr, HV *dest_ref)
                 
                 hv = newHV();
                 hv_store_ent( 
-                    dest_ref,
+                    hv_hosts,
                     newSVpvf("%s:%d",
                         memcached_server_name(ptr, servers[i]),
                         memcached_server_port(ptr, servers[i])
