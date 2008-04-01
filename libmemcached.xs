@@ -87,6 +87,21 @@ struct lmc_state_st {
     lmc_cb_context_st _cb_context;
 };
 
+/* static stuff for stats() */
+static size_t misc_keys_len = 11;
+static char *misc_keys[] = { 
+    "bytes",
+    "bytes_read",
+    "bytes_written",
+    "cmd_get",
+    "cmd_set",
+    "connection_structures",
+    "curr_items",
+    "get_hits",
+    "get_misses",
+    "total_connections",
+    "total_items"
+};
 
 static lmc_state_st *
 lmc_state_new(memcached_st *ptr, HV *memc_hv)
@@ -843,16 +858,18 @@ set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get_cb)
         sv_setsv(lmc_state->cb_context->get_cb, get_cb);
 
 memcached_return
-get_stats_into_hashref(Memcached__libmemcached ptr, HV *dest_ref)
+get_stats_into_hashref(Memcached__libmemcached ptr, HV *dest_ref, char *typename)
     PREINIT:
         memcached_return rc;
         memcached_stat_st *stat;
         char *val;
         char **keys;
-        unsigned int i;
-        HV *hv;
-        HV *hv_hosts;
+        size_t i, misc_idx;
+        HV *hv_host, *hv_typename, *hv_hosts, *hv_total;
+        unsigned int misc_total[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     CODE:
+        /* XXX - currently typename must be initialized. will make it more
+            robuts later */
         /* The resulting hash is relatively complex... */
         /* 
            $rv = {
@@ -866,6 +883,25 @@ get_stats_into_hashref(Memcached__libmemcached ptr, HV *dest_ref)
                 total => {
                 }
             }
+
+            total is only populated if the typename is malloc/misc
+            this is added for every time in this manner
+            (from Cache::Memcached)
+
+            $stats_hr->{'total'}{$key} += $value
+                if $typename eq 'misc' && $key && $misc_keys{$key};
+            $stats_hr->{'total'}{"malloc_$key"} += $value
+                if $typename eq 'malloc' && $key;
+
+            where misc_keys is 
+
+            my %misc_keys = map { $_ => 1 }
+              qw/ bytes bytes_read bytes_written
+                  cmd_get cmd_set connection_structures curr_items
+                  get_hits get_misses
+                  total_connections total_items
+              /;
+
         */
         hv_hosts = newHV();
         hv_store(dest_ref, "hosts", 5, newRV_noinc((SV *) hv_hosts), 0);
@@ -875,6 +911,10 @@ get_stats_into_hashref(Memcached__libmemcached ptr, HV *dest_ref)
             RETVAL = rc;
         } else {
             memcached_server_st *servers = memcached_server_list(ptr);
+            if (strEQ(typename, "misc") || strEQ(typename, "malloc")) {
+                hv_total = newHV();
+                hv_store(dest_ref, "total", 5, newRV_noinc((SV *) hv_total), 0);
+            }
             
             for(i = 0; i < memcached_server_count(ptr); i++) {
                 keys = memcached_stat_get_keys(ptr, &stat[i], &rc);
@@ -882,25 +922,51 @@ get_stats_into_hashref(Memcached__libmemcached ptr, HV *dest_ref)
                     RETVAL = rc;
                     break;
                 }
-                
-                hv = newHV();
+
+                hv_host = newHV();
                 hv_store_ent( 
                     hv_hosts,
                     newSVpvf("%s:%d",
                         memcached_server_name(ptr, servers[i]),
                         memcached_server_port(ptr, servers[i])
                     ),
-                    newRV_noinc((SV *) hv),
+                    newRV_noinc((SV *) hv_host),
                     0
                 );
+                
+                hv_typename = newHV();
+
+                hv_store_ent(
+                    hv_host,
+                    newSVpvf("%s", typename),
+                    newRV_noinc((SV *) hv_typename),
+                    0
+                );
+
                 while (*keys != NULL) {
                     val = memcached_stat_get_value(ptr, stat, *keys, &rc);
                     if (! val) {
                         RETVAL = rc;
                         break;
                     }
-                    hv_store(hv, *keys, strlen(*keys), newSVpvf("%s", val), 0);
+
+                    hv_store(hv_typename, *keys, strlen(*keys), newSVpvf("%s", val), 0);
+
+                    if (strEQ(typename, "misc")) {
+                        for(misc_idx = 0; misc_idx < misc_keys_len; misc_idx++) {
+                            if (strEQ(*keys, misc_keys[misc_idx])) {
+                                misc_total[misc_idx] += Strtoul(val, NULL, 10);
+                            }
+                        }
+                    }
+
                     keys++;
+                }
+            }
+
+            for(misc_idx = 0; misc_idx < misc_keys_len; misc_idx++) {
+                if (misc_total[misc_idx] > 0) {
+                    hv_store(hv_total, misc_keys[misc_idx], strlen(misc_keys[misc_idx]), newSVuv(misc_total[misc_idx]), 0);
                 }
             }
         }
