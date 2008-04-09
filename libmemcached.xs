@@ -874,6 +874,9 @@ walk_stats(Memcached__libmemcached ptr, char *typename, CV *cb)
                     continue;
                 }
 
+                ENTER;
+                SAVETMPS;
+
                 /* callback is called with key, value, hostname, typename */
                 PUSHMARK(SP);
                 XPUSHs(sv_2mortal(newSVpv(*keys, 0)));
@@ -882,7 +885,12 @@ walk_stats(Memcached__libmemcached ptr, char *typename, CV *cb)
                 XPUSHs(typename_sv);
                 PUTBACK;
 
-                call_sv((SV*)cb, G_SCALAR);
+                /* XXX Ponder if we should use the return value */
+                call_sv((SV*)cb, G_VOID);
+
+                SPAGAIN;
+                FREETMPS;
+                LEAVE;
 
                 keys++;
             }

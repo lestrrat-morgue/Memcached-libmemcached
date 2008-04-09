@@ -594,6 +594,21 @@ This method is also currently callable as memcached_set_callback_coderefs() for
 compatibility with an earlier version, but that deprecated alias will start
 warning and then cease to exist in future versions.
 
+=head3 walk_stats
+
+  $memc->walk_stats($typename, \&callback);
+
+This interface is I<experimental> and I<likely to change>.
+
+Given a $typename, issues a STAT command to the connected memcached servers.
+The returned values are passed to the callback function given. Your
+callback should accept 4 parameters:
+
+  sub callback {
+    my($key, $value, $host, $port) = @_;
+    # Do what you lkike with the above!
+  }
+
 =head2 Reference
 
 The $memc variable 
