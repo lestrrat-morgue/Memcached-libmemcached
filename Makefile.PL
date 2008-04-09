@@ -6,7 +6,7 @@ use Config;
 
 use Getopt::Long;
 use Data::Dumper;
-use Cwd qw(abs_path);
+use Cwd qw(getcwd abs_path);
 
 BEGIN {
     my $min = 5.006;
@@ -24,7 +24,7 @@ GetOptions(
 ) or exit 1;
 
 my $lmcd_src = "src/libmemcached";
-my $lmcd_inst = abs_path("src_inst");
+my $lmcd_inst = getcwd()."/src_inst";
 my $lmcd_built_lib = "$lmcd_inst/lib/libmemcached$Config{lib_ext}";
 my @lmcd_pod = sort <$lmcd_src/docs/memcached_*.pod>;
 my $is_developer = (-d ".svn");
@@ -124,7 +124,7 @@ libmemcached.c : $(XSUBPPDIR)/ParseXS.pm typemap
 $(OBJECT) : $(LMCD_BUILT_LIB)
 
 svnmanifest::
-	svn list -R | grep -v '/$$' > MANIFEST
+	svn list -R .@HEAD | sort | grep -v '/$$' > MANIFEST
 	svn diff MANIFEST
 	svn status
 
@@ -243,26 +243,30 @@ sub extract_libmemcached_constants {
     my %libmemcached_const;
 
     # find all MEMCACHED_* constants (#define and enum)
-    warn "Reading memcached.h to find all constants\n";
-    open my $fh, "<$lmcd_src/include/memcached.h" or die "Can't open $lmcd_src/include/memcached.h: $!";
+    warn "Reading headers to find all constants\n";
     my $in_enum = 0;
     my @const;
-    while (<$fh>) {
-        if ($in_enum) {
-            if (m/^ \s* } \s* (\w+)/x) { # end of enum
-                $libmemcached_const{$_} = $1 for @const;
-                @const = ();
-                $in_enum = 0;
+
+    my @headers = glob "$lmcd_src/libmemcached/memcached*.h";
+    for my $h (@headers) {
+        open my $fh, "<$h" or die "Can't open $h: $!";
+        while (<$fh>) {
+            if ($in_enum) {
+                if (m/^ \s* } \s* (\w+)/x) { # end of enum
+                    $libmemcached_const{$_} = $1 for @const;
+                    @const = ();
+                    $in_enum = 0;
+                }
+                elsif (m/^ \s* (MEMCACHED_\w+)/x) {
+                    push @const, $1;
+                }
             }
-            elsif (m/^ \s* (MEMCACHED_\w+)/x) {
-                push @const, $1;
+            elsif (m/^ \s* typedef \s+ enum /x) {
+                $in_enum = 1;
             }
-        }
-        elsif (m/^ \s* typedef \s+ enum /x) {
-            $in_enum = 1;
-        }
-        elsif (m/\# \s* define \s+ (MEMCACHED_\w+)/x) {
-            $libmemcached_const{$1} = "defines";
+            elsif (m/\# \s* define \s+ (MEMCACHED_\w+)/x) {
+                $libmemcached_const{$1} = "defines";
+            }
         }
     }
 

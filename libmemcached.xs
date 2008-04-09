@@ -882,7 +882,7 @@ walk_stats(Memcached__libmemcached ptr, char *typename, CV *cb)
                 XPUSHs(typename_sv);
                 PUTBACK;
 
-                call_sv(cb, G_SCALAR);
+                call_sv((SV*)cb, G_SCALAR);
 
                 keys++;
             }
