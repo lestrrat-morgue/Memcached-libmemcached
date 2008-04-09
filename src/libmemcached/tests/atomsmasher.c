@@ -2,7 +2,6 @@
   Sample test application.
 */
 #include <assert.h>
-#include <memcached.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,9 +11,9 @@
 #include <unistd.h>
 #include <time.h>
 #include "server.h"
-#include "../lib/common.h"
-#include "../src/generator.h"
-#include "../src/execute.h"
+#include "../libmemcached/common.h"
+#include "../clients/generator.h"
+#include "../clients/execute.h"
 
 #ifndef INT64_MAX
 #define INT64_MAX LONG_MAX
@@ -120,16 +119,14 @@ memcached_return pre_nonblock(memcached_st *memc)
 
 memcached_return pre_md5(memcached_st *memc)
 {
-  memcached_hash value= MEMCACHED_HASH_MD5;
-  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_HASH, value);
+  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_HASH, (uint64_t)MEMCACHED_HASH_MD5);
 
   return MEMCACHED_SUCCESS;
 }
 
 memcached_return pre_hsieh(memcached_st *memc)
 {
-  memcached_hash value= MEMCACHED_HASH_HSIEH;
-  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_HASH, value);
+  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_HASH, (uint64_t)MEMCACHED_HASH_HSIEH);
 
   return MEMCACHED_SUCCESS;
 }

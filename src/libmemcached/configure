@@ -730,7 +730,7 @@ PACKAGE_VERSION=
 PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
-ac_unique_file="src/memcat.c"
+ac_unique_file="clients/memcat.c"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -1970,7 +1970,7 @@ ac_config_sub="$SHELL $ac_aux_dir/config.sub"  # Please don't use this var.
 ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
-ac_config_headers="$ac_config_headers include/libmemcached_config.h"
+ac_config_headers="$ac_config_headers libmemcached/libmemcached_config.h"
 
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
@@ -2103,7 +2103,7 @@ MEMCACHED_LIBRARY_NAME=libmemcached
 
 #release versioning
 MEMCACHED_MAJOR_VERSION=0
-MEMCACHED_MINOR_VERSION=17
+MEMCACHED_MINOR_VERSION=19
 MEMCACHED_MICRO_VERSION=0
 
 #API version
@@ -19604,9 +19604,9 @@ if test "$GCC" = "yes"
 then
   if test "$ENABLE_DEBUG" = "yes"
   then
-    CFLAGS="-Wall -ggdb -DHAVE_DEBUG"
+    CFLAGS="-Wall -ggdb -DMEMCACHED_INTERNAL -DHAVE_DEBUG"
   else
-    CFLAGS="-Wall -O3"
+    CFLAGS="-Wall -O3 -DMEMCACHED_INTERNAL "
   fi
 else
   CFLAGS="-Xa -xstrconst -mt -D_FORTEC_ -fast -m64"
@@ -19927,7 +19927,7 @@ if test "$ac_res" != no; then
 
 fi
 
-ac_config_files="$ac_config_files Makefile src/Makefile tests/Makefile docs/Makefile lib/Makefile include/Makefile support/Makefile support/libmemcached.pc support/libmemcached.spec"
+ac_config_files="$ac_config_files Makefile clients/Makefile tests/Makefile docs/Makefile libmemcached/Makefile support/Makefile support/libmemcached.pc support/libmemcached.spec"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -20527,14 +20527,13 @@ cat >>$CONFIG_STATUS <<\_ACEOF
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
-    "include/libmemcached_config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/libmemcached_config.h" ;;
+    "libmemcached/libmemcached_config.h") CONFIG_HEADERS="$CONFIG_HEADERS libmemcached/libmemcached_config.h" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "clients/Makefile") CONFIG_FILES="$CONFIG_FILES clients/Makefile" ;;
     "tests/Makefile") CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
     "docs/Makefile") CONFIG_FILES="$CONFIG_FILES docs/Makefile" ;;
-    "lib/Makefile") CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
-    "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
+    "libmemcached/Makefile") CONFIG_FILES="$CONFIG_FILES libmemcached/Makefile" ;;
     "support/Makefile") CONFIG_FILES="$CONFIG_FILES support/Makefile" ;;
     "support/libmemcached.pc") CONFIG_FILES="$CONFIG_FILES support/libmemcached.pc" ;;
     "support/libmemcached.spec") CONFIG_FILES="$CONFIG_FILES support/libmemcached.spec" ;;

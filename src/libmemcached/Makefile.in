@@ -46,7 +46,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/include/libmemcached_config.h
+CONFIG_HEADER = $(top_builddir)/libmemcached/libmemcached_config.h
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -194,8 +194,8 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-INCLUDES = include
-SUBDIRS = docs include lib src tests support
+INCLUDES = 
+SUBDIRS = docs libmemcached tests support clients
 EXTRA_dist = README.FIRST
 all: all-recursive
 
