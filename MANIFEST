@@ -5,6 +5,7 @@ Makefile.PL
 README
 TODO
 lib/Memcached/libmemcached/API.pm
+lib/Memcached/libmemcached/constants.pm
 lib/Memcached/libmemcached/memcached_auto.pm
 lib/Memcached/libmemcached/memcached_behavior.pm
 lib/Memcached/libmemcached/memcached_callback.pm

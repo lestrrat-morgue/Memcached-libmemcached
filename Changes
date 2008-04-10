@@ -4,9 +4,11 @@ Memcached::libmemcached::Changes - List of significant changes
 
 As of $Date: 2008-01-08 15:54:15 +0000 (Tue, 08 Jan 2008) $ $Revision$
 
-=head2 Changes in 0.1901 (svn r129) 9th April 2008
+=head2 Changes in 0.1901 (svn r140) 10th April 2008
 
   Sync with libmemcached 0.19.
+  Added walk_stats method for fetching stats via a callback
+    thanks to Daisuke Maki.
 
 =head2 Changes in 0.1701 (svn r129) 3rd March 2008
 
