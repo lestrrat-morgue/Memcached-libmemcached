@@ -567,13 +567,13 @@ Use L</memcached_mget_by_key> directly if you need that feature.
 
 Effectively the same as:
 
-  $vaue = memcached_get( $memc, $key );
+  $value = memcached_get( $memc, $key );
 
 The C<get> method also supports the L<Cache::Memcached> feature where $key can
 be a reference to an array [ $master_key, $key ]. In which case the call is
 effectively the same as:
 
-  $vaue = memcached_get_by_key( $memc, $key->[0], $key->[1] )
+  $value = memcached_get_by_key( $memc, $key->[0], $key->[1] )
 
 
 =head3 set_callback_coderefs
@@ -596,23 +596,23 @@ warning and then cease to exist in future versions.
 
 =head3 walk_stats
 
-  $memc->walk_stats($typename, \&callback);
+  $memc->walk_stats( $stats_args, \&my_stats_callback );
 
 This interface is I<experimental> and I<likely to change>.
 
-Given a $typename, issues a STAT command to the connected memcached servers.
-The returned values are passed to the callback function given. Your
-callback should accept 4 parameters:
+Calls the memcached_stat() function to issue a "STAT $stats_args" command to
+the connected memcached servers. The $stats_args argument is usually an empty string.
 
-  sub callback {
-    my($key, $value, $host, $port) = @_;
-    # Do what you lkike with the above!
+The callback function is called for each return value from each server.
+The callback will be passed 4 parameters:
+
+  sub my_stats_callback {
+    my ($key, $value, $hostport, $stats_args) = @_;
+    # Do what you like with the above!
+    return;
   }
 
-=head2 Reference
-
-The $memc variable 
-
+Currently the callback I<must> return an empty list.
 
 =head1 EXTRA INFORMATION
 

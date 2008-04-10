@@ -12,6 +12,7 @@ use Memcached::libmemcached
     ),
     #   other functions used by the tests
     qw(
+        memcached_server_count
     );
 
 use lib 't/lib';
@@ -19,7 +20,7 @@ use libmemcached_test;
 
 my $memc = libmemcached_test_create();
 
-plan tests => 5;
+plan tests => 8;
 
 ok $memc;
 
@@ -34,15 +35,27 @@ ok $memc;
     my $keys_defined_ok = 1;
     my $hostport_defined_ok = 1;
     my $type_ok = 1;
-    $memc->walk_stats("misc", sub {
-        # my ($key, $value, $hostport, $type) = @_;
+    my (%seen_hostport, %seen_distinct);
+    my $walk_stats_rc = $memc->walk_stats("", sub {
         $arg_count_ok = scalar(@_) == 4 if $arg_count_ok;
-        $keys_defined_ok = defined $_[0] if $keys_defined_ok;
-        $hostport_defined_ok = defined $_[2] if $hostport_defined_ok;
-        $type_ok = defined $_[3] && "misc" eq $_[3] if $type_ok;
+        my ($key, $value, $hostport, $type) = @_;
+        print "$hostport $type: $key=$value\n";
+        $keys_defined_ok = defined $key if $keys_defined_ok;
+        $hostport_defined_ok = defined $hostport if $hostport_defined_ok;
+        $type_ok = defined $type && "" eq $type if $type_ok;
+        $seen_hostport{$hostport} = 1;
+        $seen_distinct{"$hostport:$key"}++;
+        # XXX build $seen_hostport{$hostport} and  it matches memcached_server_count
+        # XXX build hash
+        return;
     });
+    ok( $walk_stats_rc, "walk_stats should return true");
     ok( $arg_count_ok, "walk_stats argument count is sane" );
     ok( $keys_defined_ok, "keys are sane" );
     ok( $hostport_defined_ok, "hostport are sane" );
     ok( $type_ok, "types are sane" );
+    is( scalar keys %seen_hostport, memcached_server_count($memc),
+        "should see responses from each server");
+    is( scalar (grep { $_ != 1 } values %seen_distinct), 0,
+        "should see no distinct hostport+key more than once");
 }

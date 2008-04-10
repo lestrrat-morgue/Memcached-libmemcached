@@ -841,33 +841,41 @@ set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get_cb)
         sv_setsv(lmc_state->cb_context->set_cb, set_cb);
         sv_setsv(lmc_state->cb_context->get_cb, get_cb);
 
-void
-walk_stats(Memcached__libmemcached ptr, char *typename, CV *cb)
+
+memcached_return
+walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
     PREINIT:
+        lmc_state_st *lmc_state;
         memcached_return rc;
         memcached_stat_st *stat;
-        SV *hostport_sv, *typename_sv;
-        char **keys;
-        char *val;
     CODE:
+        lmc_state = LMC_STATE_FROM_PTR(ptr);
         size_t i;
         memcached_server_st *servers = memcached_server_list(ptr);
         size_t server_count          = memcached_server_count(ptr);
+        SV *stats_args_sv = sv_2mortal(newSVpv(stats_args, 0));
 
-        for(i = 0; i < server_count; i++) {
-            char *subcmd = strEQ(typename, "misc") ? "" : typename;
-            stat = memcached_stat(ptr, subcmd, &rc);
-            if (stat == NULL || rc != MEMCACHED_SUCCESS) {
-                continue;
-            }
+        stat = memcached_stat(ptr, stats_args, &RETVAL);
+        if (!stat || !LMC_RETURN_OK(RETVAL)) {
+            if (lmc_state->trace_level >= 2)
+                warn("memcached_stat returned stat %p rc %d\n", stat, rc);
+            LMC_RECORD_RETURN_ERR(ptr, RETVAL);
+            XSRETURN_NO;
+        }
+
+        for (i = 0; i < server_count; i++) {
+            SV *hostport_sv;
+            char **keys;
+            char *val;
 
             hostport_sv = sv_2mortal(newSVpvf("%s:%d",
                 memcached_server_name(ptr, servers[i]),
                 memcached_server_port(ptr, servers[i])
             ));
-            typename_sv = sv_2mortal(newSVpv(typename, 0));
+
             keys = memcached_stat_get_keys(ptr, &stat[i], &rc);
             while (keys && *keys) {
+                int items;
                 dSP;
                 val = memcached_stat_get_value(ptr, stat, *keys, &rc);
                 if (! val) {
@@ -882,17 +890,21 @@ walk_stats(Memcached__libmemcached ptr, char *typename, CV *cb)
                 XPUSHs(sv_2mortal(newSVpv(*keys, 0)));
                 XPUSHs(sv_2mortal(newSVpv(val, 0)));
                 XPUSHs(hostport_sv);
-                XPUSHs(typename_sv);
+                XPUSHs(stats_args_sv);
                 PUTBACK;
 
-                /* XXX Ponder if we should use the return value */
-                call_sv((SV*)cb, G_VOID);
-
+                items = call_sv((SV*)cb, G_ARRAY);
                 SPAGAIN;
+
+                if (items) /* XXX may use returned items for signalling later */
+                    croak("walk_stats callback returned non-empty list");
+
                 FREETMPS;
                 LEAVE;
 
                 keys++;
             }
         }
+    OUTPUT:
+    RETVAL
 
