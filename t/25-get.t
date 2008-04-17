@@ -28,7 +28,8 @@ my $items = 5;
 plan tests => ($items * 3) + 3
     + 2 * (1 + $items * 2 + 1)
     + $items + 6
-    + $items + 7;
+    + $items + 7
+    + 1;
 
 my ($rv, $rc, $flags, $tmp);
 my $t1= time();
@@ -81,8 +82,13 @@ ok memcached_set($memc, $_, $data{$_})
 ok $memc->mget_into_hashref([ ], {}),
     'should return true, even if no keys';
 
-ok $memc->mget_into_hashref([ 'none such foo' ], {}),
-    'should return true, even if no results';
+{
+    my %h = ();
+    ok $memc->mget_into_hashref([ 'none_such_foo' ], \%h),
+        'should return true, even if no results';
+    is_deeply \%h, {},
+        'results should be empty';
+}
 
 my %extra = ( foo => 'bar' );
 # reset got data, but not to empty so we check the hash isn't erased
@@ -110,7 +116,7 @@ ok memcached_set($memc, $_, $data{$_})
 is_deeply $memc->get_multi(), {},
     'should return empty hash for no keys';
 
-is_deeply $memc->get_multi('none such foo'), {},
+is_deeply $memc->get_multi('none_such_foo'), {},
     'should return empty hash if no results';
 
 $tmp = $memc->get_multi(keys %data);
