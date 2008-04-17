@@ -1,6 +1,6 @@
 *** General:
 
-    Add stats api
+    Stabilize stats api
     Document all typedef actions on input and output
 
     Resolve mapping of error codes to booleans

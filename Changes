@@ -4,6 +4,12 @@ Memcached::libmemcached::Changes - List of significant changes
 
 As of $Date: 2008-01-08 15:54:15 +0000 (Tue, 08 Jan 2008) $ $Revision$
 
+=head2 Changes in 0.1902 (svn r144) 17th April 2008
+
+  Fixed leak of $memc which prevented DESTROY (and thus memcached_free)
+    being called, thanks to Jim Spath and Daisuke Maki.
+  Fixed tests to not use whitespace in keys, thanks to Daisuke Maki.
+
 =head2 Changes in 0.1901 (svn r140) 10th April 2008
 
   Sync with libmemcached 0.19.
