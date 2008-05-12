@@ -17,6 +17,7 @@ use Memcached::libmemcached
     #   other functions used by the tests
     qw(
     memcached_errstr
+    memcached_version
     MEMCACHED_NOTFOUND
     );
 
@@ -26,6 +27,8 @@ use libmemcached_test;
 my $memc = libmemcached_test_create();
 
 plan tests => 14;
+
+diag "Testing using memcached version ".memcached_version($memc);
 
 my ($rv, $rc, $flags, $tmp);
 my $t1= time();
@@ -45,6 +48,10 @@ is memcached_get($memc, $k1, $flags=0, $rc=0), $v1;
 ok $rc;
 if ($flags == 0xCAFE) {
     warn "You're limited to 16 bit flags\n";
+    $flags = 0xDEADCAFE;
+}
+if ($flags == 0 && not libmemcached_version_ge($memc, "1.2.4")) {
+    warn "You're old memcached version doesn't support flags!\n";
     $flags = 0xDEADCAFE;
 }
 is sprintf("0x%X",$flags), '0xDEADCAFE', 'flags should be unchanged';

@@ -11,6 +11,7 @@ use Test::More;
 our @EXPORT = qw(
     libmemcached_test_create
     libmemcached_test_key
+    libmemcached_version_ge
 );
 
 use Memcached::libmemcached qw(
