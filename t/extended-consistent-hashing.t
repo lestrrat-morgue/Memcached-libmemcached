@@ -1,6 +1,9 @@
 use strict;
 use Test::More;
 
+use lib 't/lib';
+use libmemcached_test;
+
 # This test requires at least 5 memcached instances.
 # We start out by creating 100 items in 4 instances.
 # After that, we add another server to the server list, and
@@ -10,14 +13,12 @@ use Test::More;
 my @servers;
 BEGIN
 {
-    @servers = split(/,/, $ENV{PERL_LIBMEMCACHED_TEST_SERVERS} || '');
-    if (@servers < 5) {
-        plan(skip_all => "Set PERL_LIBMEMCACHED_TEST_SERVERS env var to at least 5 servers to run this test");
-    }
-    else {
-        plan(tests => 2);
-        use_ok("Cache::Memcached::libmemcached", "MEMCACHED_DISTRIBUTION_CONSISTENT");
-    }
+    @servers = libmemcached_test_servers();
+    plan skip_all => "Set PERL_LIBMEMCACHED_TEST_SERVERS env var to at least 5 servers to run this test"
+        if @servers < 5;
+
+    plan(tests => 2);
+    use_ok("Cache::Memcached::libmemcached", "MEMCACHED_DISTRIBUTION_CONSISTENT");
 }
 
 my $max = 100;

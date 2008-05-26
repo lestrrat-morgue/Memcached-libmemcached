@@ -12,6 +12,7 @@ our @EXPORT = qw(
     libmemcached_test_create
     libmemcached_test_key
     libmemcached_version_ge
+    libmemcached_test_servers
 );
 
 use Memcached::libmemcached qw(
@@ -22,18 +23,29 @@ use Memcached::libmemcached qw(
     memcached_version
 );
 
+
+sub libmemcached_test_servers {
+    my $servers = $ENV{PERL_LIBMEMCACHED_TEST_SERVERS};
+    $servers ||= 'localhost';
+    return split(/\s*,\s*/, $servers);
+}
+
+
 sub libmemcached_test_create {
     my ($args) = @_;
 
     my $memc = memcached_create()
         or die "memcached_create failed";
 
-    my $opts = $ENV{PERL_LIBMEMCACHED_OPTS} || 'localhost';
+    # XXX would be good to filter this list by those we can communicate with
+    # (and have sufficient version number)
+    # then pick the first of those to use as the default test server
+    my ($server,$port) = split /:/, (libmemcached_test_servers())[0];
 
     # XXX may change to memcached_parse_options or somesuch so the env
     # var can set behaviours etc
-    my $rc = memcached_server_add($memc, $opts);
-    die "libmemcached_test_create: memcached_server_add($opts) failed: ".memcached_errstr($memc)
+    my $rc = memcached_server_add($memc, $server, $port);
+    die "libmemcached_test_create: memcached_server_add($server) failed: ".memcached_errstr($memc)
         if not $rc;
 
     # XXX ideally this should be a much 'simpler/safer' command

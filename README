@@ -4,7 +4,7 @@ Memcached::libmemcached is a very thin, highly efficient, wrapper around the
 libmemcached library.
 
 It gives full access to the rich functionality offered by libmemcached.
-libmemcached is fast, light on memory usage, thread safe, and provide full
+libmemcached is fast, light on memory usage, thread safe, and provides full
 access to server side methods.
 
  - Synchronous and Asynchronous support.
@@ -20,11 +20,23 @@ To install this module, run the following commands:
 
 	perl Makefile.PL
 	make
-	make test
+	make test           (see TESTING below)
 	make install
 
 Note that the "perl Makefile.PL" step will configure and build a private copy
-of libmemcached from source.
+of libmemcached from source. So don't be surprised to see pages of output
+during that step.
+
+TESTING
+
+The "make test" command can run some tests without using a memcached server.
+Others are skipped unless a memcached server can be found.
+By default the tests look for a memcached server at the standard port on localhost.
+
+To use one or more other servers set the PERL_LIBMEMCACHED_TEST_SERVERS
+environment variable to a comma separated list of hostname:port values.
+
+Most tests require just one server but some require at least 5 servers.
 
 SUPPORT AND DOCUMENTATION
 
