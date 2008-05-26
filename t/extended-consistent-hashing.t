@@ -10,10 +10,11 @@ use Test::More;
 my @servers;
 BEGIN
 {
-    @servers = split(/,/, $ENV{PERL_LIBMEMCACHED_EXTENDED_TEST_SERVERS} || '');
-    if (! $ENV{PERL_LIBMEMCACHED_EXTENDED_TEST} || ! $ENV{PERL_LIBMEMCACHED_EXTENDED_TEST_SERVERS} || @servers != 5) {
-        plan(skip_all => "You must have 5 memcached instances, and set PERL_LIBMEMCACHED_EXTENDED_TESTS to run this test");
-    } else {
+    @servers = split(/,/, $ENV{PERL_LIBMEMCACHED_TEST_SERVERS} || '');
+    if (@servers < 5) {
+        plan(skip_all => "Set PERL_LIBMEMCACHED_TEST_SERVERS env var to at least 5 servers to run this test");
+    }
+    else {
         plan(tests => 2);
         use_ok("Cache::Memcached::libmemcached", "MEMCACHED_DISTRIBUTION_CONSISTENT");
     }
@@ -28,13 +29,13 @@ my $max = 100;
     $cache->flush_all;
 }
 
-{ # Now, warm 4 out of the 5 servers we have
+{ # Now, warm 4 out of 5 servers
     my $cache = Cache::Memcached::libmemcached->new({
         servers => [ @servers[0..3] ],
         distribution_method => MEMCACHED_DISTRIBUTION_CONSISTENT,
     });
 
-    for(1..$max) {
+    for (1..$max) {
         $cache->set($_ => $_);
     }
 }
@@ -43,11 +44,11 @@ my $max = 100;
   # be somewhere around 0.80 (we'll allow plus-or-minus 0.05
     my $hits = 0;
     my $cache = Cache::Memcached::libmemcached->new({
-        servers => \@servers,
+        servers => [ @servers[0..4] ],
         distribution_method => MEMCACHED_DISTRIBUTION_CONSISTENT,
     });
 
-    for(1..$max) {
+    for (1..$max) {
         if (defined $cache->get($_)) {
             $hits++;
         }
