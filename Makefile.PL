@@ -21,6 +21,7 @@ GetOptions(
     'g!'    => \my $opt_g,      # enable debugging
     'pg!'   => \my $opt_pg,     # enable profiling
     'cov!'  => \my $opt_cov,    # enable test coverage analysis
+    'bin!'  => \my $opt_bin,    # install bintools from libmemcached
 ) or exit 1;
 
 my $lmcd_src = "src/libmemcached";
@@ -59,6 +60,11 @@ if ($opt_cov) {
     $opts{CCFLAGS}  = $coverage_flags;
 }
 
+### optionally install the command line utilities that come with
+### libmemcached as well
+if( $opt_bin ) {
+    $opts{EXE_FILES} = [ map { s/\.c$//i; $_ } <src/libmemcached/clients/mem*.c> ]; 
+}
 
 WriteMakefile(
     NAME                => 'Memcached::libmemcached',

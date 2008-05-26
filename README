@@ -25,7 +25,14 @@ To install this module, run the following commands:
 
 Note that the "perl Makefile.PL" step will configure and build a private copy
 of libmemcached from source. So don't be surprised to see pages of output
-during that step.
+duringthat step.
+
+If you'd like to have the commandline tools that come with libmemcached installed, invoke Makefile.PL as:
+
+    perl Makefile.PL --bin
+    
+See http://tangent.org/552/libmemcached.html for details.
+
 
 TESTING
 
@@ -86,4 +93,9 @@ Test coverage analysis
     make
     make testcover
 
+Install commandline tools from libmemcached
+
+    perl Makefile.PL -bin
+    make 
+    make install
 
