@@ -4,7 +4,8 @@
 /* 
   What happens if no servers exist?
 */
-char *memcached_get(memcached_st *ptr, char *key, size_t key_length, 
+char *memcached_get(memcached_st *ptr, const char *key, 
+                    size_t key_length, 
                     size_t *value_length, 
                     uint32_t *flags,
                     memcached_return *error)
@@ -14,8 +15,9 @@ char *memcached_get(memcached_st *ptr, char *key, size_t key_length,
 }
 
 char *memcached_get_by_key(memcached_st *ptr, 
-                           char *master_key, size_t master_key_length, 
-                           char *key, size_t key_length, 
+                           const char *master_key, 
+                           size_t master_key_length, 
+                           const char *key, size_t key_length,
                            size_t *value_length, 
                            uint32_t *flags,
                            memcached_return *error)
@@ -29,7 +31,7 @@ char *memcached_get_by_key(memcached_st *ptr,
   *error= memcached_mget_by_key(ptr, 
                                 master_key, 
                                 master_key_length, 
-                                &key, &key_length, 1);
+                                (char **)&key, &key_length, 1);
 
   value= memcached_fetch(ptr, NULL, NULL, 
                          value_length, flags, error);
@@ -39,7 +41,7 @@ char *memcached_get_by_key(memcached_st *ptr,
 
   if (value == NULL)
   {
-    if (ptr->get_key_failure)
+    if (ptr->get_key_failure && *error == MEMCACHED_NOTFOUND)
     {
       memcached_return rc;
 
@@ -49,22 +51,28 @@ char *memcached_get_by_key(memcached_st *ptr,
       /* On all failure drop to returning NULL */
       if (rc == MEMCACHED_SUCCESS || rc == MEMCACHED_BUFFERED)
       {
-        uint8_t latch; /* We use latch to track the state of the original socket */
-
         if (rc == MEMCACHED_BUFFERED)
         {
+          uint8_t latch; /* We use latch to track the state of the original socket */
           latch= memcached_behavior_get(ptr, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS);
           if (latch == 0)
             memcached_behavior_set(ptr, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS, 1);
+
+          rc= memcached_set(ptr, key, key_length, 
+                            memcached_result_value(&ptr->result),
+                            memcached_result_length(&ptr->result),
+                            0, memcached_result_flags(&ptr->result));
+
+          if (rc == MEMCACHED_BUFFERED && latch == 0)
+            memcached_behavior_set(ptr, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS, 0);
         }
-
-        rc= memcached_set(ptr, key, key_length, 
-                          memcached_result_value(&ptr->result),
-                          memcached_result_length(&ptr->result),
-                          0, memcached_result_flags(&ptr->result));
-
-        if (rc == MEMCACHED_BUFFERED && latch == 0)
-          memcached_behavior_set(ptr, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS, 0);
+        else
+        {
+          rc= memcached_set(ptr, key, key_length, 
+                            memcached_result_value(&ptr->result),
+                            memcached_result_length(&ptr->result),
+                            0, memcached_result_flags(&ptr->result));
+        }
 
         if (rc == MEMCACHED_SUCCESS || rc == MEMCACHED_BUFFERED)
         {
@@ -95,8 +103,10 @@ memcached_return memcached_mget(memcached_st *ptr,
 }
 
 memcached_return memcached_mget_by_key(memcached_st *ptr, 
-                                       char *master_key, size_t master_key_length,
-                                       char **keys, size_t *key_length, 
+                                       const char *master_key, 
+                                       size_t master_key_length,
+                                       char **keys, 
+                                       size_t *key_length, 
                                        unsigned int number_of_keys)
 {
   unsigned int x;
@@ -174,6 +184,17 @@ memcached_return memcached_mget_by_key(memcached_st *ptr,
       WATCHPOINT_ASSERT(ptr->hosts[server_key].cursor_active == 0);
       memcached_server_response_increment(&ptr->hosts[server_key]);
       WATCHPOINT_ASSERT(ptr->hosts[server_key].cursor_active == 1);
+    }
+
+    /* Only called when we have a prefix key */
+    if (ptr->prefix_key[0] != 0)
+    {
+      if ((memcached_io_write(&ptr->hosts[server_key], ptr->prefix_key, ptr->prefix_key_length, 0)) == -1)
+      {
+        memcached_server_response_reset(&ptr->hosts[server_key]);
+        rc= MEMCACHED_SOME_ERRORS;
+        continue;
+      }
     }
 
     if ((memcached_io_write(&ptr->hosts[server_key], keys[x], key_length[x], 0)) == -1)

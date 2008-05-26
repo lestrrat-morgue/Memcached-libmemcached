@@ -15,7 +15,7 @@
 
 #include "test.h"
 
-uint8_t basic_test(memcached_st *memc)
+test_return basic_test(memcached_st *memc)
 {
   Memcached foo;
   char *value_set= "This is some data";
@@ -27,9 +27,43 @@ uint8_t basic_test(memcached_st *memc)
 
   assert((memcmp(value, value_set, value_length) == 0));
 
+  return TEST_SUCCESS;
+}
+
+uint8_t increment_test(memcached_st *memc)
+{
+  Memcached mcach;
+  memcached_return rc;
+  char *key= "inctest";
+  char *inc_value= "1";
+  char *ret_value;
+  uint64_t int_inc_value;
+  uint64_t int_ret_value;
+  size_t value_length;
+
+  mcach.set(key, inc_value, strlen(inc_value));
+  ret_value= mcach.get(key, &value_length);
+  printf("\nretvalue %s\n",ret_value);
+  int_inc_value= atoi(inc_value);
+  int_ret_value= atoi(ret_value);
+  assert(int_ret_value == int_inc_value); 
+
+  rc= mcach.increment(key, 1, &int_ret_value);
+  assert(rc == MEMCACHED_SUCCESS);
+  assert(int_ret_value == 2);
+
+  rc= mcach.increment(key, 1, &int_ret_value);
+  assert(rc == MEMCACHED_SUCCESS);
+  assert(int_ret_value == 3);
+
+  rc= mcach.increment(key, 5, &int_ret_value);
+  assert(rc == MEMCACHED_SUCCESS);
+  assert(int_ret_value == 8);
+
   return 0;
 }
-uint8_t basic_master_key_test(memcached_st *memc)
+
+test_return basic_master_key_test(memcached_st *memc)
 {
   Memcached foo;
   char *value_set= "Data for server A";
@@ -47,7 +81,7 @@ uint8_t basic_master_key_test(memcached_st *memc)
   value= foo.get_by_key(master_key_b, key, &value_length);
   assert((memcmp(value, value_set, value_length) == 0));
 
-  return 0;
+  return TEST_SUCCESS;
 }
 
 

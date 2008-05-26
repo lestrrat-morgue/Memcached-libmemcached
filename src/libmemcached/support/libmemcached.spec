@@ -1,6 +1,6 @@
 Summary: memcached C library and command line tools
 Name: libmemcached
-Version: 0.19
+Version: 0.21
 Release: 1
 License: BSD
 Group: System Environment/Libraries
@@ -54,6 +54,7 @@ memerror - Creates human readable messages from libmemecached error codes.
 %{_includedir}/libmemcached/memcached.hh
 %{_includedir}/libmemcached/libmemcached_config.h
 %{_includedir}/libmemcached/memcached_constants.h
+%{_includedir}/libmemcached/memcached_get.h
 %{_includedir}/libmemcached/memcached_result.h
 %{_includedir}/libmemcached/memcached_server.h
 %{_includedir}/libmemcached/memcached_storage.h

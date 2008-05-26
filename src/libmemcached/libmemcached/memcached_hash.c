@@ -8,14 +8,14 @@ static uint32_t FNV_32_INIT= 2166136261UL;
 static uint32_t FNV_32_PRIME= 16777619;
 
 /* Prototypes */
-static uint32_t internal_generate_hash(char *key, size_t key_length);
-static uint32_t internal_generate_md5(char *key, size_t key_length);
-static uint32_t internal_generate_ketama_md5(char *key, size_t key_length);
+static uint32_t internal_generate_hash(const char *key, size_t key_length);
+static uint32_t internal_generate_md5(const char *key, size_t key_length);
 
-unsigned int memcached_generate_hash(memcached_st *ptr, char *key, size_t key_length)
+uint32_t generate_hash(memcached_st *ptr, const char *key, size_t key_length)
 {
   uint32_t hash= 1; /* Just here to remove compile warning */
-  unsigned int x;
+  uint32_t x= 0;
+
 
   WATCHPOINT_ASSERT(ptr->number_of_hosts);
 
@@ -80,11 +80,6 @@ unsigned int memcached_generate_hash(memcached_st *ptr, char *key, size_t key_le
       }
     }
     break;
-    case MEMCACHED_HASH_KETAMA: 
-    {
-      hash= internal_generate_ketama_md5(key, key_length);
-      break;
-    }
     case MEMCACHED_HASH_HSIEH:
     {
       hash= hsieh_hash(key, key_length);
@@ -98,24 +93,92 @@ unsigned int memcached_generate_hash(memcached_st *ptr, char *key, size_t key_le
   }
 
   WATCHPOINT_ASSERT(hash);
-
-  if (ptr->distribution == MEMCACHED_DISTRIBUTION_MODULA)
-  {
-    return hash % ptr->number_of_hosts;
-  }
-  else
-  {
-    unsigned int server_key;
-
-    server_key= hash % MEMCACHED_WHEEL_SIZE;
-
-    return ptr->wheel[server_key];
-  }
+  return hash;
 }
 
-static uint32_t internal_generate_hash(char *key, size_t key_length)
+unsigned int dispatch_host(memcached_st *ptr, uint32_t hash)
 {
-  char *ptr= key;
+  switch (ptr->distribution) 
+  {
+  case MEMCACHED_DISTRIBUTION_CONSISTENT:
+  case MEMCACHED_DISTRIBUTION_CONSISTENT_KETAMA:
+    {
+      uint32_t num= ptr->number_of_hosts * MEMCACHED_POINTS_PER_SERVER;
+      WATCHPOINT_ASSERT(ptr->continuum);
+
+      hash= hash;
+      memcached_continuum_item_st *begin, *end, *left, *right, *middle;
+      begin= left= ptr->continuum;
+      end= right= ptr->continuum + (num - 1);
+
+      while (1)
+      {
+        memcached_continuum_item_st *rmiddle;
+
+        middle = left + (right - left) / 2;
+
+        if (middle==end)
+          return begin->index;
+
+        if (middle==begin)
+          return end->index;
+
+        rmiddle = middle+1;
+
+        if (hash<rmiddle->value && hash>=middle->value)
+          return middle->index;
+
+        if (middle->value < hash)
+          left = middle + 1;
+        else if (middle->value > hash)
+          right = middle - 1;
+
+        if (left>right)
+          return left->index;
+      }
+    } 
+    break;
+  case MEMCACHED_DISTRIBUTION_CONSISTENT_WHEEL:
+    {
+      unsigned int server_key;
+
+      server_key= hash % MEMCACHED_STRIDE * ptr->wheel_count;
+
+      return ptr->wheel[server_key];
+    }
+  case MEMCACHED_DISTRIBUTION_MODULA:
+    return hash % ptr->number_of_hosts;
+  default:
+    WATCHPOINT_ASSERT(0); /* We have added a distribution without extending the logic */
+    return hash % ptr->number_of_hosts;
+  }
+
+  WATCHPOINT_ASSERT(0); /* We should never reach here */
+  return 0;
+}
+
+/* 
+  One day make this public, and have it return the actual memcached_server_st 
+  to the calling application.
+*/
+uint32_t memcached_generate_hash(memcached_st *ptr, const char *key, size_t key_length)
+{
+  uint32_t hash= 1; /* Just here to remove compile warning */
+
+  WATCHPOINT_ASSERT(ptr->number_of_hosts);
+
+  if (ptr->number_of_hosts == 1)
+    return 0;
+
+  hash = generate_hash(ptr, key, key_length);
+
+  WATCHPOINT_ASSERT(hash);
+  return dispatch_host(ptr, hash);
+}
+
+static uint32_t internal_generate_hash(const char *key, size_t key_length)
+{
+  const char *ptr= key;
   uint32_t value= 0;
 
   while (--key_length) 
@@ -131,19 +194,7 @@ static uint32_t internal_generate_hash(char *key, size_t key_length)
   return value == 0 ? 1 : value;
 }
 
-static uint32_t internal_generate_md5(char *key, size_t key_length)
-{
-  unsigned char results[16];
-
-  md5_signature((unsigned char*)key, (unsigned int)key_length, results);
-
-  return (uint32_t)(( results[3] << 24 )
-                    | ( results[2] << 16 )
-                    | ( results[1] <<  8 )
-                    |   results[0] );
-}
-
-static uint32_t internal_generate_ketama_md5(char *key, size_t key_length)
+static uint32_t internal_generate_md5(const char *key, size_t key_length)
 {
   unsigned char results[16];
 

@@ -42,9 +42,9 @@ static char *storage_op_string(memcached_storage_action verb)
 }
 
 static inline memcached_return memcached_send(memcached_st *ptr, 
-                                              char *master_key, size_t master_key_length, 
-                                              char *key, size_t key_length, 
-                                              char *value, size_t value_length, 
+                                              const char *master_key, size_t master_key_length, 
+                                              const char *key, size_t key_length, 
+                                              const char *value, size_t value_length, 
                                               time_t expiration,
                                               uint32_t flags,
                                               uint64_t cas,
@@ -58,7 +58,6 @@ static inline memcached_return memcached_send(memcached_st *ptr,
   unsigned int server_key;
 
   WATCHPOINT_ASSERT(!(value == NULL && value_length > 0));
-  WATCHPOINT_ASSERT(!(value && value_length == 0));
 
   unlikely (key_length == 0)
     return MEMCACHED_NO_KEY_PROVIDED;
@@ -66,20 +65,22 @@ static inline memcached_return memcached_send(memcached_st *ptr,
   unlikely (ptr->number_of_hosts == 0)
     return MEMCACHED_NO_SERVERS;
 
-  if ((ptr->flags & MEM_VERIFY_KEY) && (memcachd_key_test(&key, &key_length, 1) == MEMCACHED_BAD_KEY_PROVIDED))
+  if ((ptr->flags & MEM_VERIFY_KEY) && (memcachd_key_test((char **)&key, &key_length, 1) == MEMCACHED_BAD_KEY_PROVIDED))
     return MEMCACHED_BAD_KEY_PROVIDED;
 
   server_key= memcached_generate_hash(ptr, master_key, master_key_length);
 
   if (cas)
     write_length= snprintf(buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, 
-                           "%s %.*s %u %llu %zu %llu\r\n", storage_op_string(verb),
+                           "%s %s%.*s %u %llu %zu %llu\r\n", storage_op_string(verb),
+                           ptr->prefix_key,
                            (int)key_length, key, flags, 
                            (unsigned long long)expiration, value_length, 
                            (unsigned long long)cas);
   else
     write_length= snprintf(buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, 
-                           "%s %.*s %u %llu %zu\r\n", storage_op_string(verb),
+                           "%s %s%.*s %u %llu %zu\r\n", storage_op_string(verb),
+                           ptr->prefix_key,
                            (int)key_length, key, flags, 
                            (unsigned long long)expiration, value_length);
 
@@ -126,8 +127,8 @@ error:
   return rc;
 }
 
-memcached_return memcached_set(memcached_st *ptr, char *key, size_t key_length, 
-                               char *value, size_t value_length, 
+memcached_return memcached_set(memcached_st *ptr, const char *key, size_t key_length, 
+                               const char *value, size_t value_length, 
                                time_t expiration,
                                uint32_t flags)
 {
@@ -141,8 +142,8 @@ memcached_return memcached_set(memcached_st *ptr, char *key, size_t key_length,
 }
 
 memcached_return memcached_add(memcached_st *ptr, 
-                               char *key, size_t key_length,
-                               char *value, size_t value_length, 
+                               const char *key, size_t key_length,
+                               const char *value, size_t value_length, 
                                time_t expiration,
                                uint32_t flags)
 {
@@ -156,8 +157,8 @@ memcached_return memcached_add(memcached_st *ptr,
 }
 
 memcached_return memcached_replace(memcached_st *ptr, 
-                                   char *key, size_t key_length,
-                                   char *value, size_t value_length, 
+                                   const char *key, size_t key_length,
+                                   const char *value, size_t value_length, 
                                    time_t expiration,
                                    uint32_t flags)
 {
@@ -171,8 +172,8 @@ memcached_return memcached_replace(memcached_st *ptr,
 }
 
 memcached_return memcached_prepend(memcached_st *ptr, 
-                                   char *key, size_t key_length,
-                                   char *value, size_t value_length, 
+                                   const char *key, size_t key_length,
+                                   const char *value, size_t value_length, 
                                    time_t expiration,
                                    uint32_t flags)
 {
@@ -184,8 +185,8 @@ memcached_return memcached_prepend(memcached_st *ptr,
 }
 
 memcached_return memcached_append(memcached_st *ptr, 
-                                  char *key, size_t key_length,
-                                  char *value, size_t value_length, 
+                                  const char *key, size_t key_length,
+                                  const char *value, size_t value_length, 
                                   time_t expiration,
                                   uint32_t flags)
 {
@@ -197,8 +198,8 @@ memcached_return memcached_append(memcached_st *ptr,
 }
 
 memcached_return memcached_cas(memcached_st *ptr, 
-                               char *key, size_t key_length,
-                               char *value, size_t value_length, 
+                               const char *key, size_t key_length,
+                               const char *value, size_t value_length, 
                                time_t expiration,
                                uint32_t flags,
                                uint64_t cas)
@@ -211,9 +212,9 @@ memcached_return memcached_cas(memcached_st *ptr,
 }
 
 memcached_return memcached_set_by_key(memcached_st *ptr, 
-                                      char *master_key, size_t master_key_length, 
-                                      char *key, size_t key_length, 
-                                      char *value, size_t value_length, 
+                                      const char *master_key, size_t master_key_length, 
+                                      const char *key, size_t key_length, 
+                                      const char *value, size_t value_length, 
                                       time_t expiration,
                                       uint32_t flags)
 {
@@ -227,9 +228,9 @@ memcached_return memcached_set_by_key(memcached_st *ptr,
 }
 
 memcached_return memcached_add_by_key(memcached_st *ptr, 
-                                      char *master_key, size_t master_key_length,
-                                      char *key, size_t key_length,
-                                      char *value, size_t value_length, 
+                                      const char *master_key, size_t master_key_length,
+                                      const char *key, size_t key_length,
+                                      const char *value, size_t value_length, 
                                       time_t expiration,
                                       uint32_t flags)
 {
@@ -243,9 +244,9 @@ memcached_return memcached_add_by_key(memcached_st *ptr,
 }
 
 memcached_return memcached_replace_by_key(memcached_st *ptr, 
-                                          char *master_key, size_t master_key_length,
-                                          char *key, size_t key_length,
-                                          char *value, size_t value_length, 
+                                          const char *master_key, size_t master_key_length,
+                                          const char *key, size_t key_length,
+                                          const char *value, size_t value_length, 
                                           time_t expiration,
                                           uint32_t flags)
 {
@@ -259,9 +260,9 @@ memcached_return memcached_replace_by_key(memcached_st *ptr,
 }
 
 memcached_return memcached_prepend_by_key(memcached_st *ptr, 
-                                          char *master_key, size_t master_key_length,
-                                          char *key, size_t key_length,
-                                          char *value, size_t value_length, 
+                                          const char *master_key, size_t master_key_length,
+                                          const char *key, size_t key_length,
+                                          const char *value, size_t value_length, 
                                           time_t expiration,
                                           uint32_t flags)
 {
@@ -273,9 +274,9 @@ memcached_return memcached_prepend_by_key(memcached_st *ptr,
 }
 
 memcached_return memcached_append_by_key(memcached_st *ptr, 
-                                         char *master_key, size_t master_key_length,
-                                         char *key, size_t key_length,
-                                         char *value, size_t value_length, 
+                                         const char *master_key, size_t master_key_length,
+                                         const char *key, size_t key_length,
+                                         const char *value, size_t value_length, 
                                          time_t expiration,
                                          uint32_t flags)
 {
@@ -287,9 +288,9 @@ memcached_return memcached_append_by_key(memcached_st *ptr,
 }
 
 memcached_return memcached_cas_by_key(memcached_st *ptr, 
-                                      char *master_key, size_t master_key_length,
-                                      char *key, size_t key_length,
-                                      char *value, size_t value_length, 
+                                      const char *master_key, size_t master_key_length,
+                                      const char *key, size_t key_length,
+                                      const char *value, size_t value_length, 
                                       time_t expiration,
                                       uint32_t flags,
                                       uint64_t cas)

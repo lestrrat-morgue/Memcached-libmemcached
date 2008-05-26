@@ -1,4 +1,22 @@
-0.19 Tue Apr  8 08:39:46 PDT 2008
+0.21 Fri May 23 18:34:09 PDT 2008
+  * Change of char * to const char * for all key based functions.
+  * New  MEMCACHED_CALLBACK_PREFIX_KEY added. You can now create domains for
+    values.
+  * Fixed bug introducd in last version on memcp
+  * Fix for death of file io to call shutdown()
+
+0.20 Mon May  5 08:34:26 PDT 2008
+  * New consistent distribution tests.
+  * Found a memory leak when a server constantly fails.
+  * Fix in watchpoint macro
+  * Changed default timeout to 1 second for poll timeouts
+  * Wheel uses less memory/dynamic allocation for size (no longer limited to
+    512 hosts by default.
+  * memslap memory leak fix
+  * Added Ketama distribution
+  * Fix assert.h compile problem on CentOS
+
+0.19 Wed Apr  9 09:30:53 PDT 2008
   * Documentation fix in libmemcached.
   * Fixed bug where sort was always occuring on hosts
   * Logic fix in branch prediction (thanks Jay!)

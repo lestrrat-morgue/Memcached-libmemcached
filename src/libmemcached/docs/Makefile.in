@@ -454,8 +454,6 @@ dvi: dvi-am
 
 dvi-am:
 
-html: html-am
-
 info: info-am
 
 info-am:
@@ -740,6 +738,9 @@ test:
 	podchecker memcached_set.pod
 	podchecker memcached_version.pod
 	podchecker memflush.pod
+
+html:
+	pod2htmltree "/libmemcached" .
 
 clean:
 	rm -f *.1

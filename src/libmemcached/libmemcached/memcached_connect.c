@@ -207,13 +207,23 @@ test_connect:
             fds[0].events= POLLOUT |  POLLERR;
             error= poll(fds, 1, ptr->root->connect_timeout);
 
-            if (error != 1)
+            if (error == 0) 
+            {
+              goto handle_retry;
+            }
+            else if (error != 1)
             {
               ptr->cached_errno= errno;
               WATCHPOINT_ERRNO(ptr->cached_errno);
               WATCHPOINT_NUMBER(ptr->root->connect_timeout);
               close(ptr->fd);
               ptr->fd= -1;
+              if (ptr->address_info)
+              {
+                freeaddrinfo(ptr->address_info);
+                ptr->address_info= NULL;
+              }
+
               return MEMCACHED_ERRNO;
             }
 
@@ -225,8 +235,8 @@ test_connect:
         case EISCONN: /* We were spinning waiting on connect */
           break;
         default:
+handle_retry:
           ptr->cached_errno= errno;
-          WATCHPOINT_ERRNO(ptr->cached_errno);
           close(ptr->fd);
           ptr->fd= -1;
           if (ptr->root->retry_timeout)
@@ -284,9 +294,6 @@ memcached_return memcached_connect(memcached_server_st *ptr)
   default:
     WATCHPOINT_ASSERT(0);
   }
-
-  if (rc != MEMCACHED_SUCCESS)
-    WATCHPOINT_ERROR(rc);
 
   LIBMEMCACHED_MEMCACHED_CONNECT_END();
 

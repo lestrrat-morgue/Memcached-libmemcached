@@ -571,6 +571,29 @@ uninstall-am: uninstall-binPROGRAMS
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
 	uninstall-binPROGRAMS
 
+
+test-start-server:
+	memflush --servers=localhost
+	memcp --servers=localhost /etc/services
+	memcat --servers=localhost /etc/services
+	memrm --servers=localhost /etc/services
+	memstat --servers=localhost
+	memslap --servers=localhost
+	memslap --servers=localhost --concurrency=10
+	memslap --servers=localhost --concurrency=10 --initial-load=1000
+	memslap --servers=localhost --concurrency=10 --initial-load=1000 --execute-number=10
+	memslap --servers=localhost --concurrency=10 --initial-load=1000 --execute-number=10 --test=get
+	memslap --servers=localhost --concurrency=10 --initial-load=1000 --execute-number=10 --test=set
+	memslap --servers=localhost --concurrency=10 --initial-load=1000 --execute-number=10 --test=set --non-blocking
+
+valgrind:
+	libtool --mode=execute valgrind --leak-check=yes --show-reachable=yes  memslap --servers=localhost
+	libtool --mode=execute valgrind --leak-check=yes --show-reachable=yes  memslap --servers=localhost --concurrency=10
+	libtool --mode=execute valgrind --leak-check=yes --show-reachable=yes  memslap --servers=localhost --concurrency=10 --initial-load=1000
+	libtool --mode=execute valgrind --leak-check=yes --show-reachable=yes  memslap --servers=localhost --concurrency=10 --initial-load=1000 --execute-number=10
+	libtool --mode=execute valgrind --leak-check=yes --show-reachable=yes  memslap --servers=localhost --concurrency=10 --initial-load=1000 --execute-number=10 --test=get
+	libtool --mode=execute valgrind --leak-check=yes --show-reachable=yes  memslap --servers=localhost --concurrency=10 --initial-load=1000 --execute-number=10 --test=set
+	libtool --mode=execute valgrind --leak-check=yes --show-reachable=yes  memslap --servers=localhost --concurrency=10 --initial-load=1000 --execute-number=10 --test=set --non-blocking
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

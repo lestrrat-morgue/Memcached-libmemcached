@@ -41,6 +41,22 @@ void memcached_free(memcached_st *ptr)
   if (ptr->on_cleanup)
     ptr->on_cleanup(ptr);
 
+  if (ptr->continuum)
+  {
+    if (ptr->call_free)
+      ptr->call_free(ptr, ptr->continuum);
+    else
+      free(ptr->continuum);
+  }
+
+  if (ptr->wheel)
+  {
+    if (ptr->call_free)
+      ptr->call_free(ptr, ptr->wheel);
+    else
+      free(ptr->wheel);
+  }
+
   if (ptr->is_allocated == MEMCACHED_ALLOCATED)
   {
     if (ptr->call_free)
@@ -104,6 +120,20 @@ memcached_st *memcached_clone(memcached_st *clone, memcached_st *ptr)
   new_clone->call_realloc= ptr->call_realloc;
   new_clone->get_key_failure= ptr->get_key_failure;
   new_clone->delete_trigger= ptr->delete_trigger;
+
+  if (ptr->prefix_key[0] != 0)
+  {
+    strcpy(new_clone->prefix_key, ptr->prefix_key);
+    new_clone->prefix_key_length= ptr->prefix_key_length;
+  }
+
+  rc= run_distribution(new_clone);
+  if (rc != MEMCACHED_SUCCESS)
+  {
+    memcached_free(new_clone);
+
+    return NULL;
+  }
 
   if (ptr->on_clone)
     ptr->on_clone(ptr, new_clone);

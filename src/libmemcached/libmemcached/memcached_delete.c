@@ -1,6 +1,6 @@
 #include "common.h"
 
-memcached_return memcached_delete(memcached_st *ptr, char *key, size_t key_length,
+memcached_return memcached_delete(memcached_st *ptr, const char *key, size_t key_length,
                                   time_t expiration)
 {
   return memcached_delete_by_key(ptr, key, key_length,
@@ -8,8 +8,8 @@ memcached_return memcached_delete(memcached_st *ptr, char *key, size_t key_lengt
 }
 
 memcached_return memcached_delete_by_key(memcached_st *ptr, 
-                                         char *master_key, size_t master_key_length,
-                                         char *key, size_t key_length,
+                                         const char *master_key, size_t master_key_length,
+                                         const char *key, size_t key_length,
                                          time_t expiration)
 {
   char to_write;
@@ -30,11 +30,15 @@ memcached_return memcached_delete_by_key(memcached_st *ptr,
 
   if (expiration)
     send_length= snprintf(buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, 
-                          "delete %.*s %llu\r\n", (int)key_length, key, 
+                          "delete %s%.*s %llu\r\n", 
+                          ptr->prefix_key,
+                          (int)key_length, key, 
                           (unsigned long long)expiration);
   else
     send_length= snprintf(buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, 
-                          "delete %.*s\r\n", (int)key_length, key);
+                          "delete %s%.*s\r\n", 
+                          ptr->prefix_key,
+                          (int)key_length, key);
 
   if (send_length >= MEMCACHED_DEFAULT_COMMAND_SIZE)
   {

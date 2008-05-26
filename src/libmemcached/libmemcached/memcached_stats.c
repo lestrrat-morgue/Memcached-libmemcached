@@ -130,7 +130,7 @@ static void set_data(memcached_stat_st *stat, char *key, char *value)
   }
   else if (!strcmp("limit_maxbytes", key))
   {
-    stat->limit_maxbytes= strtol(value, (char **)NULL, 10);
+    stat->limit_maxbytes= strtoll(value, (char **)NULL, 10);
   }
   else if (!strcmp("threads", key))
   {
@@ -192,7 +192,7 @@ char *memcached_stat_get_value(memcached_st *ptr, memcached_stat_st *stat,
   else if (!memcmp("bytes_written", key, strlen("bytes_written")))
     length= snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->bytes_written);
   else if (!memcmp("limit_maxbytes", key, strlen("limit_maxbytes")))
-    length= snprintf(buffer, SMALL_STRING_LEN,"%llu", stat->limit_maxbytes);
+    length= snprintf(buffer, SMALL_STRING_LEN,"%llu", (unsigned long long)stat->limit_maxbytes);
   else if (!memcmp("threads", key, strlen("threads")))
     length= snprintf(buffer, SMALL_STRING_LEN,"%u", stat->threads);
   else

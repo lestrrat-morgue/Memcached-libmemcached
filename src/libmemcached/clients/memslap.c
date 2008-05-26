@@ -6,7 +6,6 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <assert.h>
 #include <sys/time.h>
 #include <getopt.h>
 #include <pthread.h>
@@ -219,6 +218,7 @@ void scheduler(memcached_server_st *servers, conclusions_st *conclusion)
   conclusion->load_time= timedif(end_time, start_time);
   conclusion->read_time= timedif(end_time, start_time);
   pairs_free(pairs);
+  memcached_free(memc);
 }
 
 void options_parse(int argc, char *argv[])
@@ -353,6 +353,7 @@ void *run_task(void *p)
 
   if (context->execute_pairs)
     pairs_free(context->execute_pairs);
+
   free(context);
 
   pthread_mutex_lock(&counter_mutex);

@@ -158,10 +158,10 @@ ssize_t memcached_io_read(memcached_server_st *ptr,
 }
 
 ssize_t memcached_io_write(memcached_server_st *ptr,
-                           char *buffer, size_t length, char with_flush)
+                           const char *buffer, size_t length, char with_flush)
 {
   size_t original_length;
-  char* buffer_ptr;
+  const char* buffer_ptr;
 
   original_length= length;
   buffer_ptr= buffer;
@@ -204,9 +204,14 @@ ssize_t memcached_io_write(memcached_server_st *ptr,
   return original_length;
 }
 
-memcached_return memcached_io_close(memcached_server_st *ptr)
+memcached_return memcached_io_close(memcached_server_st *ptr, uint8_t io_death)
 {
-  close(ptr->fd);
+  /* in case of death shutdown to avoid blocking at close() */
+
+  if (io_death)
+    shutdown(ptr->fd, SHUT_RDWR);
+  else
+    close(ptr->fd);
 
   return MEMCACHED_SUCCESS;
 }
