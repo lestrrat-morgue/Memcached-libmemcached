@@ -26,7 +26,9 @@ use Memcached::libmemcached qw(
 
 sub libmemcached_test_servers {
     my $servers = $ENV{PERL_LIBMEMCACHED_TEST_SERVERS};
-    $servers ||= 'localhost';
+    # XXX add the default port as well to stop uninit
+    # warnings from the test suite
+    $servers ||= 'localhost:11211';
     return split(/\s*,\s*/, $servers);
 }
 
@@ -43,7 +45,7 @@ sub libmemcached_test_create {
     my ($server,$port) = split /:/, (libmemcached_test_servers())[0];
 
     # XXX may change to memcached_parse_options or somesuch so the env
-    # var can set behaviours etc
+    # var can set behaviours etc   
     my $rc = memcached_server_add($memc, $server, $port);
     die "libmemcached_test_create: memcached_server_add($server) failed: ".memcached_errstr($memc)
         if not $rc;
