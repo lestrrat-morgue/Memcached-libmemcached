@@ -114,6 +114,7 @@ src/libmemcached/libmemcached/memcached_fetch.c
 src/libmemcached/libmemcached/memcached_fetch_execute.c
 src/libmemcached/libmemcached/memcached_flush.c
 src/libmemcached/libmemcached/memcached_get.c
+src/libmemcached/libmemcached/memcached_get.h
 src/libmemcached/libmemcached/memcached_hash.c
 src/libmemcached/libmemcached/memcached_hosts.c
 src/libmemcached/libmemcached/memcached_io.c
@@ -193,6 +194,7 @@ t/51-flush.t
 t/60-stats.t
 t/80-result_st.t
 t/api-coverage.t
+t/extended-consistent-hashing.t
 t/lib/ExtUtils/ParseXS.pm
 t/lib/ExtUtils/xsubpp
 t/lib/libmemcached_test.pm

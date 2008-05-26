@@ -5,6 +5,7 @@ In future it may also contain source to memcached so we can be sure to have one 
 TO UPGRADE TO A NEW libmemcached RELEASE:
 
 libmemcached=libmemcached-X.YY
+wget http://download.tangent.org/$libmemcached.tar.gz
 tar xfz $libmemcached.tar.gz
 mv -f libmemcached libmemcached-prev
 svn_load_dirs.pl -v https://perl-libmemcached.googlecode.com/svn/trunk/src libmemcached $libmemcached
