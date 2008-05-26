@@ -766,7 +766,7 @@ get(Memcached__libmemcached ptr, SV *key_sv)
         if (SvROK(key_sv) && SvTYPE(SvRV(key_sv)) == SVt_PVAV) {
             AV *av = (AV*)SvRV(key_sv);
             master_key = SvPV(AvARRAY(av)[0], master_key_len);
-            key_sv = AvARRAY(key_sv)[1];
+            key_sv = AvARRAY(av)[1];
         }
         key = SvPV(key_sv, key_len);
         error = memcached_mget_by_key(ptr, master_key, master_key_len, &key, &key_len, 1);
