@@ -4,6 +4,18 @@ Memcached::libmemcached::Changes - List of significant changes
 
 As of $Date: 2008-01-08 15:54:15 +0000 (Tue, 08 Jan 2008) $ $Revision$
 
+=head2 Changes in 0.2101 (svn r156) 27th May 2008
+
+  Sync with libmemcached 0.21.
+  Report memcached version when running tests.
+  Skip flags test when using memcached <1.2.4.
+  Test consistent hashing thanks to Daisuke Maki.
+  Deprecated undocumented calling get() with an array ref as key
+    it now generates a warning.
+  Added way to specify multiple memcached servers for tests.
+  Added -bin option to Makefile.PL to install mem* utilities
+    thanks to Jos Boumans.
+
 =head2 Changes in 0.1902 (svn r144) 17th April 2008
 
   Fixed leak of $memc which prevented DESTROY (and thus memcached_free)
