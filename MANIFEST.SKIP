@@ -16,3 +16,10 @@
 ^src/.*\.lo
 ^src_inst/
 ^Memcached-libmemcached-\d
+^const-xs.inc$
+^lib/Memcached/libmemcached/.*\.pl$
+\bautom4te.cache\b
+config\.status$
+stamp-h1$
+^src/libmemcached/clients/[^\.]+$
+src/.*\bMakefile$
