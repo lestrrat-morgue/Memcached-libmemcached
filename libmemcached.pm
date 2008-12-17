@@ -652,11 +652,15 @@ Use L</mget_into_hashref> instead.
 
 Use L</set_callback_coderefs> instead.
 
-=head1 AUTHOR
+=head1 AUTHOR EMERITUS
 
 Tim Bunce, C<< <Tim.Bunce@pobox.com> >> with help from Patrick Galbraith and Daisuke Maki.
 
 L<http://www.tim.bunce.name>
+
+=head1 CURRENT MAINTAINER
+
+Daisuke Maki C<< <daisuke@endeworks.jp> >>
 
 =head1 ACKNOWLEDGEMENTS
 
