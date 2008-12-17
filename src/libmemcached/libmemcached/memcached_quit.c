@@ -19,9 +19,18 @@ void memcached_quit_server(memcached_server_st *ptr, uint8_t io_death)
       ssize_t read_length;
       char buffer[MEMCACHED_MAX_BUFFER];
 
-      rc= memcached_do(ptr, "quit\r\n", 6, 1);
-      WATCHPOINT_ASSERT(rc == MEMCACHED_SUCCESS || rc == MEMCACHED_FETCH_NOTFINISHED);
+      if (ptr->root->flags & MEM_BINARY_PROTOCOL) 
+      {
+        protocol_binary_request_quit request = {.bytes= {0}};
+        request.message.header.request.magic = PROTOCOL_BINARY_REQ;
+        request.message.header.request.opcode = PROTOCOL_BINARY_CMD_QUIT;
+        request.message.header.request.datatype = PROTOCOL_BINARY_RAW_BYTES;
+        rc= memcached_do(ptr, request.bytes, sizeof(request.bytes), 1);
+      } else 
+        rc= memcached_do(ptr, "quit\r\n", 6, 1);
 
+      WATCHPOINT_ASSERT(rc == MEMCACHED_SUCCESS || rc == MEMCACHED_FETCH_NOTFINISHED);
+      
       /* read until socket is closed, or there is an error
        * closing the socket before all data is read
        * results in server throwing away all data which is
@@ -31,7 +40,7 @@ void memcached_quit_server(memcached_server_st *ptr, uint8_t io_death)
 	      memcached_io_read(ptr, buffer, sizeof(buffer)/sizeof(*buffer)))
 	     > 0);
     }
-    memcached_io_close(ptr, io_death);
+    memcached_io_close(ptr);
 
     ptr->fd= -1;
     ptr->write_buffer_offset= 0;

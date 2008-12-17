@@ -16,10 +16,10 @@ extern "C" {
 struct memcached_string_st {
   memcached_st *root;
   memcached_allocated is_allocated;
-  char *string;
   char *end;
   size_t current_size;
   size_t block_size;
+  char *string;
 };
 
 #define memcached_string_length(A) (size_t)((A)->end - (A)->string)
@@ -36,7 +36,6 @@ memcached_return memcached_string_append_character(memcached_string_st *string,
                                                    char character);
 memcached_return memcached_string_append(memcached_string_st *string,
                                          char *value, size_t length);
-size_t memcached_string_backspace(memcached_string_st *string, size_t remove);
 memcached_return memcached_string_reset(memcached_string_st *string);
 void memcached_string_free(memcached_string_st *string);
 

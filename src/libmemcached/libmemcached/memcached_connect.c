@@ -1,4 +1,5 @@
 #include "common.h"
+#include <netdb.h>
 #include <poll.h>
 #include <sys/time.h>
 
@@ -13,7 +14,7 @@ static memcached_return set_hostinfo(memcached_server_st *server)
 
   memset(&hints, 0, sizeof(hints));
 
-  hints.ai_family= AF_INET;
+ // hints.ai_family= AF_INET;
   if (server->type == MEMCACHED_CONNECTION_UDP)
   {
     hints.ai_protocol= IPPROTO_UDP;
@@ -34,7 +35,10 @@ static memcached_return set_hostinfo(memcached_server_st *server)
   }
 
   if (server->address_info)
+  {
     freeaddrinfo(server->address_info);
+    server->address_info= NULL;
+  }
   server->address_info= ai;
 
   return MEMCACHED_SUCCESS;
@@ -42,30 +46,45 @@ static memcached_return set_hostinfo(memcached_server_st *server)
 
 static memcached_return set_socket_options(memcached_server_st *ptr)
 {
+  WATCHPOINT_ASSERT(ptr->fd != -1);
+
   if (ptr->type == MEMCACHED_CONNECTION_UDP)
     return MEMCACHED_SUCCESS;
 
-  if (ptr->root->flags & MEM_NO_BLOCK)
+  if (ptr->root->snd_timeout)
+  {
+    int error;
+    struct timeval waittime;
+
+    waittime.tv_sec= 0;
+    waittime.tv_usec= ptr->root->snd_timeout;
+
+    error= setsockopt(ptr->fd, SOL_SOCKET, SO_SNDTIMEO, 
+                      &waittime, (socklen_t)sizeof(struct timeval));
+    WATCHPOINT_ASSERT(error == 0);
+  }
+
+  if (ptr->root->rcv_timeout)
+  {
+    int error;
+    struct timeval waittime;
+
+    waittime.tv_sec= 0;
+    waittime.tv_usec= ptr->root->rcv_timeout;
+
+    error= setsockopt(ptr->fd, SOL_SOCKET, SO_RCVTIMEO, 
+                      &waittime, (socklen_t)sizeof(struct timeval));
+    WATCHPOINT_ASSERT(error == 0);
+  }
+
   {
     int error;
     struct linger linger;
-    struct timeval waittime;
-
-    waittime.tv_sec= 10;
-    waittime.tv_usec= 0;
 
     linger.l_onoff= 1; 
     linger.l_linger= MEMCACHED_DEFAULT_TIMEOUT; 
     error= setsockopt(ptr->fd, SOL_SOCKET, SO_LINGER, 
                       &linger, (socklen_t)sizeof(struct linger));
-    WATCHPOINT_ASSERT(error == 0);
-
-    error= setsockopt(ptr->fd, SOL_SOCKET, SO_SNDTIMEO, 
-                      &waittime, (socklen_t)sizeof(struct timeval));
-    WATCHPOINT_ASSERT(error == 0);
-
-    error= setsockopt(ptr->fd, SOL_SOCKET, SO_RCVTIMEO, 
-                      &waittime, (socklen_t)sizeof(struct timeval));
     WATCHPOINT_ASSERT(error == 0);
   }
 
@@ -150,6 +169,8 @@ test_connect:
       }
     }
   }
+
+  WATCHPOINT_ASSERT(ptr->fd != -1);
   return MEMCACHED_SUCCESS;
 }
 
@@ -159,8 +180,14 @@ static memcached_return network_connect(memcached_server_st *ptr)
   {
     struct addrinfo *use;
 
-    /* Old connection junk still is in the structure */
-    WATCHPOINT_ASSERT(ptr->cursor_active == 0);
+    if (ptr->root->server_failure_limit != 0) 
+    {
+      if (ptr->server_failure_counter >= ptr->root->server_failure_limit) 
+      {
+          memcached_server_remove(ptr);
+          return MEMCACHED_FAILURE;
+      }
+    }
 
     if (ptr->sockaddr_inited == MEMCACHED_NOT_ALLOCATED || 
         (!(ptr->root->flags & MEM_USE_CACHE_LOOKUPS)))
@@ -211,18 +238,21 @@ test_connect:
             {
               goto handle_retry;
             }
-            else if (error != 1)
+            else if (error != 1 && fds[0].revents & POLLERR)
             {
               ptr->cached_errno= errno;
               WATCHPOINT_ERRNO(ptr->cached_errno);
               WATCHPOINT_NUMBER(ptr->root->connect_timeout);
-              close(ptr->fd);
-              ptr->fd= -1;
-              if (ptr->address_info)
+              memcached_quit_server(ptr, 1);
+
+              if (ptr->root->retry_timeout)
               {
-                freeaddrinfo(ptr->address_info);
-                ptr->address_info= NULL;
+                struct timeval next_time;
+
+                gettimeofday(&next_time, NULL);
+                ptr->next_retry= next_time.tv_sec + ptr->root->retry_timeout;
               }
+              ptr->server_failure_counter+= 1;
 
               return MEMCACHED_ERRNO;
             }
@@ -251,15 +281,19 @@ handle_retry:
       else
       {
         WATCHPOINT_ASSERT(ptr->cursor_active == 0);
+        ptr->server_failure_counter= 0;
         return MEMCACHED_SUCCESS;
       }
       use = use->ai_next;
     }
   }
 
-  if (ptr->fd == -1)
+  if (ptr->fd == -1) {
+    ptr->server_failure_counter+= 1;
     return MEMCACHED_ERRNO; /* The last error should be from connect() */
+  }
 
+  ptr->server_failure_counter= 0;
   return MEMCACHED_SUCCESS; /* The last error should be from connect() */
 }
 

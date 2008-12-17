@@ -15,7 +15,9 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
+#ifdef MEMCACHED_INTERNAL
 #include <libmemcached/libmemcached_config.h>
+#endif
 #include <libmemcached/memcached_constants.h>
 #include <libmemcached/memcached_types.h>
 #include <libmemcached/memcached_watchpoint.h>
@@ -37,7 +39,7 @@ struct memcached_continuum_item_st {
   uint32_t value;
 };
 
-#define LIBMEMCACHED_VERSION_STRING "0.21"
+#define LIBMEMCACHED_VERSION_STRING "0.25"
 
 struct memcached_stat_st {
   uint32_t pid;
@@ -67,10 +69,11 @@ struct memcached_stat_st {
 };
 
 struct memcached_st {
+  uint8_t purging;
   memcached_allocated is_allocated;
   memcached_server_st *hosts;
-  unsigned int number_of_hosts;
-  unsigned int cursor_server;
+  uint32_t number_of_hosts;
+  uint32_t cursor_server;
   int cached_errno;
   uint32_t flags;
   int send_size;
@@ -82,8 +85,6 @@ struct memcached_st {
   memcached_hash hash;
   memcached_server_distribution distribution;
   void *user_data;
-  unsigned int *wheel;
-  uint32_t wheel_count;
   uint32_t continuum_count;
   memcached_continuum_item_st *continuum;
   memcached_clone_func on_clone;
@@ -95,10 +96,13 @@ struct memcached_st {
   memcached_trigger_delete_key delete_trigger;
   char prefix_key[MEMCACHED_PREFIX_KEY_MAX_SIZE];
   size_t prefix_key_length;
-#ifdef NOT_USED /* Future Use */
-  uint8_t replicas;
-  memcached_return warning;
-#endif
+  memcached_hash hash_continuum;
+  uint32_t continuum_points_counter;
+  int32_t snd_timeout;
+  int32_t rcv_timeout;
+  uint32_t server_failure_limit;
+  uint32_t io_msg_watermark;
+  uint32_t io_bytes_watermark;
 };
 
 
@@ -133,18 +137,35 @@ uint64_t memcached_behavior_get(memcached_st *ptr, memcached_behavior flag);
 /* Server Public functions */
 
 memcached_return memcached_server_add_udp(memcached_st *ptr, 
-                                          char *hostname,
+                                          const char *hostname,
                                           unsigned int port);
 memcached_return memcached_server_add_unix_socket(memcached_st *ptr, 
-                                                  char *filename);
-memcached_return memcached_server_add(memcached_st *ptr, char *hostname, 
+                                                  const char *filename);
+memcached_return memcached_server_add(memcached_st *ptr, const char *hostname, 
                                       unsigned int port);
+
+memcached_return memcached_server_add_udp_with_weight(memcached_st *ptr, 
+                                                      const char *hostname,
+                                                      unsigned int port,
+                                                      uint32_t weight);
+memcached_return memcached_server_add_unix_socket_with_weight(memcached_st *ptr, 
+                                                              const char *filename,
+                                                              uint32_t weight);
+memcached_return memcached_server_add_with_weight(memcached_st *ptr, const char *hostname, 
+                                                  unsigned int port,
+                                                  uint32_t weight);
 void memcached_server_list_free(memcached_server_st *ptr);
 memcached_return memcached_server_push(memcached_st *ptr, memcached_server_st *list);
 
 memcached_server_st *memcached_server_list_append(memcached_server_st *ptr, 
-                                             char *hostname, unsigned int port, 
-                                             memcached_return *error);
+                                                  const char *hostname, 
+                                                  unsigned int port, 
+                                                  memcached_return *error);
+memcached_server_st *memcached_server_list_append_with_weight(memcached_server_st *ptr, 
+                                                              const char *hostname, 
+                                                              unsigned int port, 
+                                                              uint32_t weight,
+                                                              memcached_return *error);
 unsigned int memcached_server_list_count(memcached_server_st *ptr);
 memcached_server_st *memcached_servers_parse(char *server_strings);
 
@@ -169,11 +190,6 @@ memcached_return memcached_callback_set(memcached_st *ptr,
 void *memcached_callback_get(memcached_st *ptr, 
                              memcached_callback flag,
                              memcached_return *error);
-
-memcached_return memcached_server_cursor(memcached_st *ptr, 
-                                         memcached_server_function *callback,
-                                         void *context,
-                                         unsigned int number_of_callbacks);
 
 
 #ifdef __cplusplus

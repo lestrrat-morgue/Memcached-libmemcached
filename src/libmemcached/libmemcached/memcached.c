@@ -28,6 +28,10 @@ memcached_st *memcached_create(memcached_st *ptr)
   ptr->retry_timeout= 0;
   ptr->distribution= MEMCACHED_DISTRIBUTION_MODULA;
 
+  /* TODO, Document why we picked these defaults */
+  ptr->io_msg_watermark= 500;
+  ptr->io_bytes_watermark= 65 * 1024;
+
   return ptr;
 }
 
@@ -49,14 +53,6 @@ void memcached_free(memcached_st *ptr)
       free(ptr->continuum);
   }
 
-  if (ptr->wheel)
-  {
-    if (ptr->call_free)
-      ptr->call_free(ptr, ptr->wheel);
-    else
-      free(ptr->wheel);
-  }
-
   if (ptr->is_allocated == MEMCACHED_ALLOCATED)
   {
     if (ptr->call_free)
@@ -69,21 +65,20 @@ void memcached_free(memcached_st *ptr)
 }
 
 /*
-  clone is the destination, while ptr is the structure to clone.
-  If ptr is NULL the call is the same as if a memcached_create() was
+  clone is the destination, while source is the structure to clone.
+  If source is NULL the call is the same as if a memcached_create() was
   called.
 */
-memcached_st *memcached_clone(memcached_st *clone, memcached_st *ptr)
+memcached_st *memcached_clone(memcached_st *clone, memcached_st *source)
 {
   memcached_return rc= MEMCACHED_SUCCESS;
   memcached_st *new_clone;
 
-  if (ptr == NULL)
+  if (source == NULL)
     return memcached_create(clone);
 
-  if (ptr->is_allocated == MEMCACHED_USED)
+  if (clone && clone->is_allocated == MEMCACHED_USED)
   {
-    WATCHPOINT_ASSERT(0);
     return NULL;
   }
   
@@ -92,8 +87,8 @@ memcached_st *memcached_clone(memcached_st *clone, memcached_st *ptr)
   if (new_clone == NULL)
     return NULL;
 
-  if (ptr->hosts)
-    rc= memcached_server_push(new_clone, ptr->hosts);
+  if (source->hosts)
+    rc= memcached_server_push(new_clone, source->hosts);
 
   if (rc != MEMCACHED_SUCCESS)
   {
@@ -103,28 +98,32 @@ memcached_st *memcached_clone(memcached_st *clone, memcached_st *ptr)
   }
 
 
-  new_clone->flags= ptr->flags;
-  new_clone->send_size= ptr->send_size;
-  new_clone->recv_size= ptr->recv_size;
-  new_clone->poll_timeout= ptr->poll_timeout;
-  new_clone->connect_timeout= ptr->connect_timeout;
-  new_clone->retry_timeout= ptr->retry_timeout;
-  new_clone->distribution= ptr->distribution;
-  new_clone->hash= ptr->hash;
-  new_clone->user_data= ptr->user_data;
+  new_clone->flags= source->flags;
+  new_clone->send_size= source->send_size;
+  new_clone->recv_size= source->recv_size;
+  new_clone->poll_timeout= source->poll_timeout;
+  new_clone->connect_timeout= source->connect_timeout;
+  new_clone->retry_timeout= source->retry_timeout;
+  new_clone->distribution= source->distribution;
+  new_clone->hash= source->hash;
+  new_clone->hash_continuum= source->hash_continuum;
+  new_clone->user_data= source->user_data;
 
-  new_clone->on_clone= ptr->on_clone;
-  new_clone->on_cleanup= ptr->on_cleanup;
-  new_clone->call_free= ptr->call_free;
-  new_clone->call_malloc= ptr->call_malloc;
-  new_clone->call_realloc= ptr->call_realloc;
-  new_clone->get_key_failure= ptr->get_key_failure;
-  new_clone->delete_trigger= ptr->delete_trigger;
+  new_clone->snd_timeout= source->snd_timeout;
+  new_clone->rcv_timeout= source->rcv_timeout;
 
-  if (ptr->prefix_key[0] != 0)
+  new_clone->on_clone= source->on_clone;
+  new_clone->on_cleanup= source->on_cleanup;
+  new_clone->call_free= source->call_free;
+  new_clone->call_malloc= source->call_malloc;
+  new_clone->call_realloc= source->call_realloc;
+  new_clone->get_key_failure= source->get_key_failure;
+  new_clone->delete_trigger= source->delete_trigger;
+
+  if (source->prefix_key[0] != 0)
   {
-    strcpy(new_clone->prefix_key, ptr->prefix_key);
-    new_clone->prefix_key_length= ptr->prefix_key_length;
+    strcpy(new_clone->prefix_key, source->prefix_key);
+    new_clone->prefix_key_length= source->prefix_key_length;
   }
 
   rc= run_distribution(new_clone);
@@ -135,8 +134,8 @@ memcached_st *memcached_clone(memcached_st *clone, memcached_st *ptr)
     return NULL;
   }
 
-  if (ptr->on_clone)
-    ptr->on_clone(ptr, new_clone);
+  if (source->on_clone)
+    source->on_clone(source, new_clone);
 
   return new_clone;
 }

@@ -67,6 +67,7 @@ pairs_st *load_create_data(memcached_st *memc, unsigned int number_of,
                            unsigned int *actual_loaded);
 void flush_all(memcached_st *memc);
 
+static int opt_binary= 0;
 static int opt_verbose= 0;
 static int opt_flush= 0;
 static int opt_non_blocking_io= 0;
@@ -140,6 +141,8 @@ void scheduler(memcached_server_st *servers, conclusions_st *conclusion)
   memc= memcached_create(NULL);
   memcached_server_push(memc, servers);
 
+  memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, opt_binary);
+  
   if (opt_flush)
     flush_all(memc);
   if (opt_createial_load)
@@ -203,14 +206,7 @@ void scheduler(memcached_server_st *servers, conclusions_st *conclusion)
   */
   pthread_mutex_lock(&counter_mutex);
   while (thread_counter)
-  {
-    struct timespec abstime;
-
-    memset(&abstime, 0, sizeof(struct timespec));
-    abstime.tv_sec= 1;
-
-    pthread_cond_timedwait(&count_threshhold, &counter_mutex, &abstime);
-  }
+    pthread_cond_wait(&count_threshhold, &counter_mutex);
   pthread_mutex_unlock(&counter_mutex);
 
   gettimeofday(&end_time, NULL);
@@ -243,6 +239,7 @@ void options_parse(int argc, char *argv[])
       {"test", required_argument, NULL, OPT_SLAP_TEST},
       {"verbose", no_argument, &opt_verbose, OPT_VERBOSE},
       {"version", no_argument, NULL, OPT_VERSION},
+      {"binary", no_argument, NULL, OPT_BINARY},
       {0, 0, 0, 0},
     };
 
@@ -256,6 +253,9 @@ void options_parse(int argc, char *argv[])
     switch (option_rv)
     {
     case 0:
+      break;
+    case OPT_BINARY:
+      opt_binary = 1;
       break;
     case OPT_VERBOSE: /* --verbose or -v */
       opt_verbose = OPT_VERBOSE;
@@ -285,6 +285,7 @@ void options_parse(int argc, char *argv[])
       break;
     case OPT_SLAP_CONCURRENCY:
       opt_concurrency= strtol(optarg, (char **)NULL, 10);
+      break;
     case OPT_SLAP_EXECUTE_NUMBER:
       opt_execute_number= strtol(optarg, (char **)NULL, 10);
       break;

@@ -14,6 +14,7 @@ extern "C" {
 #endif
 
 struct memcached_server_st {
+  memcached_allocated is_allocated;
   char hostname[MEMCACHED_MAX_HOST_LENGTH];
   unsigned int port;
   int fd;
@@ -34,6 +35,10 @@ struct memcached_server_st {
   uint16_t count;
   time_t next_retry;
   memcached_st *root;
+  uint64_t limit_maxbytes;
+  uint32_t server_failure_counter;
+  uint32_t io_bytes_sent; /* # bytes sent since last read */
+  uint32_t weight;
 };
 
 #define memcached_server_count(A) (A)->number_of_hosts
@@ -41,6 +46,19 @@ struct memcached_server_st {
 #define memcached_server_port(A,B) (B).port
 #define memcached_server_list(A) (A)->hosts
 #define memcached_server_response_count(A) (A)->cursor_active
+
+memcached_return memcached_server_cursor(memcached_st *ptr, 
+                                         memcached_server_function *callback,
+                                         void *context,
+                                         unsigned int number_of_callbacks);
+
+memcached_server_st *memcached_server_by_key(memcached_st *ptr,  const char *key, 
+                                             size_t key_length, memcached_return *error);
+
+/* These should not currently be used by end users */
+memcached_server_st *memcached_server_create(memcached_st *memc, memcached_server_st *ptr);
+void memcached_server_free(memcached_server_st *ptr);
+memcached_server_st *memcached_server_clone(memcached_server_st *clone, memcached_server_st *ptr);
 
 
 #ifdef __cplusplus

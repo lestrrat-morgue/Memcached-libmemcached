@@ -1,7 +1,7 @@
-EXTRA_DIST = libmemcached_probes.d
+EXTRA_DIST = libmemcached_probes.d memcached/README.txt
 
 INCLUDES = -I$(top_builddir)
-LIBS =
+LIBS = @LIBS@
 
 DTRACE =                @DTRACE@
 DTRACEFLAGS =           @DTRACEFLAGS@
@@ -22,7 +22,8 @@ DTRACEFILES = memcached.o \
 
 noinst_HEADERS = libmemcached_probes.h \
 		 memcached_io.h \
-                 common.h
+                 common.h \
+                 memcached/protocol_binary.h
 
 pkginclude_HEADERS= memcached.h \
 		    memcached.hh \
@@ -54,6 +55,7 @@ libmemcached_la_SOURCES = crc.c \
 			  memcached_hash.c \
 			  memcached_hosts.c \
 			  memcached_io.c \
+			  memcached_purge.c \
 			  md5.c \
 			  memcached_key.c \
 			  memcached_quit.c \
@@ -67,7 +69,9 @@ libmemcached_la_SOURCES = crc.c \
                           memcached_strerror.c \
 			  memcached_verbosity.c \
 			  memcached_version.c \
-			  murmur_hash.c
+			  murmur_hash.c \
+			  jenkins_hash.c \
+                          byteorder.c
 
 libmemcached_la_LIBADD =
 libmemcached_la_LDFLAGS = -version-info $(MEMCACHED_LIBRARY_VERSION)

@@ -11,18 +11,12 @@ static uint32_t FNV_32_PRIME= 16777619;
 static uint32_t internal_generate_hash(const char *key, size_t key_length);
 static uint32_t internal_generate_md5(const char *key, size_t key_length);
 
-uint32_t generate_hash(memcached_st *ptr, const char *key, size_t key_length)
+uint32_t generate_hash_value(const char *key, size_t key_length, memcached_hash hash_algorithm)
 {
   uint32_t hash= 1; /* Just here to remove compile warning */
   uint32_t x= 0;
 
-
-  WATCHPOINT_ASSERT(ptr->number_of_hosts);
-
-  if (ptr->number_of_hosts == 1)
-    return 0;
-
-  switch (ptr->hash)
+  switch (hash_algorithm)
   {
   case MEMCACHED_HASH_DEFAULT:
     hash= internal_generate_hash(key, key_length);
@@ -90,64 +84,62 @@ uint32_t generate_hash(memcached_st *ptr, const char *key, size_t key_length)
       hash= murmur_hash(key, key_length);
       break;
     }
+    case MEMCACHED_HASH_JENKINS:
+    {
+      hash=jenkins_hash(key, key_length, 13);
+      break;
+    }
   }
+  return hash;
+}
 
+uint32_t generate_hash(memcached_st *ptr, const char *key, size_t key_length)
+{
+  uint32_t hash= 1; /* Just here to remove compile warning */
+
+
+  WATCHPOINT_ASSERT(ptr->number_of_hosts);
+
+  if (ptr->number_of_hosts == 1)
+    return 0;
+
+  hash= generate_hash_value(key, key_length, ptr->hash);
   WATCHPOINT_ASSERT(hash);
   return hash;
 }
 
-unsigned int dispatch_host(memcached_st *ptr, uint32_t hash)
+static uint32_t dispatch_host(memcached_st *ptr, uint32_t hash)
 {
   switch (ptr->distribution) 
   {
   case MEMCACHED_DISTRIBUTION_CONSISTENT:
   case MEMCACHED_DISTRIBUTION_CONSISTENT_KETAMA:
     {
-      uint32_t num= ptr->number_of_hosts * MEMCACHED_POINTS_PER_SERVER;
+      uint32_t num= ptr->continuum_points_counter;
       WATCHPOINT_ASSERT(ptr->continuum);
 
       hash= hash;
       memcached_continuum_item_st *begin, *end, *left, *right, *middle;
       begin= left= ptr->continuum;
-      end= right= ptr->continuum + (num - 1);
+      end= right= ptr->continuum + num;
 
-      while (1)
+      while (left < right)
       {
-        memcached_continuum_item_st *rmiddle;
-
-        middle = left + (right - left) / 2;
-
-        if (middle==end)
-          return begin->index;
-
-        if (middle==begin)
-          return end->index;
-
-        rmiddle = middle+1;
-
-        if (hash<rmiddle->value && hash>=middle->value)
-          return middle->index;
-
+        middle= left + (right - left) / 2;
         if (middle->value < hash)
-          left = middle + 1;
-        else if (middle->value > hash)
-          right = middle - 1;
-
-        if (left>right)
-          return left->index;
+          left= middle + 1;
+        else
+          right= middle;
       }
+      if (right == end)
+        right= begin;
+      return right->index;
     } 
     break;
-  case MEMCACHED_DISTRIBUTION_CONSISTENT_WHEEL:
-    {
-      unsigned int server_key;
-
-      server_key= hash % MEMCACHED_STRIDE * ptr->wheel_count;
-
-      return ptr->wheel[server_key];
-    }
   case MEMCACHED_DISTRIBUTION_MODULA:
     return hash % ptr->number_of_hosts;
+  case MEMCACHED_DISTRIBUTION_RANDOM:
+    return random() % ptr->number_of_hosts;
   default:
     WATCHPOINT_ASSERT(0); /* We have added a distribution without extending the logic */
     return hash % ptr->number_of_hosts;
@@ -170,9 +162,22 @@ uint32_t memcached_generate_hash(memcached_st *ptr, const char *key, size_t key_
   if (ptr->number_of_hosts == 1)
     return 0;
 
-  hash = generate_hash(ptr, key, key_length);
+  if (ptr->flags & MEM_HASH_WITH_PREFIX_KEY)
+  {
+    int temp_len= ptr->prefix_key_length + key_length;
+    char *temp= (char *)malloc(temp_len);
+    strncpy(temp, ptr->prefix_key, ptr->prefix_key_length);
+    strncpy(temp + ptr->prefix_key_length, key, key_length);
+    hash= generate_hash(ptr, temp, temp_len);
+    free(temp);
+  }
+  else
+  {
+    hash= generate_hash(ptr, key, key_length);
+  }
 
   WATCHPOINT_ASSERT(hash);
+
   return dispatch_host(ptr, hash);
 }
 

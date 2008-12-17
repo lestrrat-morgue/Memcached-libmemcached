@@ -84,6 +84,14 @@ static void set_data(memcached_stat_st *stat, char *key, char *value)
   {
     stat->total_items= strtol(value, (char **)NULL, 10);
   }
+  else if (!strcmp("bytes_read", key))
+  {
+    stat->bytes_read= strtoll(value, (char **)NULL, 10);
+  }
+  else if (!strcmp("bytes_written", key))
+  {
+    stat->bytes_written= strtoll(value, (char **)NULL, 10);
+  }
   else if (!strcmp("bytes", key))
   {
     stat->bytes= strtoll(value, (char **)NULL, 10);
@@ -120,21 +128,13 @@ static void set_data(memcached_stat_st *stat, char *key, char *value)
   {
     stat->evictions= (uint64_t)strtoll(value, (char **)NULL, 10);
   }
-  else if (!strcmp("bytes_read", key))
-  {
-    stat->bytes_read= strtoll(value, (char **)NULL, 10);
-  }
-  else if (!strcmp("bytes_written", key))
-  {
-    stat->bytes_written= strtoll(value, (char **)NULL, 10);
-  }
   else if (!strcmp("limit_maxbytes", key))
   {
     stat->limit_maxbytes= strtoll(value, (char **)NULL, 10);
   }
   else if (!strcmp("threads", key))
   {
-    stat->threads= strtol(key, (char **)NULL, 10);
+    stat->threads= strtol(value, (char **)NULL, 10);
   }
   else
   {
@@ -211,7 +211,69 @@ char *memcached_stat_get_value(memcached_st *ptr, memcached_stat_st *stat,
   return ret;
 }
 
-static memcached_return memcached_stats_fetch(memcached_st *ptr,
+static memcached_return binary_stats_fetch(memcached_st *ptr,
+                                           memcached_stat_st *stat,
+                                           char *args,
+                                           unsigned int server_key)
+{
+  memcached_return rc;
+
+  char buffer[MEMCACHED_DEFAULT_COMMAND_SIZE];
+  protocol_binary_request_stats request= {.bytes= {0}};
+  request.message.header.request.magic= PROTOCOL_BINARY_REQ;
+  request.message.header.request.opcode= PROTOCOL_BINARY_CMD_STAT;
+  request.message.header.request.datatype= PROTOCOL_BINARY_RAW_BYTES;
+
+  if (args != NULL) 
+  {
+    int len= strlen(args);
+    request.message.header.request.keylen= htons((uint16_t)len);
+    request.message.header.request.bodylen= htonl(len);
+      
+    if ((memcached_do(&ptr->hosts[server_key], request.bytes, 
+                      sizeof(request.bytes), 0) != MEMCACHED_SUCCESS) ||
+        (memcached_io_write(&ptr->hosts[server_key], args, len, 1) == -1)) 
+    {
+      memcached_io_reset(&ptr->hosts[server_key]);
+      return MEMCACHED_WRITE_FAILURE;
+    }
+  }
+  else
+  {
+    if (memcached_do(&ptr->hosts[server_key], request.bytes, 
+                     sizeof(request.bytes), 1) != MEMCACHED_SUCCESS) 
+    {
+      memcached_io_reset(&ptr->hosts[server_key]);
+      return MEMCACHED_WRITE_FAILURE;
+    }
+  }
+
+  memcached_server_response_decrement(&ptr->hosts[server_key]);  
+  do 
+  {
+     rc= memcached_response(&ptr->hosts[server_key], buffer, 
+                             sizeof(buffer), NULL);
+     if (rc == MEMCACHED_END)
+        break;
+     
+     unlikely (rc != MEMCACHED_SUCCESS) 
+     {
+        memcached_io_reset(&ptr->hosts[server_key]);
+        return rc;
+     }
+     
+     set_data(stat, buffer, buffer + strlen(buffer) + 1);
+  } while (1);
+  
+  /* shit... memcached_response will decrement the counter, so I need to
+  ** reset it.. todo: look at this and try to find a better solution.
+  */
+  ptr->hosts[server_key].cursor_active= 0;
+
+  return MEMCACHED_SUCCESS;
+}
+
+static memcached_return ascii_stats_fetch(memcached_st *ptr,
                                               memcached_stat_st *stat,
                                               char *args,
                                               unsigned int server_key)
@@ -294,8 +356,12 @@ memcached_stat_st *memcached_stat(memcached_st *ptr, char *args, memcached_retur
   for (x= 0; x < ptr->number_of_hosts; x++)
   {
     memcached_return temp_return;
-
-    temp_return= memcached_stats_fetch(ptr, stats + x, args, x);
+    
+    if (ptr->flags & MEM_BINARY_PROTOCOL)
+      temp_return= binary_stats_fetch(ptr, stats + x, args, x);
+    else
+      temp_return= ascii_stats_fetch(ptr, stats + x, args, x);
+    
     if (temp_return != MEMCACHED_SUCCESS)
       rc= MEMCACHED_SOME_ERRORS;
   }
@@ -314,7 +380,10 @@ memcached_return memcached_stat_servername(memcached_stat_st *stat, char *args,
 
   memcached_server_add(&memc, hostname, port);
 
-  rc= memcached_stats_fetch(&memc, stat, args, 0);
+  if (memc.flags & MEM_BINARY_PROTOCOL)
+    rc= binary_stats_fetch(&memc, stat, args, 0);
+  else
+    rc= ascii_stats_fetch(&memc, stat, args, 0);
 
   memcached_free(&memc);
 
@@ -325,7 +394,7 @@ memcached_return memcached_stat_servername(memcached_stat_st *stat, char *args,
   We make a copy of the keys since at some point in the not so distant future
   we will add support for "found" keys.
 */
-char ** memcached_stat_get_keys(memcached_st *ptr, memcached_stat_st *stat, 
+char ** memcached_stat_get_keys(memcached_st *ptr, memcached_stat_st *stat __attribute__((unused)), 
                                 memcached_return *error)
 {
   char **list;

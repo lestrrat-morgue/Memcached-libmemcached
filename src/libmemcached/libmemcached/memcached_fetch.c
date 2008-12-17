@@ -31,7 +31,7 @@ memcached_return value_fetch(memcached_server_st *ptr,
     key= result->key;
     result->key_length= 0;
 
-    for (prefix_length= ptr->root->prefix_key_length; isgraph(*string_ptr); string_ptr++)
+    for (prefix_length= ptr->root->prefix_key_length; !(iscntrl(*string_ptr) || isspace(*string_ptr)) ; string_ptr++)
     {
       if (prefix_length == 0)
       {
@@ -53,7 +53,7 @@ memcached_return value_fetch(memcached_server_st *ptr,
   if (end_ptr == string_ptr)
     goto read_error;
   for (next_ptr= string_ptr; isdigit(*string_ptr); string_ptr++);
-  result->flags= (uint32_t)strtol(next_ptr, &string_ptr, 10);
+  result->flags= strtoul(next_ptr, &string_ptr, 10);
 
   if (end_ptr == string_ptr)
     goto read_error;
@@ -64,7 +64,7 @@ memcached_return value_fetch(memcached_server_st *ptr,
     goto read_error;
 
   for (next_ptr= string_ptr; isdigit(*string_ptr); string_ptr++);
-  value_length= (size_t)strtoll(next_ptr, &string_ptr, 10);
+  value_length= (size_t)strtoull(next_ptr, &string_ptr, 10);
 
   if (end_ptr == string_ptr)
     goto read_error;
@@ -79,7 +79,7 @@ memcached_return value_fetch(memcached_server_st *ptr,
   {
     string_ptr++;
     for (next_ptr= string_ptr; isdigit(*string_ptr); string_ptr++);
-    result->cas= (size_t)strtoll(next_ptr, &string_ptr, 10);
+    result->cas= strtoull(next_ptr, &string_ptr, 10);
   }
 
   if (end_ptr < string_ptr)
@@ -127,9 +127,9 @@ read_error:
 }
 
 char *memcached_fetch(memcached_st *ptr, char *key, size_t *key_length, 
-                    size_t *value_length, 
-                    uint32_t *flags,
-                    memcached_return *error)
+                      size_t *value_length, 
+                      uint32_t *flags,
+                      memcached_return *error)
 {
   memcached_result_st *result_buffer= &ptr->result;
 

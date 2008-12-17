@@ -3,11 +3,11 @@ AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(libmemcached/libmemcached_config.h)
 AC_CANONICAL_SYSTEM
 
-MEMCACHED_LIBRARY_NAME=libmemcached
+MEMCACHED_LIBRARY_NAME=libmemcached 
 
 #release versioning
 MEMCACHED_MAJOR_VERSION=0
-MEMCACHED_MINOR_VERSION=21
+MEMCACHED_MINOR_VERSION=25
 MEMCACHED_MICRO_VERSION=0
 
 #API version
@@ -49,26 +49,38 @@ LIBTOOL="$LIBTOOL --preserve-dup-deps"
 AC_SUBST(LIBTOOL)dnl
 AC_LANG_CPLUSPLUS
 
+sinclude(config/pod2man.m4)
 sinclude(config/debug.m4)
 sinclude(config/dtrace.m4)
+sinclude(config/byteorder.m4)
+sinclude(config/64bit.m4)
+sinclude(config/protocol_binary.m4)
 
 # We only support GCC and Sun's forte at the moment
+CFLAGS="-DMEMCACHED_INTERNAL $CFLAGS"
 if test "$GCC" = "yes"
 then
+  #CFLAGS="-W -std=iso9899:1999 -Wall -Wextra -Wstrict-aliasing -pedantic -Wundef -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -O3 $CFLAGS"
+  CFLAGS="-Wall -O3 $CFLAGS"
+
   if test "$ENABLE_DEBUG" = "yes"
   then
-    CFLAGS="-Wall -ggdb -DMEMCACHED_INTERNAL -DHAVE_DEBUG"
-  else
-    CFLAGS="-Wall -O3 -DMEMCACHED_INTERNAL "
+    CFLAGS="$CFLAGS -ggdb -DHAVE_DEBUG"
   fi
 else
-  CFLAGS="-Xa -xstrconst -mt -D_FORTEC_ -fast -m64"
-  LDFLAGS="-lsocket -lnsl"
-  DTRACEFLAGS="-64"
+  CFLAGS="-Xa -xstrconst -mt -D_FORTEC_ $CFLAGS"
+  if test "$ENABLE_DEBUG" = "yes"
+  then
+    CFLAGS="$CFLAGS -DHAVE_DEBUG"
+  fi
+  DTRACEFLAGS="$DTRACEFLAGS"
 fi
 
+LDFLAGS="-lm"
 AC_C_CONST
 AC_HEADER_TIME
 AC_TYPE_SIZE_T
 AC_SEARCH_LIBS(getopt_long, gnugetopt)
+AC_SEARCH_LIBS(socket, socket)
+AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_OUTPUT(Makefile clients/Makefile tests/Makefile docs/Makefile libmemcached/Makefile support/Makefile support/libmemcached.pc support/libmemcached.spec)

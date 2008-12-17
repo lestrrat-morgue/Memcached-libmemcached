@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "generator.h"
@@ -21,7 +22,7 @@ static void get_random_string(char *buffer, size_t size)
 
 void pairs_free(pairs_st *pairs)
 {
-  unsigned int x;
+  uint32_t x;
 
   if (!pairs)
     return;
@@ -36,7 +37,7 @@ void pairs_free(pairs_st *pairs)
   free(pairs);
 }
 
-pairs_st *pairs_generate(unsigned long long number_of, size_t value_length)
+pairs_st *pairs_generate(uint64_t number_of, size_t value_length)
 {
   unsigned int x;
   pairs_st *pairs;

@@ -1,6 +1,9 @@
 /* libmemcached/libmemcached_config.h.  Generated from libmemcached_config.h.in by configure.  */
 /* libmemcached/libmemcached_config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Enable big endian byteorder */
+/* #undef BYTEORDER_BIG_ENDIAN */
+
 /* Enables DEBUG Support */
 /* #undef HAVE_DEBUG */
 

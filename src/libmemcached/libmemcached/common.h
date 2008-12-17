@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -21,11 +22,11 @@
 #include <sys/un.h>
 #include <netinet/tcp.h>
 
-#if TIME_WITH_SYS_TIME
+#ifdef TIME_WITH_SYS_TIME
 # include <sys/time.h>
 # include <time.h>
 #else
-# if HAVE_SYS_TIME_H
+# ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>
 # else
 #  include <time.h>
@@ -37,7 +38,8 @@
 #include <memcached.h>
 #include "memcached_io.h"
 
-#include <libmemcached_config.h>
+#include "memcached/protocol_binary.h"
+#include "libmemcached_config.h"
 
 #if !defined(__GNUC__) || (__GNUC__ == 2 && __GNUC_MINOR__ < 96)
 
@@ -77,6 +79,10 @@ typedef enum {
   MEM_BUFFER_REQUESTS= (1 << 8),
   MEM_USE_SORT_HOSTS= (1 << 9),
   MEM_VERIFY_KEY= (1 << 10),
+  /* 11 used for weighted ketama */
+  MEM_KETAMA_WEIGHTED= (1 << 11),
+  MEM_BINARY_PROTOCOL= (1 << 12),
+  MEM_HASH_WITH_PREFIX_KEY= (1 << 13)
 } memcached_flags;
 
 /* Hashing algo */
@@ -85,6 +91,7 @@ uint32_t hash_crc32(const char *data,
                     size_t data_len);
 uint32_t hsieh_hash(const char *key, size_t key_length);
 uint32_t murmur_hash(const char *key, size_t key_length);
+uint32_t jenkins_hash(const void *key, size_t length, uint32_t initval);
 
 memcached_return memcached_connect(memcached_server_st *ptr);
 memcached_return memcached_response(memcached_server_st *ptr,
@@ -97,7 +104,7 @@ void memcached_quit_server(memcached_server_st *ptr, uint8_t io_death);
 #define memcached_server_response_decrement(A) (A)->cursor_active--
 #define memcached_server_response_reset(A) (A)->cursor_active=0
 
-memcached_return memcached_do(memcached_server_st *ptr, const char *commmand,
+memcached_return memcached_do(memcached_server_st *ptr, const void *commmand,
                               size_t command_length, uint8_t with_flush);
 memcached_return memcached_version(memcached_st *ptr);
 memcached_return value_fetch(memcached_server_st *ptr,
@@ -110,5 +117,18 @@ memcached_return memcachd_key_test(char **keys, size_t *key_length,
 
 memcached_return run_distribution(memcached_st *ptr);
 
+uint32_t generate_hash_value(const char *key, size_t key_length, memcached_hash hash_algorithm);
+
 uint32_t generate_hash(memcached_st *ptr, const char *key, size_t key_length);
+memcached_return memcached_server_remove(memcached_server_st *st_ptr);
+
+extern uint64_t ntohll(uint64_t);
+extern uint64_t htonll(uint64_t);
+
+void host_reset(memcached_st *ptr, memcached_server_st *host, 
+                const char *hostname, unsigned int port, uint32_t weight,
+                memcached_connection type);
+
+memcached_return memcached_purge(memcached_server_st *ptr);
+
 #endif /* __COMMON_H__ */
