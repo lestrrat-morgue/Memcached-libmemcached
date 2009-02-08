@@ -52,13 +52,6 @@
 #define unlikely(x)     if(__builtin_expect((x), 0))
 #endif
 
-
-#ifdef HAVE_DTRACE
-#define _DTRACE_VERSION 1
-#else
-#undef _DTRACE_VERSION
-#endif
-
 #include "libmemcached_probes.h"
 
 #define MEMCACHED_BLOCK_SIZE 1024
@@ -82,7 +75,8 @@ typedef enum {
   /* 11 used for weighted ketama */
   MEM_KETAMA_WEIGHTED= (1 << 11),
   MEM_BINARY_PROTOCOL= (1 << 12),
-  MEM_HASH_WITH_PREFIX_KEY= (1 << 13)
+  MEM_HASH_WITH_PREFIX_KEY= (1 << 13),
+  MEM_NOREPLY= (1 << 14)
 } memcached_flags;
 
 /* Hashing algo */
@@ -117,18 +111,31 @@ memcached_return memcachd_key_test(char **keys, size_t *key_length,
 
 memcached_return run_distribution(memcached_st *ptr);
 
-uint32_t generate_hash_value(const char *key, size_t key_length, memcached_hash hash_algorithm);
-
 uint32_t generate_hash(memcached_st *ptr, const char *key, size_t key_length);
 memcached_return memcached_server_remove(memcached_server_st *st_ptr);
 
 extern uint64_t ntohll(uint64_t);
 extern uint64_t htonll(uint64_t);
 
-void host_reset(memcached_st *ptr, memcached_server_st *host, 
-                const char *hostname, unsigned int port, uint32_t weight,
-                memcached_connection type);
-
 memcached_return memcached_purge(memcached_server_st *ptr);
+
+static inline memcached_return memcached_validate_key_length(size_t key_length, 
+                                                             bool binary) {
+  unlikely (key_length == 0)
+    return MEMCACHED_BAD_KEY_PROVIDED;
+  
+  if (binary)
+  {
+    unlikely (key_length > 0xffff)
+      return MEMCACHED_BAD_KEY_PROVIDED;
+  }
+  else
+  {
+    unlikely (key_length >= MEMCACHED_MAX_KEY) 
+      return MEMCACHED_BAD_KEY_PROVIDED;
+  }
+
+  return MEMCACHED_SUCCESS;
+}
 
 #endif /* __COMMON_H__ */

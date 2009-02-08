@@ -51,6 +51,7 @@ static memcached_return set_socket_options(memcached_server_st *ptr)
   if (ptr->type == MEMCACHED_CONNECTION_UDP)
     return MEMCACHED_SUCCESS;
 
+#ifdef HAVE_SNDTIMEO
   if (ptr->root->snd_timeout)
   {
     int error;
@@ -63,7 +64,9 @@ static memcached_return set_socket_options(memcached_server_st *ptr)
                       &waittime, (socklen_t)sizeof(struct timeval));
     WATCHPOINT_ASSERT(error == 0);
   }
+#endif
 
+#ifdef HAVE_RCVTIMEO
   if (ptr->root->rcv_timeout)
   {
     int error;
@@ -76,6 +79,7 @@ static memcached_return set_socket_options(memcached_server_st *ptr)
                       &waittime, (socklen_t)sizeof(struct timeval));
     WATCHPOINT_ASSERT(error == 0);
   }
+#endif
 
   {
     int error;
@@ -189,7 +193,7 @@ static memcached_return network_connect(memcached_server_st *ptr)
       }
     }
 
-    if (ptr->sockaddr_inited == MEMCACHED_NOT_ALLOCATED || 
+    if (ptr->sockaddr_inited || 
         (!(ptr->root->flags & MEM_USE_CACHE_LOOKUPS)))
     {
       memcached_return rc;
@@ -197,7 +201,7 @@ static memcached_return network_connect(memcached_server_st *ptr)
       rc= set_hostinfo(ptr);
       if (rc != MEMCACHED_SUCCESS)
         return rc;
-      ptr->sockaddr_inited= MEMCACHED_ALLOCATED;
+      ptr->sockaddr_inited= true;
     }
 
     use= ptr->address_info;

@@ -34,7 +34,6 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@HAVE_DTRACE_TRUE@am__append_1 = libmemcached_probes.o
 subdir = libmemcached
 DIST_COMMON = $(noinst_HEADERS) $(pkginclude_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
@@ -45,7 +44,8 @@ am__aclocal_m4_deps = $(top_srcdir)/config/pod2man.m4 \
 	$(top_srcdir)/config/byteorder.m4 \
 	$(top_srcdir)/config/64bit.m4 \
 	$(top_srcdir)/config/protocol_binary.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/config/memcached.m4 \
+	$(top_srcdir)/config/setsockopt.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -60,19 +60,18 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libmemcached_la_DEPENDENCIES = $(am__append_1)
 am_libmemcached_la_OBJECTS = crc.lo hsieh_hash.lo memcached.lo \
-	memcached_auto.lo memcached_behavior.lo memcached_callback.lo \
-	memcached_connect.lo memcached_delete.lo memcached_do.lo \
-	memcached_fetch.lo memcached_fetch_execute.lo \
+	memcached_auto.lo memcached_analyze.lo memcached_behavior.lo \
+	memcached_callback.lo memcached_connect.lo memcached_delete.lo \
+	memcached_do.lo memcached_fetch.lo memcached_fetch_execute.lo \
 	memcached_flush.lo memcached_get.lo memcached_hash.lo \
-	memcached_hosts.lo memcached_io.lo memcached_purge.lo md5.lo \
-	memcached_key.lo memcached_quit.lo memcached_parse.lo \
-	memcached_response.lo memcached_result.lo memcached_server.lo \
-	memcached_storage.lo memcached_string.lo memcached_stats.lo \
-	memcached_strerror.lo memcached_verbosity.lo \
-	memcached_version.lo murmur_hash.lo jenkins_hash.lo \
-	byteorder.lo
+	memcached_hosts.lo memcached_io.lo memcached_purge.lo \
+	memcached_flush_buffers.lo md5.lo memcached_key.lo \
+	memcached_quit.lo memcached_parse.lo memcached_response.lo \
+	memcached_result.lo memcached_server.lo memcached_storage.lo \
+	memcached_string.lo memcached_stats.lo memcached_strerror.lo \
+	memcached_verbosity.lo memcached_version.lo murmur_hash.lo \
+	jenkins_hash.lo byteorder.lo
 libmemcached_la_OBJECTS = $(am_libmemcached_la_OBJECTS)
 libmemcached_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -117,8 +116,11 @@ DEBUG = @DEBUG@
 DEBUGFLAGS = @DEBUGFLAGS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
 DTRACEFLAGS = @DTRACEFLAGS@
+DTRACE_HEADER = @DTRACE_HEADER@
+DTRACE_OBJ = @DTRACE_OBJ@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -147,7 +149,9 @@ MEMCACHED_LIBRARY_NAME = @MEMCACHED_LIBRARY_NAME@
 MEMCACHED_LIBRARY_VERSION = @MEMCACHED_LIBRARY_VERSION@
 MEMCACHED_RELEASE = @MEMCACHED_RELEASE@
 MEMCACHED_VERSION = @MEMCACHED_VERSION@
+MEMC_BINARY = @MEMC_BINARY@
 MKDIR_P = @MKDIR_P@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -216,29 +220,17 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
+top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 EXTRA_DIST = libmemcached_probes.d memcached/README.txt
+BUILT_SOURCES = @DTRACE_HEADER@
 INCLUDES = -I$(top_builddir)
-DTRACEFILES = memcached.o \
-              memcached_strerror.o \
-              memcached_connect.o \
-              memcached_response.o \
-              memcached_get.o \
-              memcached_storage.o \
-              memcached_delete.o \
-              memcached_hash.o \
-              memcached_auto.o \
-              memcached_verbosity.o \
-              memcached_quit.o \
-              memcached_flush.o \
-              memcached_string.o \
-              memcached_stats.o
-
+EXTRA_HEADERS = 
 noinst_HEADERS = libmemcached_probes.h \
 		 memcached_io.h \
                  common.h \
-                 memcached/protocol_binary.h
+                 memcached/protocol_binary.h @DTRACE_HEADER@
 
 pkginclude_HEADERS = memcached.h \
 		    memcached.hh \
@@ -257,6 +249,7 @@ libmemcached_la_SOURCES = crc.c \
 			  hsieh_hash.c \
 			  memcached.c \
 			  memcached_auto.c \
+			  memcached_analyze.c \
 			  memcached_behavior.c \
 			  memcached_callback.c \
 			  memcached_connect.c \
@@ -270,6 +263,7 @@ libmemcached_la_SOURCES = crc.c \
 			  memcached_hosts.c \
 			  memcached_io.c \
 			  memcached_purge.c \
+                          memcached_flush_buffers.c \
 			  md5.c \
 			  memcached_key.c \
 			  memcached_quit.c \
@@ -280,16 +274,17 @@ libmemcached_la_SOURCES = crc.c \
 			  memcached_storage.c \
 			  memcached_string.c \
 			  memcached_stats.c \
-                          memcached_strerror.c \
+			  memcached_strerror.c \
 			  memcached_verbosity.c \
 			  memcached_version.c \
 			  murmur_hash.c \
 			  jenkins_hash.c \
                           byteorder.c
 
-libmemcached_la_LIBADD = $(am__append_1)
+libmemcached_la_DEPENDENCIES = @DTRACE_OBJ@
+libmemcached_la_LIBADD = @DTRACE_OBJ@
 libmemcached_la_LDFLAGS = -version-info $(MEMCACHED_LIBRARY_VERSION)
-all: libmemcached_config.h
+all: $(BUILT_SOURCES) libmemcached_config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
@@ -382,6 +377,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jenkins_hash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_analyze.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_auto.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_behavior.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_callback.Plo@am__quote@
@@ -391,6 +387,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_fetch.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_fetch_execute.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_flush.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_flush_buffers.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_get.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_hash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_hosts.Plo@am__quote@
@@ -528,13 +525,15 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES) $(HEADERS) libmemcached_config.h
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -558,6 +557,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
@@ -636,14 +636,19 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-pkgincludeHEADERS
 	uninstall-pkgincludeHEADERS
 
 
-libmemcached_probes.h: libmemcached_probes.d
-	$(DTRACE) $(DTRACEFLAGS) -h -s libmemcached_probes.d
-	mv libmemcached_probes.h libmemcached_probes.h.bak
-	sed "s/#include <unistd.h>//g" libmemcached_probes.h.bak > libmemcached_probes.h
-	rm libmemcached_probes.h.bak
+dtrace_probes.h: libmemcached_probes.d
+	$(DTRACE) $(DTRACEFLAGS) -o dtrace_probes.tmp -h -s libmemcached_probes.d
+	sed "s/#include <unistd.h>//g" dtrace_probes.tmp > dtrace_probes.h
+	rm dtrace_probes.tmp
 
-libmemcached_probes.o:
-	$(DTRACE) $(DTRACEFLAGS) -G -s libmemcached_probes.d $(DTRACEFILES)
+# So libtool doesn't support dtrace, but just copy one of the existing
+# lo-file and replace the file name ;-) 
+libmemcached_probes.lo: libmemcached_probes.o
+	sed "s,jenkins_hash,libmemcached_probes,g" jenkins_hash.lo > libmemcached_probes.lo
+
+libmemcached_probes.o: $(libmemcached_la_OBJECTS)
+	$(DTRACE) $(DTRACEFLAGS) -o .libs/libmemcached_probes.o -G -s libmemcached_probes.d `grep pic_object *.lo | cut -f 2 -d\' | grep -v non_pic_object`
+	$(DTRACE) $(DTRACEFLAGS) -o libmemcached_probes.o -G -s libmemcached_probes.d `grep non_pic_object *.lo | cut -f 2 -d\' `
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

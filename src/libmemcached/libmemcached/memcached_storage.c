@@ -39,7 +39,7 @@ static char *storage_op_string(memcached_storage_action verb)
     return "tosserror"; /* This is impossible, fixes issue for compiler warning in VisualStudio */
   };
 
-  return SET_OP;
+  /* NOTREACHED */
 }
 
 static memcached_return memcached_send_binary(memcached_server_st* server, 
@@ -70,9 +70,10 @@ static inline memcached_return memcached_send(memcached_st *ptr,
 
   WATCHPOINT_ASSERT(!(value == NULL && value_length > 0));
 
-  unlikely (key_length == 0)
-    return MEMCACHED_NO_KEY_PROVIDED;
-
+  rc= memcached_validate_key_length(key_length, ptr->flags & MEM_BINARY_PROTOCOL);
+  unlikely (rc != MEMCACHED_SUCCESS)
+    return rc;
+  
   unlikely (ptr->number_of_hosts == 0)
     return MEMCACHED_NO_SERVERS;
 
@@ -88,17 +89,21 @@ static inline memcached_return memcached_send(memcached_st *ptr,
 
   if (cas)
     write_length= snprintf(buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, 
-                           "%s %s%.*s %u %llu %zu %llu\r\n", storage_op_string(verb),
+                           "%s %s%.*s %u %llu %zu %llu%s\r\n", 
+                           storage_op_string(verb),
                            ptr->prefix_key,
                            (int)key_length, key, flags, 
                            (unsigned long long)expiration, value_length, 
-                           (unsigned long long)cas);
+                           (unsigned long long)cas,
+                           (ptr->flags & MEM_NOREPLY) ? " noreply" : "");
   else
     write_length= snprintf(buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, 
-                           "%s %s%.*s %u %llu %zu\r\n", storage_op_string(verb),
+                           "%s %s%.*s %u %llu %zu%s\r\n", 
+                           storage_op_string(verb),
                            ptr->prefix_key,
                            (int)key_length, key, flags, 
-                           (unsigned long long)expiration, value_length);
+                           (unsigned long long)expiration, value_length,
+                           (ptr->flags & MEM_NOREPLY) ? " noreply" : "");
 
   if (write_length >= MEMCACHED_DEFAULT_COMMAND_SIZE)
   {
@@ -127,6 +132,12 @@ static inline memcached_return memcached_send(memcached_st *ptr,
   {
     rc= MEMCACHED_WRITE_FAILURE;
     goto error;
+  }
+
+  if (ptr->flags & MEM_NOREPLY)
+  {
+    memcached_server_response_decrement(&ptr->hosts[server_key]);
+    return (to_write == 0) ? MEMCACHED_BUFFERED : MEMCACHED_SUCCESS;
   }
 
   if (to_write == 0)
@@ -322,6 +333,55 @@ memcached_return memcached_cas_by_key(memcached_st *ptr,
   return rc;
 }
 
+static inline uint8_t get_com_code(memcached_storage_action verb, bool noreply) {
+   uint8_t ret;
+
+  if (noreply)
+    switch (verb)
+    {
+    case SET_OP:
+      ret=PROTOCOL_BINARY_CMD_SETQ;
+      break;
+    case ADD_OP:
+      ret=PROTOCOL_BINARY_CMD_ADDQ;
+      break;
+    case CAS_OP: /* FALLTHROUGH */
+    case REPLACE_OP:
+      ret=PROTOCOL_BINARY_CMD_REPLACEQ;
+      break;
+    case APPEND_OP:
+      ret=PROTOCOL_BINARY_CMD_APPENDQ;
+      break;
+    case PREPEND_OP:
+      ret=PROTOCOL_BINARY_CMD_PREPENDQ;
+      break;
+    }
+  else
+    switch (verb)
+    {
+    case SET_OP:
+      ret=PROTOCOL_BINARY_CMD_SET;
+      break;
+    case ADD_OP:
+      ret=PROTOCOL_BINARY_CMD_ADD;
+      break;
+    case CAS_OP: /* FALLTHROUGH */
+    case REPLACE_OP:
+      ret=PROTOCOL_BINARY_CMD_REPLACE;
+      break;
+    case APPEND_OP:
+      ret=PROTOCOL_BINARY_CMD_APPEND;
+      break;
+    case PREPEND_OP:
+      ret=PROTOCOL_BINARY_CMD_PREPEND;
+      break;
+    }
+
+   return ret;
+}
+
+
+
 static memcached_return memcached_send_binary(memcached_server_st* server, 
                                               const char *key, 
                                               size_t key_length, 
@@ -335,30 +395,10 @@ static memcached_return memcached_send_binary(memcached_server_st* server,
   char flush;
   protocol_binary_request_set request= {.bytes= {0}};
   size_t send_length= sizeof(request.bytes);
+  bool noreply = server->root->flags & MEM_NOREPLY;
 
   request.message.header.request.magic= PROTOCOL_BINARY_REQ;
-  switch (verb) 
-  {
-  case SET_OP:
-    request.message.header.request.opcode= PROTOCOL_BINARY_CMD_SET;
-    break;
-  case ADD_OP:
-    request.message.header.request.opcode= PROTOCOL_BINARY_CMD_ADD;
-    break;
-  case REPLACE_OP:
-    request.message.header.request.opcode= PROTOCOL_BINARY_CMD_REPLACE;
-    break;
-  case APPEND_OP:
-    request.message.header.request.opcode= PROTOCOL_BINARY_CMD_APPEND;
-    break;
-  case PREPEND_OP:
-    request.message.header.request.opcode= PROTOCOL_BINARY_CMD_PREPEND;
-    break;
-  case CAS_OP:
-    request.message.header.request.opcode= PROTOCOL_BINARY_CMD_REPLACE;
-      break;
-  }
-
+  request.message.header.request.opcode= get_com_code(verb, noreply);
   request.message.header.request.keylen= htons((uint16_t)key_length);
   request.message.header.request.datatype= PROTOCOL_BINARY_RAW_BYTES;
   if (verb == APPEND_OP || verb == PREPEND_OP)
@@ -377,6 +417,7 @@ static memcached_return memcached_send_binary(memcached_server_st* server,
     request.message.header.request.cas= htonll(cas);
   
   flush= ((server->root->flags & MEM_BUFFER_REQUESTS) && verb == SET_OP) ? 0 : 1;
+
   /* write the header */
   if ((memcached_do(server, (const char*)request.bytes, send_length, 0) != MEMCACHED_SUCCESS) ||
       (memcached_io_write(server, key, key_length, 0) == -1) ||
@@ -385,10 +426,16 @@ static memcached_return memcached_send_binary(memcached_server_st* server,
     memcached_io_reset(server);
     return MEMCACHED_WRITE_FAILURE;
   }
+  
+  if (noreply)
+    memcached_server_response_decrement(server);
 
   if (flush == 0)
     return MEMCACHED_BUFFERED;
-  
+
+  if (noreply)
+    return MEMCACHED_SUCCESS;
+
   return memcached_response(server, NULL, 0, NULL);   
 }
 

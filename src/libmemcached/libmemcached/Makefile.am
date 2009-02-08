@@ -1,29 +1,18 @@
 EXTRA_DIST = libmemcached_probes.d memcached/README.txt
 
+BUILT_SOURCES= @DTRACE_HEADER@
+
 INCLUDES = -I$(top_builddir)
 LIBS = @LIBS@
 
+EXTRA_HEADERS = 
 DTRACE =                @DTRACE@
 DTRACEFLAGS =           @DTRACEFLAGS@
-DTRACEFILES = memcached.o \
-              memcached_strerror.o \
-              memcached_connect.o \
-              memcached_response.o \
-              memcached_get.o \
-              memcached_storage.o \
-              memcached_delete.o \
-              memcached_hash.o \
-              memcached_auto.o \
-              memcached_verbosity.o \
-              memcached_quit.o \
-              memcached_flush.o \
-              memcached_string.o \
-              memcached_stats.o
 
 noinst_HEADERS = libmemcached_probes.h \
 		 memcached_io.h \
                  common.h \
-                 memcached/protocol_binary.h
+                 memcached/protocol_binary.h @DTRACE_HEADER@
 
 pkginclude_HEADERS= memcached.h \
 		    memcached.hh \
@@ -43,6 +32,7 @@ libmemcached_la_SOURCES = crc.c \
 			  hsieh_hash.c \
 			  memcached.c \
 			  memcached_auto.c \
+			  memcached_analyze.c \
 			  memcached_behavior.c \
 			  memcached_callback.c \
 			  memcached_connect.c \
@@ -56,6 +46,7 @@ libmemcached_la_SOURCES = crc.c \
 			  memcached_hosts.c \
 			  memcached_io.c \
 			  memcached_purge.c \
+                          memcached_flush_buffers.c \
 			  md5.c \
 			  memcached_key.c \
 			  memcached_quit.c \
@@ -66,25 +57,29 @@ libmemcached_la_SOURCES = crc.c \
 			  memcached_storage.c \
 			  memcached_string.c \
 			  memcached_stats.c \
-                          memcached_strerror.c \
+			  memcached_strerror.c \
 			  memcached_verbosity.c \
 			  memcached_version.c \
 			  murmur_hash.c \
 			  jenkins_hash.c \
                           byteorder.c
 
-libmemcached_la_LIBADD =
+libmemcached_la_DEPENDENCIES = @DTRACE_OBJ@
+libmemcached_la_LIBADD = @DTRACE_OBJ@
 libmemcached_la_LDFLAGS = -version-info $(MEMCACHED_LIBRARY_VERSION)
 
-if HAVE_DTRACE
-  libmemcached_la_LIBADD += libmemcached_probes.o
-endif
+dtrace_probes.h: libmemcached_probes.d
+	$(DTRACE) $(DTRACEFLAGS) -o dtrace_probes.tmp -h -s libmemcached_probes.d
+	sed "s/#include <unistd.h>//g" dtrace_probes.tmp > dtrace_probes.h
+	rm dtrace_probes.tmp
 
-libmemcached_probes.h: libmemcached_probes.d
-	$(DTRACE) $(DTRACEFLAGS) -h -s libmemcached_probes.d
-	mv libmemcached_probes.h libmemcached_probes.h.bak
-	sed "s/#include <unistd.h>//g" libmemcached_probes.h.bak > libmemcached_probes.h
-	rm libmemcached_probes.h.bak
 
-libmemcached_probes.o:
-	$(DTRACE) $(DTRACEFLAGS) -G -s libmemcached_probes.d $(DTRACEFILES)
+# So libtool doesn't support dtrace, but just copy one of the existing
+# lo-file and replace the file name ;-) 
+libmemcached_probes.lo: libmemcached_probes.o
+	sed "s,jenkins_hash,libmemcached_probes,g" jenkins_hash.lo > libmemcached_probes.lo
+
+libmemcached_probes.o: $(libmemcached_la_OBJECTS)
+	$(DTRACE) $(DTRACEFLAGS) -o .libs/libmemcached_probes.o -G -s libmemcached_probes.d `grep pic_object *.lo | cut -f 2 -d\' | grep -v non_pic_object`
+	$(DTRACE) $(DTRACEFLAGS) -o libmemcached_probes.o -G -s libmemcached_probes.d `grep non_pic_object *.lo | cut -f 2 -d\' `
+

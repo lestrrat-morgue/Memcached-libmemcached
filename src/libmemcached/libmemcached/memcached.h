@@ -12,6 +12,9 @@
 
 #include <stdlib.h>
 #include <inttypes.h>
+#if !defined(__cplusplus)
+# include <stdbool.h>
+#endif
 #include <sys/types.h>
 #include <netinet/in.h>
 
@@ -40,6 +43,17 @@ struct memcached_continuum_item_st {
 };
 
 #define LIBMEMCACHED_VERSION_STRING "0.25"
+
+struct memcached_analysis_st {
+  uint64_t most_used_bytes;
+  uint64_t least_remaining_bytes;
+  uint32_t average_item_size;
+  uint32_t longest_uptime;
+  uint32_t least_free_server;
+  uint32_t most_consumed_server;
+  uint32_t oldest_server;
+  double pool_hit_ratio;
+};
 
 struct memcached_stat_st {
   uint32_t pid;
@@ -70,7 +84,7 @@ struct memcached_stat_st {
 
 struct memcached_st {
   uint8_t purging;
-  memcached_allocated is_allocated;
+  bool is_allocated;
   memcached_server_st *hosts;
   uint32_t number_of_hosts;
   uint32_t cursor_server;
@@ -133,6 +147,8 @@ void memcached_quit(memcached_st *ptr);
 char *memcached_strerror(memcached_st *ptr, memcached_return rc);
 memcached_return memcached_behavior_set(memcached_st *ptr, memcached_behavior flag, uint64_t data);
 uint64_t memcached_behavior_get(memcached_st *ptr, memcached_behavior flag);
+uint32_t memcached_generate_hash_value(const char *key, size_t key_length, memcached_hash hash_algorithm);
+memcached_return memcached_flush_buffers(memcached_st *mem);
 
 /* Server Public functions */
 
@@ -167,10 +183,10 @@ memcached_server_st *memcached_server_list_append_with_weight(memcached_server_s
                                                               uint32_t weight,
                                                               memcached_return *error);
 unsigned int memcached_server_list_count(memcached_server_st *ptr);
-memcached_server_st *memcached_servers_parse(char *server_strings);
+memcached_server_st *memcached_servers_parse(const char *server_strings);
 
 char *memcached_stat_get_value(memcached_st *ptr, memcached_stat_st *stat, 
-                               char *key, memcached_return *error);
+                               const char *key, memcached_return *error);
 char ** memcached_stat_get_keys(memcached_st *ptr, memcached_stat_st *stat, 
                                 memcached_return *error);
 

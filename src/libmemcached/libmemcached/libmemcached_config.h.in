@@ -18,6 +18,12 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have a working SO_RCVTIMEO */
+#undef HAVE_RCVTIMEO
+
+/* Define to 1 if you have a working SO_SNDTIMEO */
+#undef HAVE_SNDTIMEO
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
@@ -38,6 +44,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Name of the memcached binary used in make test */
+#undef MEMCACHED_BINARY
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT

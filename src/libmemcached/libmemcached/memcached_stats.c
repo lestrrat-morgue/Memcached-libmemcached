@@ -143,7 +143,7 @@ static void set_data(memcached_stat_st *stat, char *key, char *value)
 }
 
 char *memcached_stat_get_value(memcached_st *ptr, memcached_stat_st *stat, 
-                               char *key, memcached_return *error)
+                               const char *key, memcached_return *error)
 {
   char buffer[SMALL_STRING_LEN];
   size_t length;
@@ -227,6 +227,11 @@ static memcached_return binary_stats_fetch(memcached_st *ptr,
   if (args != NULL) 
   {
     int len= strlen(args);
+
+    rc= memcached_validate_key_length(len, true);
+    unlikely (rc != MEMCACHED_SUCCESS)
+      return rc;
+
     request.message.header.request.keylen= htons((uint16_t)len);
     request.message.header.request.bodylen= htonl(len);
       
@@ -343,11 +348,6 @@ memcached_stat_st *memcached_stat(memcached_st *ptr, char *args, memcached_retur
   if (!stats)
   {
     *error= MEMCACHED_MEMORY_ALLOCATION_FAILURE;
-    if (ptr->call_free)
-      ptr->call_free(ptr, stats);
-    else
-      free(stats);
-
     return NULL;
   }
   memset(stats, 0, sizeof(memcached_stat_st)*(ptr->number_of_hosts));

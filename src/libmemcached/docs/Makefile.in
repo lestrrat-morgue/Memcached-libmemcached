@@ -40,7 +40,8 @@ am__aclocal_m4_deps = $(top_srcdir)/config/pod2man.m4 \
 	$(top_srcdir)/config/byteorder.m4 \
 	$(top_srcdir)/config/64bit.m4 \
 	$(top_srcdir)/config/protocol_binary.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/config/memcached.m4 \
+	$(top_srcdir)/config/setsockopt.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -75,8 +76,11 @@ DEBUG = @DEBUG@
 DEBUGFLAGS = @DEBUGFLAGS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
 DTRACEFLAGS = @DTRACEFLAGS@
+DTRACE_HEADER = @DTRACE_HEADER@
+DTRACE_OBJ = @DTRACE_OBJ@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -105,7 +109,9 @@ MEMCACHED_LIBRARY_NAME = @MEMCACHED_LIBRARY_NAME@
 MEMCACHED_LIBRARY_VERSION = @MEMCACHED_LIBRARY_VERSION@
 MEMCACHED_RELEASE = @MEMCACHED_RELEASE@
 MEMCACHED_VERSION = @MEMCACHED_VERSION@
+MEMC_BINARY = @MEMC_BINARY@
 MKDIR_P = @MKDIR_P@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -174,6 +180,7 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
+top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 INCLUDES = include
@@ -200,7 +207,10 @@ EXTRA_DIST = libmemcached.pod\
 	memcached_delete.pod\
 	memcached_set.pod\
 	memcached_version.pod\
-	memflush.pod
+	memflush.pod\
+	memcached_flush_buffers.pod\
+        memcached_analyze.pod\
+        memcached_generate_hash_value.pod
 
 man_MANS = libmemcached.3\
 	libmemcached_examples.3\
@@ -215,6 +225,7 @@ man_MANS = libmemcached.3\
 	memcached_add_by_key.3\
 	memcached_append.3\
 	memcached_append_by_key.3\
+	memcached_analyze.3\
 	memcached_behavior_get.3\
 	memcached_behavior_set.3\
 	memcached_callback_get.3\
@@ -257,7 +268,9 @@ man_MANS = libmemcached.3\
 	memcached_quit.3\
 	memcached_verbosity.3\
 	memcached_lib_version.3\
-	memcached_version.3
+	memcached_version.3\
+        memcached_flush_buffers.3\
+        memcached_generate_hash_value.3
 
 all: all-am
 
@@ -697,6 +710,15 @@ memcached_version.3: memcached_version.pod
 memcached_lib_version.3: memcached_version.pod
 	@POD2MAN@ -c "libmemcached" -r "" -s 3 memcached_version.pod  > memcached_lib_version.3
 
+memcached_flush_buffers.3: memcached_flush_buffers.pod
+	@POD2MAN@ -c "libmemcached" -r "" -s 3 memcached_flush_buffers.pod  > memcached_flush_buffers.3
+
+memcached_analyze.3: memcached_analyze.pod
+	@POD2MAN@ -c "libmemcached" -r "" -s 3 memcached_analyze.pod > memcached_analyze.3
+
+memcached_generate_hash_value.3: memcached_generate_hash_value.pod
+	@POD2MAN@ -c "libmemcached" -r "" -s 3 memcached_generate_hash_value.pod > memcached_generate_hash_value.3
+
 memcp.1: memcp.pod
 	@POD2MAN@ -c "libmemcached" -r "" -s 1 memcp.pod > memcp.1
 
@@ -743,6 +765,7 @@ test:
 	podchecker memcached_set.pod
 	podchecker memcached_version.pod
 	podchecker memflush.pod
+	podchecker memcached_flush_buffers.pod
 
 html:
 	pod2htmltree "/libmemcached" .

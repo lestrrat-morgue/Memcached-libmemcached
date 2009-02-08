@@ -44,7 +44,8 @@ am__aclocal_m4_deps = $(top_srcdir)/config/pod2man.m4 \
 	$(top_srcdir)/config/byteorder.m4 \
 	$(top_srcdir)/config/64bit.m4 \
 	$(top_srcdir)/config/protocol_binary.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/config/memcached.m4 \
+	$(top_srcdir)/config/setsockopt.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -98,8 +99,11 @@ DEBUG = @DEBUG@
 DEBUGFLAGS = @DEBUGFLAGS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
 DTRACEFLAGS = @DTRACEFLAGS@
+DTRACE_HEADER = @DTRACE_HEADER@
+DTRACE_OBJ = @DTRACE_OBJ@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -128,7 +132,9 @@ MEMCACHED_LIBRARY_NAME = @MEMCACHED_LIBRARY_NAME@
 MEMCACHED_LIBRARY_VERSION = @MEMCACHED_LIBRARY_VERSION@
 MEMCACHED_RELEASE = @MEMCACHED_RELEASE@
 MEMCACHED_VERSION = @MEMCACHED_VERSION@
+MEMC_BINARY = @MEMC_BINARY@
 MKDIR_P = @MKDIR_P@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -197,6 +203,7 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
+top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 INCLUDES = 

@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 struct memcached_server_st {
-  memcached_allocated is_allocated;
+  bool is_allocated;
   char hostname[MEMCACHED_MAX_HOST_LENGTH];
   unsigned int port;
   int fd;
@@ -26,7 +26,7 @@ struct memcached_server_st {
   size_t read_data_length;
   size_t read_buffer_length;
   char *read_ptr;
-  memcached_allocated sockaddr_inited;
+  bool sockaddr_inited;
   struct addrinfo *address_info;
   memcached_connection type;
   uint8_t major_version;
@@ -57,8 +57,15 @@ memcached_server_st *memcached_server_by_key(memcached_st *ptr,  const char *key
 
 /* These should not currently be used by end users */
 memcached_server_st *memcached_server_create(memcached_st *memc, memcached_server_st *ptr);
+
+memcached_server_st *memcached_server_create_with(memcached_st *memc, memcached_server_st *host, 
+                                                  const char *hostname, unsigned int port, 
+                                                  uint32_t weight, memcached_connection type);
+
 void memcached_server_free(memcached_server_st *ptr);
 memcached_server_st *memcached_server_clone(memcached_server_st *clone, memcached_server_st *ptr);
+memcached_analysis_st *memcached_analyze(memcached_st *memc, memcached_stat_st *stat,
+                                         memcached_return *error);
 
 
 #ifdef __cplusplus
