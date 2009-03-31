@@ -698,33 +698,47 @@ memcached_lib_version()
 
 void
 memcached_version(Memcached__libmemcached ptr)
+    PREINIT:
+        memcached_stat_st *stat;
+        memcached_return  rc;
+        lmc_state_st* lmc_state;
+        int i;
+        size_t server_count;
     PPCODE:
-        /* memcached_version updates ptr->hosts[x].*_version for each
-         * associated memcached server that responds to the request.
-         */
-        /* XXX assumes first entry in list of hosts responded
-         * XXX should scan to find first non-all-zero
-         * and that any other memcached servers have the same version
-         */
-        memcached_server_st *host = &ptr->hosts[0];
-        if (memcached_version(ptr) != MEMCACHED_SUCCESS)
-            XSRETURN_EMPTY;
-        if (GIMME_V == G_ARRAY) {
-            mXPUSHi(host->major_version);
-            mXPUSHi(host->minor_version);
-            mXPUSHi(host->micro_version);
-            XSRETURN(3);
+        server_count = memcached_server_count(ptr);
+        lmc_state = LMC_STATE_FROM_PTR(ptr);
+        stat = memcached_stat(ptr, NULL, &rc);
+        if (!stat || !LMC_RETURN_OK(rc)) {
+            if (lmc_state->trace_level >= 2)
+                warn("memcached_stat returned stat %p rc %d\n", stat, rc);
+            LMC_RECORD_RETURN_ERR(ptr, rc);
+            XSRETURN_NO;
         }
-        else {
-            SV *version_sv = sv_newmortal();
-            sv_setpvf(version_sv, "%d.%d.%d",
-                host->major_version,
-                host->minor_version,
-                host->micro_version
-            );
-            XPUSHs(version_sv);
-            XSRETURN(1);
+
+        for (i = 0; i < server_count; i++) {
+            char **keys;
+            char *val;
+
+            keys = memcached_stat_get_keys(ptr, &stat[i], &rc);
+            while (keys && *keys) {
+                SV *version_sv;
+                val = memcached_stat_get_value(ptr, stat, *keys, &rc);
+                if (! val) {
+                    keys++;
+                    continue;
+                }
+
+                if ( strNE(*keys, "version") ) {
+                    keys++;
+                    continue;
+                }
+                version_sv = sv_newmortal();
+                sv_setpvf(version_sv, "%s", val);
+                XPUSHs(version_sv);
+                keys++;
+            }
         }
+        XSRETURN(1);
 
 
 =head2 Memcached::libmemcached Methods
@@ -849,12 +863,15 @@ walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
         lmc_state_st *lmc_state;
         memcached_return rc;
         memcached_stat_st *stat;
+        size_t i;
+        memcached_server_st *servers;
+        size_t server_count;
+        SV *stats_args_sv;
     CODE:
         lmc_state = LMC_STATE_FROM_PTR(ptr);
-        size_t i;
-        memcached_server_st *servers = memcached_server_list(ptr);
-        size_t server_count          = memcached_server_count(ptr);
-        SV *stats_args_sv = sv_2mortal(newSVpv(stats_args, 0));
+        servers = memcached_server_list(ptr);
+        server_count          = memcached_server_count(ptr);
+        stats_args_sv = sv_2mortal(newSVpv(stats_args, 0));
 
         stat = memcached_stat(ptr, stats_args, &RETVAL);
         if (!stat || !LMC_RETURN_OK(RETVAL)) {
