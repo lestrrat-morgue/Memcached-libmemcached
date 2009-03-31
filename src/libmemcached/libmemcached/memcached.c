@@ -81,22 +81,11 @@ memcached_st *memcached_clone(memcached_st *clone, memcached_st *source)
   {
     return NULL;
   }
-  
+
   new_clone= memcached_create(clone);
-  
+
   if (new_clone == NULL)
     return NULL;
-
-  if (source->hosts)
-    rc= memcached_server_push(new_clone, source->hosts);
-
-  if (rc != MEMCACHED_SUCCESS)
-  {
-    memcached_free(new_clone);
-
-    return NULL;
-  }
-
 
   new_clone->flags= source->flags;
   new_clone->send_size= source->send_size;
@@ -119,6 +108,20 @@ memcached_st *memcached_clone(memcached_st *clone, memcached_st *source)
   new_clone->call_realloc= source->call_realloc;
   new_clone->get_key_failure= source->get_key_failure;
   new_clone->delete_trigger= source->delete_trigger;
+  new_clone->server_failure_limit= source->server_failure_limit;
+  new_clone->io_msg_watermark= source->io_msg_watermark;
+  new_clone->io_bytes_watermark= source->io_bytes_watermark;
+
+  if (source->hosts)
+    rc= memcached_server_push(new_clone, source->hosts);
+
+  if (rc != MEMCACHED_SUCCESS)
+  {
+    memcached_free(new_clone);
+
+    return NULL;
+  }
+
 
   if (source->prefix_key[0] != 0)
   {

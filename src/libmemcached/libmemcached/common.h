@@ -76,7 +76,8 @@ typedef enum {
   MEM_KETAMA_WEIGHTED= (1 << 11),
   MEM_BINARY_PROTOCOL= (1 << 12),
   MEM_HASH_WITH_PREFIX_KEY= (1 << 13),
-  MEM_NOREPLY= (1 << 14)
+  MEM_NOREPLY= (1 << 14),
+  MEM_USE_UDP= (1 << 15)
 } memcached_flags;
 
 /* Hashing algo */
@@ -106,16 +107,18 @@ memcached_return value_fetch(memcached_server_st *ptr,
                              memcached_result_st *result);
 void server_list_free(memcached_st *ptr, memcached_server_st *servers);
 
-memcached_return memcachd_key_test(char **keys, size_t *key_length,
-                                   unsigned int number_of_keys);
+memcached_return memcached_key_test(char **keys, size_t *key_length,
+                                    unsigned int number_of_keys);
 
 memcached_return run_distribution(memcached_st *ptr);
 
 uint32_t generate_hash(memcached_st *ptr, const char *key, size_t key_length);
 memcached_return memcached_server_remove(memcached_server_st *st_ptr);
 
+#ifndef HAVE_HTONLL
 extern uint64_t ntohll(uint64_t);
 extern uint64_t htonll(uint64_t);
+#endif
 
 memcached_return memcached_purge(memcached_server_st *ptr);
 

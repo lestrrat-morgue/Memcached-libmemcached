@@ -27,6 +27,12 @@ char *memcached_get_by_key(memcached_st *ptr,
   uint32_t dummy_flags;
   memcached_return dummy_error;
 
+  if (ptr->flags & MEM_USE_UDP)
+  {
+    *error= MEMCACHED_NOT_SUPPORTED;
+    return NULL;
+  }
+
   /* Request the key */
   *error= memcached_mget_by_key(ptr, 
                                 master_key, 
@@ -120,6 +126,9 @@ memcached_return memcached_mget_by_key(memcached_st *ptr,
   uint8_t get_command_length= 4;
   unsigned int master_server_key= 0;
 
+   if (ptr->flags & MEM_USE_UDP)
+    return MEMCACHED_NOT_SUPPORTED;
+
   LIBMEMCACHED_MEMCACHED_MGET_START();
   ptr->cursor_server= 0;
 
@@ -129,7 +138,7 @@ memcached_return memcached_mget_by_key(memcached_st *ptr,
   if (ptr->number_of_hosts == 0)
     return MEMCACHED_NO_SERVERS;
 
-  if ((ptr->flags & MEM_VERIFY_KEY) && (memcachd_key_test(keys, key_length, number_of_keys) == MEMCACHED_BAD_KEY_PROVIDED))
+  if ((ptr->flags & MEM_VERIFY_KEY) && (memcached_key_test(keys, key_length, number_of_keys) == MEMCACHED_BAD_KEY_PROVIDED))
     return MEMCACHED_BAD_KEY_PROVIDED;
 
   if (ptr->flags & MEM_SUPPORT_CAS)
@@ -140,7 +149,7 @@ memcached_return memcached_mget_by_key(memcached_st *ptr,
 
   if (master_key && master_key_length)
   {
-    if ((ptr->flags & MEM_VERIFY_KEY) && (memcachd_key_test((char **)&master_key, &master_key_length, 1) == MEMCACHED_BAD_KEY_PROVIDED))
+    if ((ptr->flags & MEM_VERIFY_KEY) && (memcached_key_test((char **)&master_key, &master_key_length, 1) == MEMCACHED_BAD_KEY_PROVIDED))
       return MEMCACHED_BAD_KEY_PROVIDED;
     master_server_key= memcached_generate_hash(ptr, master_key, master_key_length);
   }
@@ -284,7 +293,8 @@ static memcached_return binary_mget_by_key(memcached_st *ptr,
     memcached_return vk;
     vk= memcached_validate_key_length(key_length[x],
                                       ptr->flags & MEM_BINARY_PROTOCOL);
-    unlikely (vk != MEMCACHED_SUCCESS) {
+    unlikely (vk != MEMCACHED_SUCCESS)
+    {
       if (x > 0)
         memcached_io_reset(&ptr->hosts[server_key]);
       return vk;

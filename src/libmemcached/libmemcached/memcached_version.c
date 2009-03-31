@@ -10,6 +10,9 @@ static inline memcached_return memcached_version_textual(memcached_st *ptr);
 
 memcached_return memcached_version(memcached_st *ptr)
 {
+   if (ptr->flags & MEM_USE_UDP)
+    return MEMCACHED_NOT_SUPPORTED;
+
    if (ptr->flags & MEM_BINARY_PROTOCOL)
      return memcached_version_binary(ptr);
    else
@@ -41,7 +44,10 @@ static inline memcached_return memcached_version_textual(memcached_st *ptr)
 
     rrc= memcached_response(&ptr->hosts[x], buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, NULL);
     if (rrc != MEMCACHED_SUCCESS)
+    {
       rc= MEMCACHED_SOME_ERRORS;
+      continue;
+    }
 
     /* Find the space, and then move one past it to copy version */
     response_ptr= index(buffer, ' ');
@@ -94,6 +100,7 @@ static inline memcached_return memcached_version_binary(memcached_st *ptr)
       {
         memcached_io_reset(&ptr->hosts[x]);
         rc= MEMCACHED_SOME_ERRORS;
+        continue;
       }
 
       ptr->hosts[x].major_version= (uint8_t)strtol(buffer, &p, 10);

@@ -17,6 +17,8 @@
 
 /* Prototypes */
 static void options_parse(int argc, char *argv[]);
+static void run_analyzer(memcached_st *memc, memcached_stat_st *stat,
+                         memcached_server_st *server_list);
 static void print_server_listing(memcached_st *memc, memcached_stat_st *stat,
                                  memcached_server_st *server_list);
 static void print_analysis_report(memcached_st *memc,
@@ -27,6 +29,7 @@ static int opt_verbose= 0;
 static int opt_displayflag= 0;
 static int opt_analyze= 0;
 static char *opt_servers= NULL;
+static char *analyze_mode= NULL;
 
 static struct option long_options[]=
 {
@@ -36,7 +39,7 @@ static struct option long_options[]=
   {"debug", no_argument, &opt_verbose, OPT_DEBUG},
   {"servers", required_argument, NULL, OPT_SERVERS},
   {"flag", no_argument, &opt_displayflag, OPT_FLAG},
-  {"analyze", no_argument, NULL, OPT_ANALYZE},
+  {"analyze", optional_argument, NULL, OPT_ANALYZE},
   {0, 0, 0, 0},
 };
 
@@ -47,7 +50,6 @@ int main(int argc, char *argv[])
   memcached_stat_st *stat;
   memcached_server_st *servers;
   memcached_server_st *server_list;
-  memcached_analysis_st *report;
 
   options_parse(argc, argv);
 
@@ -83,7 +85,26 @@ int main(int argc, char *argv[])
   server_list= memcached_server_list(memc);
 
   if (opt_analyze)
+    run_analyzer(memc, stat, server_list);
+  else
+    print_server_listing(memc, stat, server_list);
+
+  free(stat);
+  free(opt_servers);
+
+  memcached_free(memc);
+
+  return 0;
+}
+
+static void run_analyzer(memcached_st *memc, memcached_stat_st *stat,
+                         memcached_server_st *server_list)
+{
+  memcached_return rc;
+
+  if (analyze_mode == NULL)
   {
+    memcached_analysis_st *report;
     report= memcached_analyze(memc, stat, &rc);
     if (rc != MEMCACHED_SUCCESS || report == NULL)
     {
@@ -94,15 +115,99 @@ int main(int argc, char *argv[])
     print_analysis_report(memc, report, server_list);
     free(report);
   }
+  else if (strcmp(analyze_mode, "latency") == 0)
+  {
+    memcached_st **servers;
+    uint32_t x, y, flags, server_count= memcached_server_count(memc);
+    uint32_t num_of_tests= 32;
+    const char *test_key= "libmemcached_test_key";
+
+    servers= malloc(sizeof(memcached_st*) * server_count);
+    if (!servers)
+    {
+      fprintf(stderr, "Failed to allocate memory\n");
+      return;
+    }
+
+    for (x= 0; x < server_count; x++)
+    {
+      if((servers[x]= memcached_create(NULL)) == NULL)
+      {
+        fprintf(stderr, "Failed to memcached_create()\n");
+        x--;
+        for (; x >= 0; x--)
+          memcached_free(servers[x]);
+        free(servers);
+        return;
+      }
+      memcached_server_add(servers[x],
+                           memcached_server_name(memc, server_list[x]),
+                           memcached_server_port(memc, server_list[x]));
+    }
+
+    printf("Network Latency Test:\n\n");
+    struct timeval start_time, end_time;
+    long elapsed_time, slowest_time= 0, slowest_server= 0;
+
+    for (x= 0; x < server_count; x++)
+    {
+      gettimeofday(&start_time, NULL);
+      for (y= 0; y < num_of_tests; y++)
+      {
+        size_t vlen;
+        char *val= memcached_get(servers[x], test_key, strlen(test_key),
+                                 &vlen, &flags, &rc);
+        if (rc != MEMCACHED_NOTFOUND && rc != MEMCACHED_SUCCESS)
+          break;
+        free(val);
+      }
+      gettimeofday(&end_time, NULL);
+
+      elapsed_time= timedif(end_time, start_time);
+      elapsed_time /= num_of_tests;
+
+      if (elapsed_time > slowest_time)
+      {
+        slowest_server= x;
+        slowest_time= elapsed_time;
+      }
+
+      if (rc != MEMCACHED_NOTFOUND && rc != MEMCACHED_SUCCESS)
+      {
+        printf("\t %s (%d)  =>  failed to reach the server\n",
+               memcached_server_name(memc, server_list[x]),
+               memcached_server_port(memc, server_list[x]));
+      }
+      else
+      {
+        printf("\t %s (%d)  =>  %ld.%ld seconds\n",
+               memcached_server_name(memc, server_list[x]),
+               memcached_server_port(memc, server_list[x]),
+               elapsed_time / 1000, elapsed_time % 1000);
+      }
+    }
+
+    if (server_count > 1 && slowest_time > 0)
+    {
+      printf("---\n");
+      printf("Slowest Server: %s (%d) => %ld.%ld seconds\n",
+             memcached_server_name(memc, server_list[slowest_server]),
+             memcached_server_port(memc, server_list[slowest_server]),
+             slowest_time / 1000, slowest_time % 1000);
+    }
+    printf("\n");
+
+    for (x= 0; x < server_count; x++)
+      memcached_free(servers[x]);
+
+    free(servers);
+    free(analyze_mode);
+  }
   else
-    print_server_listing(memc, stat, server_list);
-
-  free(stat);
-  free(opt_servers);
-
-  memcached_free(memc);
-
-  return 0;
+  {
+    fprintf(stderr, "Invalid Analyzer Option provided\n");
+    free(analyze_mode);
+  }
 }
 
 static void print_server_listing(memcached_st *memc, memcached_stat_st *stat,
@@ -154,14 +259,14 @@ static void print_analysis_report(memcached_st *memc,
   }
 
   printf("\n");
-  printf("\tNode with most memory consumption  : %s:%u (%u bytes)\n",
+  printf("\tNode with most memory consumption  : %s:%u (%llu bytes)\n",
          memcached_server_name(memc, server_list[report->most_consumed_server]),
          memcached_server_port(memc, server_list[report->most_consumed_server]),
-         report->most_used_bytes);
-  printf("\tNode with least free space         : %s:%u (%u bytes remaining)\n",
+         (unsigned long long)report->most_used_bytes);
+  printf("\tNode with least free space         : %s:%u (%llu bytes remaining)\n",
          memcached_server_name(memc, server_list[report->least_free_server]),
          memcached_server_port(memc, server_list[report->least_free_server]),
-         report->least_remaining_bytes);
+         (unsigned long long)report->least_remaining_bytes);
   printf("\tNode with longest uptime           : %s:%u (%us)\n",
          memcached_server_name(memc, server_list[report->oldest_server]),
          memcached_server_port(memc, server_list[report->oldest_server]),
@@ -205,6 +310,7 @@ static void options_parse(int argc, char *argv[])
       break;
     case OPT_ANALYZE: /* --analyze or -a */
       opt_analyze= OPT_ANALYZE;
+      analyze_mode= (optarg) ? strdup(optarg) : NULL;
       break;
     case '?':
       /* getopt_long already printed an error message. */

@@ -77,7 +77,7 @@ static inline memcached_return memcached_send(memcached_st *ptr,
   unlikely (ptr->number_of_hosts == 0)
     return MEMCACHED_NO_SERVERS;
 
-  if ((ptr->flags & MEM_VERIFY_KEY) && (memcachd_key_test((char **)&key, &key_length, 1) == MEMCACHED_BAD_KEY_PROVIDED))
+  if ((ptr->flags & MEM_VERIFY_KEY) && (memcached_key_test((char **)&key, &key_length, 1) == MEMCACHED_BAD_KEY_PROVIDED))
     return MEMCACHED_BAD_KEY_PROVIDED;
 
   server_key= memcached_generate_hash(ptr, master_key, master_key_length);
@@ -104,6 +104,15 @@ static inline memcached_return memcached_send(memcached_st *ptr,
                            (int)key_length, key, flags, 
                            (unsigned long long)expiration, value_length,
                            (ptr->flags & MEM_NOREPLY) ? " noreply" : "");
+
+  if (ptr->flags & MEM_USE_UDP && ptr->flags & MEM_BUFFER_REQUESTS)
+  {
+    size_t cmd_size= write_length + value_length + 2;
+    if (cmd_size > MAX_UDP_DATAGRAM_LENGTH - UDP_DATAGRAM_HEADER_LENGTH)
+      return MEMCACHED_WRITE_FAILURE;
+    if (cmd_size + ptr->hosts[server_key].write_buffer_offset > MAX_UDP_DATAGRAM_LENGTH)
+      memcached_io_write(&ptr->hosts[server_key], NULL, 0, 1);
+  }
 
   if (write_length >= MEMCACHED_DEFAULT_COMMAND_SIZE)
   {
@@ -135,10 +144,7 @@ static inline memcached_return memcached_send(memcached_st *ptr,
   }
 
   if (ptr->flags & MEM_NOREPLY)
-  {
-    memcached_server_response_decrement(&ptr->hosts[server_key]);
     return (to_write == 0) ? MEMCACHED_BUFFERED : MEMCACHED_SUCCESS;
-  }
 
   if (to_write == 0)
     return MEMCACHED_BUFFERED;
@@ -333,7 +339,8 @@ memcached_return memcached_cas_by_key(memcached_st *ptr,
   return rc;
 }
 
-static inline uint8_t get_com_code(memcached_storage_action verb, bool noreply) {
+static inline uint8_t get_com_code(memcached_storage_action verb, bool noreply)
+{
    uint8_t ret;
 
   if (noreply)
@@ -395,7 +402,7 @@ static memcached_return memcached_send_binary(memcached_server_st* server,
   char flush;
   protocol_binary_request_set request= {.bytes= {0}};
   size_t send_length= sizeof(request.bytes);
-  bool noreply = server->root->flags & MEM_NOREPLY;
+  bool noreply= server->root->flags & MEM_NOREPLY;
 
   request.message.header.request.magic= PROTOCOL_BINARY_REQ;
   request.message.header.request.opcode= get_com_code(verb, noreply);
@@ -418,6 +425,15 @@ static memcached_return memcached_send_binary(memcached_server_st* server,
   
   flush= ((server->root->flags & MEM_BUFFER_REQUESTS) && verb == SET_OP) ? 0 : 1;
 
+  if ((server->root->flags & MEM_USE_UDP) && !flush)
+  {
+    size_t cmd_size= send_length + key_length + value_length;
+    if (cmd_size > MAX_UDP_DATAGRAM_LENGTH - UDP_DATAGRAM_HEADER_LENGTH)
+      return MEMCACHED_WRITE_FAILURE;
+    if (cmd_size + server->write_buffer_offset > MAX_UDP_DATAGRAM_LENGTH)
+      memcached_io_write(server,NULL,0, 1);
+  }
+  
   /* write the header */
   if ((memcached_do(server, (const char*)request.bytes, send_length, 0) != MEMCACHED_SUCCESS) ||
       (memcached_io_write(server, key, key_length, 0) == -1) ||
@@ -427,9 +443,6 @@ static memcached_return memcached_send_binary(memcached_server_st* server,
     return MEMCACHED_WRITE_FAILURE;
   }
   
-  if (noreply)
-    memcached_server_response_decrement(server);
-
   if (flush == 0)
     return MEMCACHED_BUFFERED;
 

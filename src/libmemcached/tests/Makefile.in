@@ -614,6 +614,10 @@ clients:
 
 valgrind:
 	libtool --mode=execute valgrind --leak-check=yes --show-reachable=yes  testapp
+
+test-no-outputdiff: testapp
+	./testapp > /dev/null
+	@echo "Test completed"
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

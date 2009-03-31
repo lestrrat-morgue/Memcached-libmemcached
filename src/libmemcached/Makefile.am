@@ -3,13 +3,16 @@ SUBDIRS = docs libmemcached tests support clients
 EXTRA_dist = README.FIRST
 
 test: all
-	cd tests; make test; cd ..
+	@(cd tests; ${MAKE} test)
 
 test-extended: all
-	cd tests; make test-extended; cd ..
+	@(cd tests; ${MAKE} test-extended)
 
 valgrind:
-	cd tests; make valgrind; cd ..
+	@(cd tests; ${MAKE} valgrind)
+
+test-no-outputdiff:
+	@(cd tests; ${MAKE} test-no-outputdiff)
 
 rpm: all dist
 	cp libmemcached-$(VERSION).tar.gz /home/brian/rpm/SOURCES/

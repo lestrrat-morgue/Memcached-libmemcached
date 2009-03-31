@@ -3,6 +3,9 @@
 /* Enable big endian byteorder */
 #undef BYTEORDER_BIG_ENDIAN
 
+/* Enable little endian byteorder */
+#undef BYTEORDER_LITTLE_ENDIAN
+
 /* Enables DEBUG Support */
 #undef HAVE_DEBUG
 
@@ -11,6 +14,9 @@
 
 /* Enables DTRACE Support */
 #undef HAVE_DTRACE
+
+/* Have ntohll */
+#undef HAVE_HTONLL
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H

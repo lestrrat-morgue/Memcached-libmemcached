@@ -34,6 +34,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
+@BUILD_BYTEORDER_TRUE@am__append_1 = byteorder.c
 subdir = libmemcached
 DIST_COMMON = $(noinst_HEADERS) $(pkginclude_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
@@ -60,18 +61,30 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
+am__libmemcached_la_SOURCES_DIST = crc.c hsieh_hash.c memcached.c \
+	memcached_auto.c memcached_analyze.c memcached_behavior.c \
+	memcached_callback.c memcached_connect.c memcached_delete.c \
+	memcached_do.c memcached_fetch.c memcached_flush.c \
+	memcached_get.c memcached_hash.c memcached_hosts.c \
+	memcached_io.c memcached_purge.c memcached_flush_buffers.c \
+	md5.c memcached_key.c memcached_quit.c memcached_parse.c \
+	memcached_response.c memcached_result.c memcached_server.c \
+	memcached_storage.c memcached_string.c memcached_stats.c \
+	memcached_strerror.c memcached_verbosity.c memcached_version.c \
+	murmur_hash.c jenkins_hash.c byteorder.c
+@BUILD_BYTEORDER_TRUE@am__objects_1 = byteorder.lo
 am_libmemcached_la_OBJECTS = crc.lo hsieh_hash.lo memcached.lo \
 	memcached_auto.lo memcached_analyze.lo memcached_behavior.lo \
 	memcached_callback.lo memcached_connect.lo memcached_delete.lo \
-	memcached_do.lo memcached_fetch.lo memcached_fetch_execute.lo \
-	memcached_flush.lo memcached_get.lo memcached_hash.lo \
-	memcached_hosts.lo memcached_io.lo memcached_purge.lo \
-	memcached_flush_buffers.lo md5.lo memcached_key.lo \
-	memcached_quit.lo memcached_parse.lo memcached_response.lo \
-	memcached_result.lo memcached_server.lo memcached_storage.lo \
-	memcached_string.lo memcached_stats.lo memcached_strerror.lo \
-	memcached_verbosity.lo memcached_version.lo murmur_hash.lo \
-	jenkins_hash.lo byteorder.lo
+	memcached_do.lo memcached_fetch.lo memcached_flush.lo \
+	memcached_get.lo memcached_hash.lo memcached_hosts.lo \
+	memcached_io.lo memcached_purge.lo memcached_flush_buffers.lo \
+	md5.lo memcached_key.lo memcached_quit.lo memcached_parse.lo \
+	memcached_response.lo memcached_result.lo memcached_server.lo \
+	memcached_storage.lo memcached_string.lo memcached_stats.lo \
+	memcached_strerror.lo memcached_verbosity.lo \
+	memcached_version.lo murmur_hash.lo jenkins_hash.lo \
+	$(am__objects_1)
 libmemcached_la_OBJECTS = $(am_libmemcached_la_OBJECTS)
 libmemcached_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -89,7 +102,7 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libmemcached_la_SOURCES)
-DIST_SOURCES = $(libmemcached_la_SOURCES)
+DIST_SOURCES = $(am__libmemcached_la_SOURCES_DIST)
 pkgincludeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(noinst_HEADERS) $(pkginclude_HEADERS)
 ETAGS = etags
@@ -245,42 +258,18 @@ pkginclude_HEADERS = memcached.h \
 		    memcached_watchpoint.h
 
 lib_LTLIBRARIES = libmemcached.la
-libmemcached_la_SOURCES = crc.c \
-			  hsieh_hash.c \
-			  memcached.c \
-			  memcached_auto.c \
-			  memcached_analyze.c \
-			  memcached_behavior.c \
-			  memcached_callback.c \
-			  memcached_connect.c \
-			  memcached_delete.c \
-			  memcached_do.c \
-			  memcached_fetch.c \
-			  memcached_fetch_execute.c \
-			  memcached_flush.c \
-			  memcached_get.c \
-			  memcached_hash.c \
-			  memcached_hosts.c \
-			  memcached_io.c \
-			  memcached_purge.c \
-                          memcached_flush_buffers.c \
-			  md5.c \
-			  memcached_key.c \
-			  memcached_quit.c \
-			  memcached_parse.c \
-			  memcached_response.c \
-			  memcached_result.c \
-			  memcached_server.c \
-			  memcached_storage.c \
-			  memcached_string.c \
-			  memcached_stats.c \
-			  memcached_strerror.c \
-			  memcached_verbosity.c \
-			  memcached_version.c \
-			  murmur_hash.c \
-			  jenkins_hash.c \
-                          byteorder.c
-
+libmemcached_la_SOURCES = crc.c hsieh_hash.c memcached.c \
+	memcached_auto.c memcached_analyze.c memcached_behavior.c \
+	memcached_callback.c memcached_connect.c memcached_delete.c \
+	memcached_do.c memcached_fetch.c memcached_flush.c \
+	memcached_get.c memcached_hash.c memcached_hosts.c \
+	memcached_io.c memcached_purge.c memcached_flush_buffers.c \
+	md5.c memcached_key.c memcached_quit.c memcached_parse.c \
+	memcached_response.c memcached_result.c memcached_server.c \
+	memcached_storage.c memcached_string.c memcached_stats.c \
+	memcached_strerror.c memcached_verbosity.c memcached_version.c \
+	murmur_hash.c jenkins_hash.c $(am__append_1)
+AM_CFLAGS = -DMEMCACHED_INTERNAL
 libmemcached_la_DEPENDENCIES = @DTRACE_OBJ@
 libmemcached_la_LIBADD = @DTRACE_OBJ@
 libmemcached_la_LDFLAGS = -version-info $(MEMCACHED_LIBRARY_VERSION)
@@ -385,7 +374,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_delete.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_do.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_fetch.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_fetch_execute.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_flush.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_flush_buffers.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memcached_get.Plo@am__quote@

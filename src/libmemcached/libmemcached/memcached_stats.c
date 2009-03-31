@@ -136,7 +136,15 @@ static void set_data(memcached_stat_st *stat, char *key, char *value)
   {
     stat->threads= strtol(value, (char **)NULL, 10);
   }
-  else
+  else if (!(strcmp("delete_misses", key) == 0 ||/* New stats in the 1.3 beta */
+             strcmp("delete_hits", key) == 0 ||/* Just swallow them for now.. */
+             strcmp("incr_misses", key) == 0 ||
+             strcmp("incr_hits", key) == 0 ||
+             strcmp("decr_misses", key) == 0 ||
+             strcmp("decr_hits", key) == 0 ||
+             strcmp("cas_misses", key) == 0 ||
+             strcmp("cas_hits", key) == 0 ||
+             strcmp("cas_badval", key) == 0))
   {
     fprintf(stderr, "Unknown key %s\n", key);
   }
@@ -339,6 +347,12 @@ memcached_stat_st *memcached_stat(memcached_st *ptr, char *args, memcached_retur
   unsigned int x;
   memcached_return rc;
   memcached_stat_st *stats;
+
+  if (ptr->flags & MEM_USE_UDP)
+  {
+    *error= MEMCACHED_NOT_SUPPORTED;
+    return NULL;
+  }
 
   if (ptr->call_malloc)
     stats= (memcached_stat_st *)ptr->call_malloc(ptr, sizeof(memcached_stat_st)*(ptr->number_of_hosts));

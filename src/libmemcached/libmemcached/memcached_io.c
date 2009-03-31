@@ -13,6 +13,7 @@ typedef enum {
 } memc_read_or_write;
 
 static ssize_t io_flush(memcached_server_st *ptr, memcached_return *error);
+static void increment_udp_message_id(memcached_server_st *ptr);
 
 static memcached_return io_wait(memcached_server_st *ptr,
                                 memc_read_or_write read_or_write)
@@ -194,18 +195,30 @@ ssize_t memcached_io_write(memcached_server_st *ptr,
   {
     char *write_ptr;
     size_t should_write;
+    size_t buffer_end;
 
-    should_write= MEMCACHED_MAX_BUFFER - ptr->write_buffer_offset;
+    if (ptr->type == MEMCACHED_CONNECTION_UDP)
+    {
+      //UDP does not support partial writes
+      buffer_end= MAX_UDP_DATAGRAM_LENGTH;
+      should_write= length;
+      if (ptr->write_buffer_offset + should_write > buffer_end)
+        return -1;
+    }
+    else
+    {
+      buffer_end= MEMCACHED_MAX_BUFFER;
+      should_write= buffer_end - ptr->write_buffer_offset;
+      should_write= (should_write < length) ? should_write : length;
+    }
+
     write_ptr= ptr->write_buffer + ptr->write_buffer_offset;
-
-    should_write= (should_write < length) ? should_write : length;
-
     memcpy(write_ptr, buffer_ptr, should_write);
     ptr->write_buffer_offset+= should_write;
     buffer_ptr+= should_write;
     length-= should_write;
 
-    if (ptr->write_buffer_offset == MEMCACHED_MAX_BUFFER)
+    if (ptr->write_buffer_offset == buffer_end && ptr->type != MEMCACHED_CONNECTION_UDP)
     {
       memcached_return rc;
       ssize_t sent_length;
@@ -217,7 +230,7 @@ ssize_t memcached_io_write(memcached_server_st *ptr,
 
       /* If io_flush calls memcached_purge, sent_length may be 0 */
       if (sent_length != 0)
-        WATCHPOINT_ASSERT(sent_length == MEMCACHED_MAX_BUFFER);
+        WATCHPOINT_ASSERT(sent_length == buffer_end);
     }
   }
 
@@ -263,6 +276,54 @@ memcached_return memcached_io_close(memcached_server_st *ptr)
   return MEMCACHED_SUCCESS;
 }
 
+memcached_server_st *memcached_io_get_readable_server(memcached_st *memc)
+{
+#define MAX_SERVERS_TO_POLL 100
+  struct pollfd fds[MAX_SERVERS_TO_POLL];
+  int index= 0;
+
+  for (int x= 0; x< memc->number_of_hosts && index < MAX_SERVERS_TO_POLL; ++x)
+  {
+    if (memc->hosts[x].read_buffer_length > 0) /* I have data in the buffer */
+      return &memc->hosts[x];
+
+    if (memcached_server_response_count(&memc->hosts[x]) > 0)
+    {
+      fds[index].events = POLLIN;
+      fds[index].revents = 0;
+      fds[index].fd = memc->hosts[x].fd;
+      ++index;
+    }
+  }
+
+  if (index < 2)
+  {
+    /* We have 0 or 1 server with pending events.. */
+    for (int x= 0; x< memc->number_of_hosts; ++x)
+      if (memcached_server_response_count(&memc->hosts[x]) > 0)
+        return &memc->hosts[x];
+
+    return NULL;
+  }
+
+  int err= poll(fds, index, memc->poll_timeout);
+  switch (err) {
+  case -1:
+    memc->cached_errno = errno;
+    /* FALLTHROUGH */
+  case 0:
+    break;
+  default:
+    for (int x= 0; x < index; ++x)
+      if (fds[x].revents & POLLIN)
+        for (int y= 0; y < memc->number_of_hosts; ++y)
+          if (memc->hosts[y].fd == fds[x].fd)
+            return &memc->hosts[y];
+  }
+
+  return NULL;
+}
+
 static ssize_t io_flush(memcached_server_st *ptr,
                         memcached_return *error)
 {
@@ -288,7 +349,12 @@ static ssize_t io_flush(memcached_server_st *ptr,
 
   WATCHPOINT_ASSERT(ptr->fd != -1);
 
-  if (ptr->write_buffer_offset == 0)
+  // UDP Sanity check, make sure that we are not sending somthing too big
+  if (ptr->type == MEMCACHED_CONNECTION_UDP && write_length > MAX_UDP_DATAGRAM_LENGTH)
+    return -1;
+
+  if (ptr->write_buffer_offset == 0 || (ptr->type == MEMCACHED_CONNECTION_UDP
+          && ptr->write_buffer_offset == UDP_DATAGRAM_HEADER_LENGTH))
     return 0;
 
   /* Looking for memory overflows */
@@ -305,61 +371,38 @@ static ssize_t io_flush(memcached_server_st *ptr,
     WATCHPOINT_ASSERT(write_length > 0);
     sent_length= 0;
     if (ptr->type == MEMCACHED_CONNECTION_UDP)
-    {
-      struct addrinfo *ai;
+      increment_udp_message_id(ptr);
+    sent_length= write(ptr->fd, local_write_ptr, write_length);
 
-      ai= ptr->address_info;
-
-      /* Crappy test code */
-      char buffer[HUGE_STRING_LEN + 8];
-      memset(buffer, 0, HUGE_STRING_LEN + 8);
-      memcpy (buffer+8, local_write_ptr, write_length);
-      buffer[0]= 0;
-      buffer[1]= 0;
-      buffer[2]= 0;
-      buffer[3]= 0;
-      buffer[4]= 0;
-      buffer[5]= 1;
-      buffer[6]= 0;
-      buffer[7]= 0;
-      sent_length= sendto(ptr->fd, buffer, write_length + 8, 0, 
-                          (struct sockaddr *)ai->ai_addr, 
-                          ai->ai_addrlen);
-      if (sent_length == -1)
-      {
-        WATCHPOINT_ERRNO(errno);
-        WATCHPOINT_ASSERT(0);
-      }
-      sent_length-= 8; /* We remove the header */
-    }
-    else
+    if (sent_length == -1)
     {
-      WATCHPOINT_ASSERT(ptr->fd != -1);
-      if ((sent_length= write(ptr->fd, local_write_ptr, 
-                              write_length)) == -1)
+      ptr->cached_errno= errno;
+      switch (errno)
       {
-        switch (errno)
-        {
-        case ENOBUFS:
+      case ENOBUFS:
+        continue;
+      case EAGAIN:
+      {
+        memcached_return rc;
+        rc= io_wait(ptr, MEM_WRITE);
+
+        if (rc == MEMCACHED_SUCCESS || rc == MEMCACHED_TIMEOUT)
           continue;
-        case EAGAIN:
-          {
-            memcached_return rc;
-            rc= io_wait(ptr, MEM_WRITE);
 
-            if (rc == MEMCACHED_SUCCESS || rc == MEMCACHED_TIMEOUT) 
-              continue;
-
-            memcached_quit_server(ptr, 1);
-            return -1;
-          }
-        default:
-          memcached_quit_server(ptr, 1);
-          ptr->cached_errno= errno;
-          *error= MEMCACHED_ERRNO;
-          return -1;
-        }
+        memcached_quit_server(ptr, 1);
+        return -1;
       }
+      default:
+        memcached_quit_server(ptr, 1);
+        *error= MEMCACHED_ERRNO;
+        return -1;
+      }
+    }
+
+    if (ptr->type == MEMCACHED_CONNECTION_UDP && sent_length != write_length)
+    {
+      memcached_quit_server(ptr, 1);
+      return -1;
     }
 
     ptr->io_bytes_sent += sent_length;
@@ -372,7 +415,13 @@ static ssize_t io_flush(memcached_server_st *ptr,
   WATCHPOINT_ASSERT(write_length == 0);
   // Need to study this assert() WATCHPOINT_ASSERT(return_length ==
   // ptr->write_buffer_offset);
-  ptr->write_buffer_offset= 0;
+
+  // if we are a udp server, the begining of the buffer is reserverd for
+  // the upd frame header
+  if (ptr->type == MEMCACHED_CONNECTION_UDP)
+    ptr->write_buffer_offset= UDP_DATAGRAM_HEADER_LENGTH;
+  else
+    ptr->write_buffer_offset= 0;
 
   return return_length;
 }
@@ -451,6 +500,43 @@ memcached_return memcached_io_readline(memcached_server_st *ptr,
     if (total_nr == size)
       return MEMCACHED_PROTOCOL_ERROR;
   }
+
+  return MEMCACHED_SUCCESS;
+}
+
+/*
+ * The udp request id consists of two seperate sections
+ *   1) The thread id
+ *   2) The message number
+ * The thread id should only be set when the memcached_st struct is created
+ * and should not be changed.
+ *
+ * The message num is incremented for each new message we send, this function
+ * extracts the message number from message_id, increments it and then
+ * writes the new value back into the header
+ */
+static void increment_udp_message_id(memcached_server_st *ptr)
+{
+  struct udp_datagram_header_st *header= (struct udp_datagram_header_st *)ptr->write_buffer;
+  uint16_t cur_req= get_udp_datagram_request_id(header);
+  uint16_t msg_num= get_msg_num_from_request_id(cur_req);
+  uint16_t thread_id= get_thread_id_from_request_id(cur_req);
+  
+  if (((++msg_num) & UDP_REQUEST_ID_THREAD_MASK) != 0)
+    msg_num= 0;
+
+  header->request_id= htons(thread_id | msg_num);
+}
+
+memcached_return memcached_io_init_udp_header(memcached_server_st *ptr, uint16_t thread_id)
+{
+  if (thread_id > UDP_REQUEST_ID_MAX_THREAD_ID)
+    return MEMCACHED_FAILURE;
+
+  struct udp_datagram_header_st *header= (struct udp_datagram_header_st *)ptr->write_buffer;
+  header->request_id= htons(generate_udp_request_thread_id(thread_id));
+  header->num_datagrams= htons(1);
+  header->sequence_number= htons(0);
 
   return MEMCACHED_SUCCESS;
 }
