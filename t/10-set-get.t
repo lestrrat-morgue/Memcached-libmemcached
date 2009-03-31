@@ -36,7 +36,6 @@ my $k1= "$0-test-key-$t1"; # can't have spaces
 my $v1= "$0 test value $t1";
 
 # get (presumably non-existant) key
-print "memcached_get the not yet stored value\n";
 is scalar memcached_get($memc, $k1, $flags=0, $rc=0), undef,
     'should not exist yet and so should return undef';
 
