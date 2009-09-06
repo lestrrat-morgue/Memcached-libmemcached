@@ -172,15 +172,6 @@ sub run {
 }
 
 sub build_libmemcached {
-    my @dirs = qw(lib Memcached libmemcached);
-    my $dir = '';
-    foreach my $x (@dirs) {
-        $dir .= "$x/";
-        if (! -d $dir) {
-            mkdir $dir;
-        }
-    }
-
     sync_libmemcached_pod();
     extract_libmemcached_functions();
     extract_libmemcached_constants();
@@ -274,14 +265,20 @@ sub extract_libmemcached_constants {
                     $in_enum = 0;
                 }
                 elsif (m/^ \s* (MEMCACHED_\w+)/x) {
-                    push @const, $1;
+                    my $symbol = $1;
+                    if ( $symbol !~ /MEMCACHED_CALLBACK_(MALLOC|REALLOC|FREE)_FUNCTION/) {
+                        push @const, $symbol;
+                    }
                 }
             }
             elsif (m/^ \s* typedef \s+ enum /x) {
                 $in_enum = 1;
             }
             elsif (m/\# \s* define \s+ (MEMCACHED_\w+)/x) {
-                $libmemcached_const{$1} = "defines";
+                my $symbol = $1;
+                if ($symbol !~ /_H$/) {
+                    $libmemcached_const{$1} = "defines";
+                }
             }
         }
     }
