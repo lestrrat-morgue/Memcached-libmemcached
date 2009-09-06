@@ -401,10 +401,9 @@ version (version of the client library, not server).
 =head2 memcached_version
 
   $version = memcached_version($memc)
-  ($major, $minor, $micro) = memcached_version($memc)
+  ($version1, $version2, $version3) = memcached_version($memc)
 
-Returns the version of the first memcached server (in the list associated with
-$memc) to respond to the version request.
+Returns the version of all memcached servers to respond to the version request.
 
 In scalar context returns a simple version string, like "1.2.3".
 In list context returns the individual version component numbers.
