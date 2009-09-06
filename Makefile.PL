@@ -172,6 +172,15 @@ sub run {
 }
 
 sub build_libmemcached {
+    my @dirs = qw(lib Memcached libmemcached);
+    my $dir = '';
+    foreach my $x (@dirs) {
+        $dir .= "$x/";
+        if (! -d $dir) {
+            mkdir $dir;
+        }
+    }
+
     sync_libmemcached_pod();
     extract_libmemcached_functions();
     extract_libmemcached_constants();
