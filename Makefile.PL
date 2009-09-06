@@ -16,19 +16,19 @@ BEGIN {
     }
 }
 
-
+my $lmcd_src = "src/libmemcached";
 GetOptions(
     'g!'    => \my $opt_g,      # enable debugging
     'pg!'   => \my $opt_pg,     # enable profiling
     'cov!'  => \my $opt_cov,    # enable test coverage analysis
     'bin!'  => \my $opt_bin,    # install bintools from libmemcached
+    'src=s' => \$lmcd_src,     # unpacked source code for libmemcached
 ) or exit 1;
 
-my $lmcd_src = "src/libmemcached";
 my $lmcd_inst = getcwd()."/src_inst";
 my $lmcd_built_lib = "$lmcd_inst/lib/libmemcached$Config{lib_ext}";
 my @lmcd_pod = sort <$lmcd_src/docs/memcached_*.pod>;
-my $is_developer = (-d ".svn");
+my $is_developer = (-d ".svn" || -d ".git");
 
 my ($lmcd_h) = eval { build_libmemcached() };
 if ($@) {
@@ -63,7 +63,7 @@ if ($opt_cov) {
 ### optionally install the command line utilities that come with
 ### libmemcached as well
 if( $opt_bin ) {
-    $opts{EXE_FILES} = [ map { s/\.c$//i; $_ } <src/libmemcached/clients/mem*.c> ]; 
+    $opts{EXE_FILES} = [ map { s/\.c$//i; $_ } <src/libmemcached/clients/mem*.c> ];
 }
 
 WriteMakefile(
@@ -179,7 +179,6 @@ sub build_libmemcached {
     return if -d "$lmcd_inst/lib"; # XXX assume it built ok. use 'make realclean' to rm
     mkdir $lmcd_inst, 0775 unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
-    #my $configure_args = '--with-pic'; #'--disable-shared';
     my $configure_args = '--disable-sasl --with-pic --disable-shared';
     $configure_args .= ' --enable-debug' if $opt_g;
     $configure_args .= ' CFLAGS=-pg LDFLAGS=-pg' if $opt_pg;
@@ -340,6 +339,6 @@ sub extract_libmemcached_constants {
     # close up
     print $const_pm_fh "=cut\n\n1;\n";
     close $const_pm_fh or die "Error closing $const_pm: $!";
-    run("svn add -q $const_pm") if $is_developer;
+#    run("svn add -q $const_pm") if $is_developer;
 }
 

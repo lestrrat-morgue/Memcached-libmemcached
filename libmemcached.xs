@@ -209,7 +209,7 @@ _cb_prep_store_into_sv_of_hv(memcached_st *ptr, memcached_result_st *result, voi
 }
 
 static unsigned int
-_cb_store_into_sv(memcached_st *ptr, memcached_result_st *result, void *context) 
+_cb_store_into_sv(memcached_st *ptr, memcached_result_st *result, void *context)
 {
     /* Store result value and flags into places specified by lmc_cb_context */
     /* This is the 'core' fetch callback. Increments result_count.             */
@@ -237,7 +237,7 @@ _cb_store_into_sv(memcached_st *ptr, memcached_result_st *result, void *context)
  */
 static unsigned int
 _cb_fire_perl_cb(lmc_cb_context_st *lmc_cb_context, SV *callback_sv, SV *key_sv, SV *value_sv, SV *flags_sv, SV *cas_sv)
-{       
+{
     int items;
     dSP;
 
@@ -639,7 +639,7 @@ memcached_fetch(Memcached__libmemcached ptr, \
         size_t key_length=0;
         size_t value_length=0;
         char key_buffer[MEMCACHED_MAX_KEY];
-    INIT: 
+    INIT:
         key = key_buffer;
     CODE:
         RETVAL = memcached_fetch(ptr, key, &key_length, &value_length, &flags, &error);
@@ -699,7 +699,7 @@ char *
 memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 
 const char *
-memcached_lib_version() 
+memcached_lib_version()
 
 void
 memcached_version(Memcached__libmemcached ptr)

@@ -110,7 +110,6 @@ T_VALUE:pre_call
         else {
             $var = ($type)SvPV($arg, $length_var);
         }
-        
 
 OUTPUT
 T_VALUE

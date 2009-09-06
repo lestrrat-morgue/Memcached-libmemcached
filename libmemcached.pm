@@ -560,7 +560,7 @@ Cache::Memcached compatible API with maximum efficiency.
 Note, however, that C<get_multi> does I<not> support the L<Cache::Memcached>
 feature where a key can be a reference to an array [ $master_key, $key ].
 Use L</memcached_mget_by_key> directly if you need that feature.
-  
+
 =head3 get
 
   $value = $memc->get( $key );

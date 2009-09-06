@@ -4217,9 +4217,9 @@ DPPP_(my_newCONSTSUB)(HV *stash, const char *name, SV *sv)
 #if   (PERL_BCDVERSION < 0x5003022)
 		start_subparse(),
 #elif (PERL_BCDVERSION == 0x5003022)
-     		start_subparse(0),
+		start_subparse(0),
 #else  /* 5.003_23  onwards */
-     		start_subparse(FALSE, 0),
+		start_subparse(FALSE, 0),
 #endif
 
 		newSVOP(OP_CONST, 0, newSVpv((char *) name, 0)),
