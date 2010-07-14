@@ -2,7 +2,7 @@ package Memcached::libmemcached::memcached_quit;
 
 =head1 NAME
 
-memcached_quit
+memcached_quit - Disconnect from all servers
 
 =head1 LIBRARY
 
@@ -35,7 +35,7 @@ Use memcached_strerror() to translate this value to a printable string.
 =head1 HOME
 
 To find out more information please check:
-L<http://tangent.org/552/libmemcached.html>
+L<https://launchpad.net/libmemcached>
 
 =head1 AUTHOR
 

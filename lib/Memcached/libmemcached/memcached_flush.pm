@@ -2,7 +2,7 @@ package Memcached::libmemcached::memcached_flush;
 
 =head1 NAME
 
-memcached_flush
+memcached_flush - wipe contents of memcached servers
 
 =head1 LIBRARY
 
@@ -12,7 +12,7 @@ C Client Library for memcached (libmemcached, -lmemcached)
 
   #include <memcached.h>
 
-  memcached_return
+  memcached_return_t
     memcached_flush (memcached_st *ptr,
                      time_t expiration);
 
@@ -27,14 +27,14 @@ added.
 
 =head1 RETURN
 
-A value of type C<memcached_return> is returned
+A value of type C<memcached_return_t> is returned
 On success that value will be C<MEMCACHED_SUCCESS>.
 Use memcached_strerror() to translate this value to a printable string.
 
 =head1 HOME
 
 To find out more information please check:
-L<http://tangent.org/552/libmemcached.html>
+L<https://launchpad.net/libmemcached>
 
 =head1 AUTHOR
 

@@ -2,7 +2,7 @@ package Memcached::libmemcached::memcached_create;
 
 =head1 NAME
 
-memcached_create, memcached_free
+memcached_create, memcached_free, memcached_clone, memcached_servers_reset- Create a memcached_st structure
 
 =head1 LIBRARY
 
@@ -16,7 +16,9 @@ C Client Library for memcached (libmemcached, -lmemcached)
 
   void memcached_free (memcached_st *ptr);
 
-  memcached_st *memcached_clone(memcached_st *clone, memcached_st *source);
+  memcached_st *memcached_clone (memcached_st *destination, memcached_st *source);
+
+  void memcached_servers_reset(memcached_st);
 
 =head1 DESCRIPTION
 
@@ -28,12 +30,19 @@ a NULL. If a NULL passed in then a structure is allocated for you.
 memcached_clone() is similar to memcached_create(3) but it copies the
 defaults and list of servers from the source C<memcached_st>. If you pass a null as
 the argument for the source to clone, it is the same as a call to memcached_create().
-If the clone argument is NULL a C<memcached_st> will be allocated for you. 
+If the destination argument is NULL a C<memcached_st> will be allocated for you.
+
+memcached_servers_reset() allows you to zero out the list of servers that
+the memcached_st has.
 
 To clean up memory associated with a C<memcached_st> structure you should pass
 it to memcached_free() when you are finished using it. memcached_free() is
 the only way to make sure all memory is deallocated when you finish using
 the structure.
+
+You may wish to avoid using memcached_create(3) or memcached_clone(3) with a
+stack based allocation. The most common issues related to ABI safety involve
+heap allocated structures.
 
 =head1 RETURN
 
@@ -46,7 +55,7 @@ memcached_clone() returns a pointer to the memcached_st that was created
 =head1 HOME
 
 To find out more information please check:
-L<http://tangent.org/552/libmemcached.html>
+L<https://launchpad.net/libmemcached>
 
 =head1 AUTHOR
 

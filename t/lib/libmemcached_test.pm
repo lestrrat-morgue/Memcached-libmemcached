@@ -19,6 +19,7 @@ use Memcached::libmemcached qw(
     memcached_create
     memcached_server_add
     memcached_get
+    memcached_set
     memcached_errstr
     memcached_version
 );
@@ -51,9 +52,9 @@ sub libmemcached_test_create {
         if not $rc;
 
     # XXX ideally this should be a much 'simpler/safer' command
-    memcached_get($memc, "foo");
+    memcached_set($memc, "foo", "hello memcached");
     plan skip_all => "Can't talk to any memcached servers"
-        if memcached_errstr($memc) !~ /SUCCESS|NOT FOUND/;
+        if memcached_errstr($memc) !~ /SERVER END|SUCCESS|NOT FOUND/;
 
     plan skip_all => "memcached server version less than $args->{min_version}"
         if $args->{min_version}

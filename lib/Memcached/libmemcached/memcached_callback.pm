@@ -2,7 +2,7 @@ package Memcached::libmemcached::memcached_callback;
 
 =head1 NAME
 
-memcached_callback_get memcached_callback_set
+memcached_callback_get, memcached_callback_set - Get and set a callback
 
 =head1 LIBRARY
 
@@ -12,15 +12,15 @@ C Client Library for memcached (libmemcached, -lmemcached)
 
   #include <memcached.h>
 
-  memcached_return 
+  memcached_return_t 
     memcached_callback_set (memcached_st *ptr, 
-                            memcached_callback flag, 
+                            memcached_callback_t flag, 
                             void *data);
 
   void *
     memcached_callback_get (memcached_st *ptr, 
-                            memcached_callback flag,
-                            memcached_return *error);
+                            memcached_callback_t flag,
+                            memcached_return_t *error);
 
 =head1 DESCRIPTION
 
@@ -52,10 +52,11 @@ point of its execution all connections have been closed.
 =item MEMCACHED_CALLBACK_PREFIX_KEY
 
 You can set a value which will be used to create a domain for your keys.
-The value specified here will be appended to each of your keys. The value can not
-be greater then MEMCACHED_PREFIX_KEY_MAX_SIZE and will reduce MEMCACHED_MAX_KEY by
+The value specified here will be prefixed to each of your keys. The value can not
+be greater then MEMCACHED_PREFIX_KEY_MAX_SIZE - 1 and will reduce MEMCACHED_MAX_KEY by
 the value of your key. The prefix key is only applied to the primary key,
-not the master key.
+not the master key. MEMCACHED_FAILURE will be returned if no key is set. In the case
+of a key which is too long MEMCACHED_BAD_KEY_PROVIDED will be returned.
 
 =item MEMCACHED_CALLBACK_USER_DATA
 
@@ -65,24 +66,15 @@ will copy the pointer to the clone.
 
 =item  MEMCACHED_CALLBACK_MALLOC_FUNCTION
 
-This alllows yout to pass in a customized version of malloc that will be used instead of the builtin malloc(3) call.
-The prototype for this is:
-
-void *(*memcached_malloc_function)(memcached_st *ptr, const size_t size);
+DEPRECATED: use memcached_set_memory_allocators instead.
 
 =item  MEMCACHED_CALLBACK_REALLOC_FUNCTION
 
-This alllows yout to pass in a customized version of realloc that will be used instead of the builtin realloc(3) call.
-The prototype for this is:
-
-void *(*memcached_realloc_function)(memcached_st *ptr, void *mem, const size_t size);
+DEPRECATED: use memcached_set_memory_allocators instead.
 
 =item  MEMCACHED_CALLBACK_FREE_FUNCTION
 
-This alllows yout to pass in a customized version of realloc that will be used instead of the builtin free(3) call.
-The prototype for this is:
-
-typedef void (*memcached_free_function)(memcached_st *ptr, void *mem);
+DEPRECATED: use memcached_set_memory_allocators instead.
 
 =item  MEMCACHED_CALLBACK_GET_FAILURE
 
@@ -94,7 +86,7 @@ MEMCACHED_SUCCESS or MEMCACHED_BUFFERED. Returning MEMCACHED_BUFFERED will
 cause the object to be buffered and not sent immediatly (if this is the default behavior based on your connection setup this will happen automatically).
 
 The prototype for this is:
-memcached_return (*memcached_trigger_key)(memcached_st *ptr, char *key, size_t key_length, memcached_result_st *result);
+memcached_return_t (*memcached_trigger_key)(memcached_st *ptr, char *key, size_t key_length, memcached_result_st *result);
 
 =item  MEMCACHED_CALLBACK_DELETE_TRIGGER
 
@@ -102,7 +94,7 @@ This function implements a trigger upon successful deletion of a key. The memcac
 in order to make use of it.
 
 The prototype for this is:
-typedef memcached_return (*memcached_trigger_delete_key)(memcached_st *ptr, char *key, size_t key_length);
+typedef memcached_return_t (*memcached_trigger_delete_key)(memcached_st *ptr, char *key, size_t key_length);
 
 
 =back
@@ -110,7 +102,7 @@ typedef memcached_return (*memcached_trigger_delete_key)(memcached_st *ptr, char
 =head1 RETURN
 
 memcached_callback_get() return the function or structure that was provided.
-Upon error, nothing is set, null is returned, and the memcached_return
+Upon error, nothing is set, null is returned, and the memcached_return_t
 argument is set to MEMCACHED_FAILURE.
 
 memcached_callback_set() returns MEMCACHED_SUCCESS upon successful setting,
@@ -119,7 +111,7 @@ otherwise MEMCACHED_FAILURE on error.
 =head1 HOME
 
 To find out more information please check:
-L<http://tangent.org/552/libmemcached.html>
+L<https://launchpad.net/libmemcached>
 
 =head1 AUTHOR
 

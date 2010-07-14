@@ -179,7 +179,8 @@ sub build_libmemcached {
     return if -d "$lmcd_inst/lib"; # XXX assume it built ok. use 'make realclean' to rm
     mkdir $lmcd_inst, 0775 unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
-    my $configure_args = '--with-pic'; #'--disable-shared';
+    #my $configure_args = '--with-pic'; #'--disable-shared';
+    my $configure_args = '--disable-sasl --with-pic --disable-shared';
     $configure_args .= ' --enable-debug' if $opt_g;
     $configure_args .= ' CFLAGS=-pg LDFLAGS=-pg' if $opt_pg;
     if ($is_developer) {    # XXX make a Makefile.PL argument/option
@@ -253,17 +254,20 @@ sub extract_libmemcached_constants {
     my $in_enum = 0;
     my @const;
 
-    my @headers = glob "$lmcd_src/libmemcached/memcached*.h";
+    my @headers = ("$lmcd_src/libmemcached/memcached.h", 
+                   "$lmcd_src/libmemcached/constants.h");
     for my $h (@headers) {
         open my $fh, "<$h" or die "Can't open $h: $!";
         while (<$fh>) {
             if ($in_enum) {
                 if (m/^ \s* } \s* (\w+)/x) { # end of enum
+                    print STDERR "CONST: $_, $1\n";
                     $libmemcached_const{$_} = $1 for @const;
                     @const = ();
                     $in_enum = 0;
                 }
                 elsif (m/^ \s* (MEMCACHED_\w+)/x) {
+                    print STDERR "CONST: $1\n";
                     push @const, $1;
                 }
             }

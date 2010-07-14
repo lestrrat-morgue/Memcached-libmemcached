@@ -8,6 +8,11 @@
 #include "ppport.h"
 
 #include <libmemcached/memcached.h>
+#include <libmemcached/constants.h>
+
+#define MEMCACHED_CALLBACK_MALLOC_FUNCTION 4
+#define MEMCACHED_CALLBACK_REALLOC_FUNCTION 5
+#define MEMCACHED_CALLBACK_FREE_FUNCTION 6
 
 /* mapping C types to perl classes - keep typemap file in sync */
 typedef memcached_st*        Memcached__libmemcached;
@@ -887,8 +892,8 @@ walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
             char *val;
 
             hostport_sv = sv_2mortal(newSVpvf("%s:%d",
-                memcached_server_name(ptr, servers[i]),
-                memcached_server_port(ptr, servers[i])
+                memcached_server_name(ptr),
+                memcached_server_port(ptr)
             ));
 
             keys = memcached_stat_get_keys(ptr, &stat[i], &rc);

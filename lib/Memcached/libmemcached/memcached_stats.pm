@@ -2,7 +2,7 @@ package Memcached::libmemcached::memcached_stats;
 
 =head1 NAME
 
-memcached_stat memcached_stat_servername memcached_stat_get_value memcached_stat_get_keys
+memcached_stat, memcached_stat_servername, memcached_stat_get_value, memcached_stat_get_keys - Get memcached statistics
 
 =head1 LIBRARY
 
@@ -14,21 +14,23 @@ C Client Library for memcached (libmemcached, -lmemcached)
 
   memcached_stat_st *memcached_stat (memcached_st *ptr,
                                      char *args,
-                                     memcached_return *error);
+                                     memcached_return_t *error);
 
-  memcached_return memcached_stat_servername (memcached_stat_st *stat,
-                                              char *args, 
-                                              char *hostname,
-                                              unsigned int port);
+  memcached_return_t memcached_stat_servername (memcached_stat_st *stat,
+                                                char *args, 
+                                                const char *hostname,
+                                                unsigned int port);
 
-  char *memcached_stat_get_value (memcached_st *ptr,
-                                  memcached_stat_st *stat, 
-                                  char *key,
-                                  memcached_return *error);
+  char *
+    memcached_stat_get_value (memcached_st *ptr,
+                              memcached_stat_st *stat, 
+                              const char *key,
+                              memcached_return_t *error);
 
-  char ** memcached_stat_get_keys (memcached_st *ptr,
-                                   memcached_stat_st *stat, 
-                                   memcached_return *error);
+  char ** 
+    memcached_stat_get_keys (memcached_st *ptr,
+                             memcached_stat_st *stat, 
+                             memcached_return_t *error);
 
 =head1 DESCRIPTION
 
@@ -40,7 +42,9 @@ While it is possible to access the structure directly it is not advisable.
 
 memcached_stat() fetches an array of C<memcached_stat_st> structures containing
 the state of all available memcached servers. The return value must be freed
-by the calling application.
+by the calling application. If called with the C<MEMCACHED_BEHAVIOR_USE_UDP>
+behavior set, a NULL value is returned and the error parameter is set to 
+C<MEMCACHED_NOT_SUPPORTED>.
 
 memcached_stat_servername() can be used standalone without a C<memcached_st> to
 obtain the state of a particular server.  "args" is used to define a
@@ -68,7 +72,7 @@ memory allocated for it.
 =head1 HOME
 
 To find out more information please check:
-L<http://tangent.org/552/libmemcached.html>
+L<https://launchpad.net/libmemcached>
 
 =head1 AUTHOR
 
