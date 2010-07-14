@@ -1,6 +1,6 @@
 =head1 NAME
 
-memcached_delete
+memcached_delete - Delete a key
 
 =head1 LIBRARY
 
@@ -10,12 +10,12 @@ C Client Library for memcached (libmemcached, -lmemcached)
 
   #include <memcached.h>
 
-  memcached_return
+  memcached_return_t
     memcached_delete (memcached_st *ptr,
                       const char *key, size_t key_length,
                       time_t expiration);
 
-  memcached_return
+  memcached_return_t
   memcached_delete_by_key (memcached_st *ptr,
                            const char *master_key, size_t master_key_length,
                            const char *key, size_t key_length,
@@ -23,14 +23,21 @@ C Client Library for memcached (libmemcached, -lmemcached)
 
 =head1 DESCRIPTION
 
-memcached_delete() is used to delete a particular key. An expiration value
-can be applied so that the key is deleted after that many seconds.
-memcached_delete_by_key() works the same, but it takes a master key to 
+memcached_delete() is used to delete a particular key. 
+memcached_delete_by_key() works the same, but it takes a master key to
 find the given value.
+
+Expiration works by placing the item into a delete queue, which means that
+it won't possible to retrieve it by the "get" command, but "add" and 
+"replace" command with this key will also fail (the "set" command will 
+succeed, however). After the time passes, the item is finally deleted from server memory.
+
+Please note the the Danga memcached server removed support for expiration in
+the 1.4 version.
 
 =head1 RETURN
 
-A value of type C<memcached_return> is returned
+A value of type C<memcached_return_t> is returned
 On success that value will be C<MEMCACHED_SUCCESS>.
 Use memcached_strerror() to translate this value to a printable string.
 
@@ -40,7 +47,7 @@ means that the message was queued for delivery.
 =head1 HOME
 
 To find out more information please check:
-L<http://tangent.org/552/libmemcached.html>
+L<https://launchpad.net/libmemcached>
 
 =head1 AUTHOR
 

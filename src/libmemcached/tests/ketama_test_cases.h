@@ -1,11 +1,20 @@
-typedef struct {
-    char *key;
+/*
+ * Copyright (C) 2006-2009 Brian Aker
+ * All rights reserved.
+ *
+ * Use and distribution licensed under the BSD license.  See
+ * the COPYING file in the parent directory for full text.
+ */
+
+#ifndef TESTS_KETAMA_TEST_CASES_H
+#define TESTS_KETAMA_TEST_CASES_H
+
+static struct {
+    const char *key;
     unsigned long hash1;
     unsigned long hash2;
-    char *server;
-} TestCase;
-
-static TestCase test_cases[99] = {
+    const char *server;
+} ketama_test_cases[99]= {
   { "SVa_]_V41)", 443691461UL, 445379617UL, "10.0.1.7" },
   { "*/Z;?V(.\\8", 1422915503UL, 1428303028UL, "10.0.1.1" },
   { "30C1*Z*S/_", 1473165754UL, 1480075959UL, "10.0.1.2" },
@@ -106,3 +115,7 @@ static TestCase test_cases[99] = {
   { "\\MQ_XNT7L-", 1259349383UL, 1259509450UL, "10.0.1.7" },
   { "VD6D0]ba_\\", 3842502950UL, 3842588691UL, "10.0.1.1" },
 };
+
+#include "ketama_test_cases_spy.h"
+
+#endif

@@ -1,9 +1,22 @@
+/* LibMemcached
+ * Copyright (C) 2006-2009 Brian Aker
+ * All rights reserved.
+ *
+ * Use and distribution licensed under the BSD license.  See
+ * the COPYING file in the parent directory for full text.
+ *
+ * Summary:
+ *
+ */
+
 /*
   Common include file for libmemached
 */
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef __LIBMEMCACHED_COMMON_H__
+#define __LIBMEMCACHED_COMMON_H__
+
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +34,6 @@
 #include <fcntl.h>
 #include <sys/un.h>
 #include <netinet/tcp.h>
-
 #ifdef TIME_WITH_SYS_TIME
 # include <sys/time.h>
 # include <time.h>
@@ -33,13 +45,43 @@
 # endif
 #endif
 
+/* Define this here, which will turn on the visibilty controls while we're
+ * building libmemcached.
+ */
+#define BUILDING_LIBMEMCACHED 1
 
 
-#include <memcached.h>
-#include "memcached_io.h"
+#include "libmemcached/memcached.h"
+#include "libmemcached/watchpoint.h"
 
-#include "memcached/protocol_binary.h"
-#include "libmemcached_config.h"
+typedef struct memcached_server_st * memcached_server_write_instance_st;
+
+LIBMEMCACHED_LOCAL
+memcached_server_write_instance_st memcached_server_instance_fetch(memcached_st *ptr, uint32_t server_key);
+
+/* These are private not to be installed headers */
+#include "libmemcached/io.h"
+#include "libmemcached/do.h"
+#include "libmemcached/internal.h"
+#include "libmemcached/libmemcached_probes.h"
+#include "libmemcached/memcached/protocol_binary.h"
+#include "libmemcached/byteorder.h"
+#include "libmemcached/response.h"
+
+/* string value */
+struct memcached_continuum_item_st
+{
+  uint32_t index;
+  uint32_t value;
+};
+
+/* Yum, Fortran.... can you make the reference? */
+typedef enum {
+  MEM_NOT= -1,
+  MEM_FALSE= false,
+  MEM_TRUE= true
+} memcached_ternary_t;
+
 
 #if !defined(__GNUC__) || (__GNUC__ == 2 && __GNUC_MINOR__ < 96)
 
@@ -48,85 +90,64 @@
 
 #else
 
-#define likely(x)       if(__builtin_expect(!!(x), 1))
-#define unlikely(x)     if(__builtin_expect((x), 0))
+#define likely(x)       if(__builtin_expect((x) != 0, 1))
+#define unlikely(x)     if(__builtin_expect((x) != 0, 0))
 #endif
-
-#include "libmemcached_probes.h"
 
 #define MEMCACHED_BLOCK_SIZE 1024
 #define MEMCACHED_DEFAULT_COMMAND_SIZE 350
 #define SMALL_STRING_LEN 1024
 #define HUGE_STRING_LEN 8196
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-typedef enum {
-  MEM_NO_BLOCK= (1 << 0),
-  MEM_TCP_NODELAY= (1 << 1),
-  MEM_REUSE_MEMORY= (1 << 2),
-  MEM_USE_MD5= (1 << 3),
-  /* 4 was once Ketama */
-  MEM_USE_CRC= (1 << 5),
-  MEM_USE_CACHE_LOOKUPS= (1 << 6),
-  MEM_SUPPORT_CAS= (1 << 7),
-  MEM_BUFFER_REQUESTS= (1 << 8),
-  MEM_USE_SORT_HOSTS= (1 << 9),
-  MEM_VERIFY_KEY= (1 << 10),
-  /* 11 used for weighted ketama */
-  MEM_KETAMA_WEIGHTED= (1 << 11),
-  MEM_BINARY_PROTOCOL= (1 << 12),
-  MEM_HASH_WITH_PREFIX_KEY= (1 << 13),
-  MEM_NOREPLY= (1 << 14),
-  MEM_USE_UDP= (1 << 15)
-} memcached_flags;
+LIBMEMCACHED_LOCAL
+memcached_return_t memcached_connect(memcached_server_write_instance_st ptr);
 
-/* Hashing algo */
-void md5_signature(const unsigned char *key, unsigned int length, unsigned char *result);
-uint32_t hash_crc32(const char *data,
-                    size_t data_len);
-uint32_t hsieh_hash(const char *key, size_t key_length);
-uint32_t murmur_hash(const char *key, size_t key_length);
-uint32_t jenkins_hash(const void *key, size_t length, uint32_t initval);
-
-memcached_return memcached_connect(memcached_server_st *ptr);
-memcached_return memcached_response(memcached_server_st *ptr,
-                                    char *buffer, size_t buffer_length,
-                                    memcached_result_st *result);
-uint32_t memcached_generate_hash(memcached_st *ptr, const char *key, size_t key_length);
-void memcached_quit_server(memcached_server_st *ptr, uint8_t io_death);
+LIBMEMCACHED_LOCAL
+memcached_return_t run_distribution(memcached_st *ptr);
 
 #define memcached_server_response_increment(A) (A)->cursor_active++
 #define memcached_server_response_decrement(A) (A)->cursor_active--
 #define memcached_server_response_reset(A) (A)->cursor_active=0
 
-memcached_return memcached_do(memcached_server_st *ptr, const void *commmand,
-                              size_t command_length, uint8_t with_flush);
-memcached_return memcached_version(memcached_st *ptr);
-memcached_return value_fetch(memcached_server_st *ptr,
-                             char *buffer,
-                             memcached_result_st *result);
-void server_list_free(memcached_st *ptr, memcached_server_st *servers);
+// These are private 
+#define memcached_is_allocated(__object) ((__object)->options.is_allocated)
+#define memcached_is_initialized(__object) ((__object)->options.is_initialized)
+#define memcached_is_purging(__object) ((__object)->state.is_purging)
+#define memcached_is_processing_input(__object) ((__object)->state.is_processing_input)
+#define memcached_set_purging(__object, __value) ((__object)->state.is_purging= (__value))
+#define memcached_set_processing_input(__object, __value) ((__object)->state.is_processing_input= (__value))
+#define memcached_set_initialized(__object, __value) ((__object)->options.is_initialized(= (__value))
+#define memcached_set_allocated(__object, __value) ((__object)->options.is_allocated(= (__value))
 
-memcached_return memcached_key_test(char **keys, size_t *key_length,
-                                    unsigned int number_of_keys);
+LIBMEMCACHED_LOCAL
+void set_last_disconnected_host(memcached_server_write_instance_st ptr);
 
-memcached_return run_distribution(memcached_st *ptr);
+LIBMEMCACHED_LOCAL
+memcached_return_t memcached_key_test(const char * const *keys,
+                                      const size_t *key_length,
+                                      size_t number_of_keys);
 
-uint32_t generate_hash(memcached_st *ptr, const char *key, size_t key_length);
-memcached_return memcached_server_remove(memcached_server_st *st_ptr);
+LIBMEMCACHED_LOCAL
+memcached_return_t memcached_purge(memcached_server_write_instance_st ptr);
 
-#ifndef HAVE_HTONLL
-extern uint64_t ntohll(uint64_t);
-extern uint64_t htonll(uint64_t);
-#endif
+LIBMEMCACHED_LOCAL
+memcached_server_st *memcached_server_create_with(const memcached_st *memc,
+                                                  memcached_server_write_instance_st host,
+                                                  const char *hostname,
+                                                  in_port_t port,
+                                                  uint32_t weight,
+                                                  memcached_connection_t type);
 
-memcached_return memcached_purge(memcached_server_st *ptr);
 
-static inline memcached_return memcached_validate_key_length(size_t key_length, 
-                                                             bool binary) {
+static inline memcached_return_t memcached_validate_key_length(size_t key_length, bool binary)
+{
   unlikely (key_length == 0)
     return MEMCACHED_BAD_KEY_PROVIDED;
-  
+
   if (binary)
   {
     unlikely (key_length > 0xffff)
@@ -134,11 +155,73 @@ static inline memcached_return memcached_validate_key_length(size_t key_length,
   }
   else
   {
-    unlikely (key_length >= MEMCACHED_MAX_KEY) 
+    unlikely (key_length >= MEMCACHED_MAX_KEY)
       return MEMCACHED_BAD_KEY_PROVIDED;
   }
 
   return MEMCACHED_SUCCESS;
 }
 
-#endif /* __COMMON_H__ */
+#ifdef TCP_CORK
+  #define CORK TCP_CORK
+#elif defined TCP_NOPUSH
+  #define CORK TCP_NOPUSH
+#endif
+
+/*
+  test_cork() tries to enable TCP_CORK. IF TCP_CORK is not an option
+  on the system it returns false but sets errno to 0. Otherwise on
+  failure errno is set.
+*/
+static inline memcached_ternary_t test_cork(memcached_server_st *ptr, int enable)
+{
+#ifdef CORK
+  if (ptr->type != MEMCACHED_CONNECTION_TCP)
+    return MEM_FALSE;
+
+  int err= setsockopt(ptr->fd, IPPROTO_TCP, CORK,
+                      &enable, (socklen_t)sizeof(int));
+  if (! err)
+  {
+    return MEM_TRUE;
+  }
+
+  perror(strerror(errno));
+  ptr->cached_errno= errno;
+
+  return MEM_FALSE;
+#else
+  (void)ptr;
+  (void)enable;
+
+  ptr->cached_errno= 0;
+
+  return MEM_NOT;
+#endif
+}
+
+static inline void libmemcached_free(const memcached_st *ptr, void *mem)
+{
+  ptr->allocators.free(ptr, mem, ptr->allocators.context);
+}
+
+static inline void *libmemcached_malloc(const memcached_st *ptr, const size_t size)
+{
+  return ptr->allocators.malloc(ptr, size, ptr->allocators.context);
+}
+
+static inline void *libmemcached_realloc(const memcached_st *ptr, void *mem, const size_t size)
+{
+  return ptr->allocators.realloc(ptr, mem, size, ptr->allocators.context);
+}
+
+static inline void *libmemcached_calloc(const memcached_st *ptr, size_t nelem, size_t size)
+{
+  return ptr->allocators.calloc(ptr, nelem, size, ptr->allocators.context);
+}
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __LIBMEMCACHED_COMMON_H__ */

@@ -1,3 +1,14 @@
+/* LibMemcached
+ * Copyright (C) 2006-2009 Brian Aker
+ * All rights reserved.
+ *
+ * Use and distribution licensed under the BSD license.  See
+ * the COPYING file in the parent directory for full text.
+ *
+ * Summary:
+ *
+ */
+
 #ifndef __CLIENT_OPTIONS_H__
 #define __CLIENT_OPTIONS_H__
 
@@ -24,7 +35,10 @@ typedef enum {
   OPT_FLUSH,
   OPT_HASH,
   OPT_BINARY,
-  OPT_UDP
+  OPT_UDP,
+  OPT_USERNAME,
+  OPT_PASSWD,
+  OPT_FILE= 'f'
 } memcached_options;
 
 #endif /* CLIENT_OPTIONS */

@@ -1,8 +1,6 @@
 =head1 NAME
 
-memcached_lib_version
-
-memcached_version
+memcached_lib_version, memcached_version - Get library version
 
 =head1 LIBRARY
 
@@ -13,11 +11,11 @@ C Client Library for memcached (libmemcached, -lmemcached)
   #include <memcached.h>
 
   const char *
-    memcached_lib_version(void) 
+    memcached_lib_version (void) 
 
 
-  memcached_return
-    memcached_version(memcached_st *ptr)
+  memcached_return_t
+    memcached_version (memcached_st *ptr)
 
 
 =head1 DESCRIPTION
@@ -35,7 +33,7 @@ memcached server return code.
 A string with the version of libmemcached driver is returned from
 memcached_lib_version()
 
-A value of type C<memcached_return> is returned from memcached_version()
+A value of type C<memcached_return_t> is returned from memcached_version()
 On success that value will be C<MEMCACHED_SUCCESS>. If called with the
 C<MEMCACHED_BEHAVIOR_USE_UDP> behavior set, the value C<MEMCACHED_NOT_SUPPORTED> 
 will be returned. Use memcached_strerror() to translate this value to 
@@ -44,7 +42,7 @@ a printable string.
 =head1 HOME
 
 To find out more information please check:
-L<http://tangent.org/552/libmemcached.html>
+L<https://launchpad.net/libmemcached>
 
 =head1 AUTHOR
 

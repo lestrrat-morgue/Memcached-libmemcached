@@ -1,18 +1,29 @@
+/* LibMemcached
+ * Copyright (C) 2006-2009 Brian Aker
+ * All rights reserved.
+ *
+ * Use and distribution licensed under the BSD license.  See
+ * the COPYING file in the parent directory for full text.
+ *
+ * Summary:
+ *
+ */
+
 /*
  * This file contains the definition of the various probes supported by
  * libmemcached. Currently it only support DTRACE, but just create an
  * implementation of the following macros to create your own sort of
  * probing :)
  */
-#ifndef	LIBMEMCACHED_PROBES_H
-#define	LIBMEMCACHED_PROBES_H
+#ifndef	__LIBMEMCACHED_PROBES_H__
+#define	__LIBMEMCACHED_PROBES_H__
 
 #ifdef HAVE_DTRACE
 /*
  * Create the DTrace probes on the system using it (to support both Solaris
  * and MacOS X
  */
-#include "dtrace_probes.h"
+#include "libmemcached/dtrace_probes.h"
 
 #else
 /*
@@ -32,6 +43,10 @@
 #define	LIBMEMCACHED_MEMCACHED_DECREMENT_END_ENABLED() (0)
 #define	LIBMEMCACHED_MEMCACHED_DECREMENT_START()
 #define	LIBMEMCACHED_MEMCACHED_DECREMENT_START_ENABLED() (0)
+#define	LIBMEMCACHED_MEMCACHED_DECREMENT_WITH_INITIAL_END()
+#define	LIBMEMCACHED_MEMCACHED_DECREMENT_WITH_INITIAL_END_ENABLED() (0)
+#define	LIBMEMCACHED_MEMCACHED_DECREMENT_WITH_INITIAL_START()
+#define	LIBMEMCACHED_MEMCACHED_DECREMENT_WITH_INITIAL_START_ENABLED() (0)
 #define	LIBMEMCACHED_MEMCACHED_DELETE_END()
 #define	LIBMEMCACHED_MEMCACHED_DELETE_END_ENABLED() (0)
 #define	LIBMEMCACHED_MEMCACHED_DELETE_START()
@@ -48,6 +63,10 @@
 #define	LIBMEMCACHED_MEMCACHED_INCREMENT_END_ENABLED() (0)
 #define	LIBMEMCACHED_MEMCACHED_INCREMENT_START()
 #define	LIBMEMCACHED_MEMCACHED_INCREMENT_START_ENABLED() (0)
+#define	LIBMEMCACHED_MEMCACHED_INCREMENT_WITH_INITIAL_END()
+#define	LIBMEMCACHED_MEMCACHED_INCREMENT_WITH_INITIAL_END_ENABLED() (0)
+#define	LIBMEMCACHED_MEMCACHED_INCREMENT_WITH_INITIAL_START()
+#define	LIBMEMCACHED_MEMCACHED_INCREMENT_WITH_INITIAL_START_ENABLED() (0)
 #define	LIBMEMCACHED_MEMCACHED_MGET_END()
 #define	LIBMEMCACHED_MEMCACHED_MGET_END_ENABLED() (0)
 #define	LIBMEMCACHED_MEMCACHED_MGET_START()
@@ -67,4 +86,4 @@
 
 #endif
 
-#endif	/* LIBMEMCACHED_PROBES_H */
+#endif	/* __LIBMEMCACHED_PROBES_H__ */

@@ -1,3 +1,15 @@
+/* LibMemcached
+ * Copyright (C) 2006-2009 Brian Aker
+ * All rights reserved.
+ *
+ * Use and distribution licensed under the BSD license.  See
+ * the COPYING file in the parent directory for full text.
+ *
+ * Summary:
+ *
+ */
+#include "config.h"
+
 #include <stdio.h>
 #include <inttypes.h>
 #include <string.h>
@@ -19,12 +31,23 @@ static int opt_verbose= 0;
 
 int main(int argc, char *argv[])
 {
+  unsigned long value;
   options_parse(argc, argv);
 
   if (argc != 2)
     return 1;
 
-  printf("%s\n", memcached_strerror(NULL, atoi(argv[1])));
+  value= strtoul(argv[1], (char **) NULL, 10);
+
+  if (value < MEMCACHED_MAXIMUM_RETURN)
+  {
+    printf("%s\n", memcached_strerror(NULL, (memcached_return_t)value));
+  }
+  else
+  {
+    fprintf(stderr, "Unknown Error Code\n");
+    return 1;
+  }
 
   return 0;
 }
@@ -42,10 +65,10 @@ void options_parse(int argc, char *argv[])
 
   static struct option long_options[]=
     {
-      {"version", no_argument, NULL, OPT_VERSION},
-      {"help", no_argument, NULL, OPT_HELP},
-      {"verbose", no_argument, &opt_verbose, OPT_VERBOSE},
-      {"debug", no_argument, &opt_verbose, OPT_DEBUG},
+      {(OPTIONSTRING)"version", no_argument, NULL, OPT_VERSION},
+      {(OPTIONSTRING)"help", no_argument, NULL, OPT_HELP},
+      {(OPTIONSTRING)"verbose", no_argument, &opt_verbose, OPT_VERBOSE},
+      {(OPTIONSTRING)"debug", no_argument, &opt_verbose, OPT_DEBUG},
       {0, 0, 0, 0},
     };
 
