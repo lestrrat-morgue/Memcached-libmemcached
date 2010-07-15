@@ -134,7 +134,7 @@ _prep_keys_buffer(lmc_cb_context_st *lmc_cb_context, int keys_needed)
         Renew(lmc_cb_context->key_strings, keys_needed, char *);
         Renew(lmc_cb_context->key_lengths, keys_needed, size_t);
         if (trace_level >= 3)
-            warn("growing keys buffer %d->%d", lmc_cb_context->key_alloc_count, keys_needed);
+            warn("growing keys buffer %d->%d", (int)lmc_cb_context->key_alloc_count, keys_needed);
     }
     lmc_cb_context->key_alloc_count = keys_needed;
 }
@@ -219,7 +219,7 @@ _cb_store_into_sv(memcached_st *ptr, memcached_result_st *result, void *context)
     sv_setpvn(lmc_cb_context->dest_sv, memcached_result_value(result), memcached_result_length(result));
     if (lmc_cb_context->lmc_state->trace_level >= 2)
         warn("fetched %s (value len %d, flags %lu)\n",
-            memcached_result_key_value(result), memcached_result_length(result), memcached_result_flags(result));
+            memcached_result_key_value(result), (int) memcached_result_length(result), (long unsigned int)memcached_result_flags(result));
     return 0;
 }
 
@@ -349,7 +349,7 @@ _fetch_one_sv(memcached_st *ptr, lmc_data_flags_t *flags_ptr, memcached_return *
     lmc_cb_context->rc_ptr    = error_ptr;
     lmc_cb_context->result_count = 0;
 
-    *error_ptr = memcached_fetch_execute(ptr, callbacks, lmc_cb_context, callback_ix);
+    *error_ptr = memcached_fetch_execute(ptr, (memcached_execute_fn *)callbacks, lmc_cb_context, callback_ix);
 
     if (lmc_cb_context->result_count == 0 && *error_ptr == MEMCACHED_SUCCESS)
         *error_ptr = MEMCACHED_NOTFOUND; /* to match memcached_get behaviour */
@@ -389,7 +389,7 @@ _fetch_all_into_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
         return rc;
     }
 
-    return memcached_fetch_execute(ptr, callbacks, (void *)lmc_cb_context, callback_ix);
+    return memcached_fetch_execute(ptr, (memcached_execute_fn *)callbacks, (void *)lmc_cb_context, callback_ix);
 }
 
 
@@ -583,7 +583,7 @@ memcached_get(Memcached__libmemcached ptr, \
         IN_OUT memcached_return error=0)
     CODE:
         /* rc is the return code from the preceeding mget */
-        error = memcached_mget_by_key(ptr, NULL, 0, &key, &XSauto_length_of_key, 1);
+        error = memcached_mget_by_key(ptr, NULL, 0, (const char * const*)&key, &XSauto_length_of_key, 1);
         RETVAL = _fetch_one_sv(ptr, &flags, &error);
     OUTPUT:
         RETVAL
@@ -596,7 +596,7 @@ memcached_get_by_key(Memcached__libmemcached ptr, \
         IN_OUT lmc_data_flags_t flags=0, \
         IN_OUT memcached_return error=0)
     CODE:
-        error = memcached_mget_by_key(ptr, master_key, XSauto_length_of_master_key, &key, &XSauto_length_of_key, 1);
+        error = memcached_mget_by_key(ptr, master_key, XSauto_length_of_master_key, (const char * const*)&key, &XSauto_length_of_key, 1);
         RETVAL = _fetch_one_sv(ptr, &flags, &error);
     OUTPUT:
         RETVAL
@@ -610,7 +610,7 @@ memcached_mget(Memcached__libmemcached ptr, SV *keys_rv)
         unsigned int number_of_keys;
     CODE:
         if ((RETVAL = _prep_keys_lengths(ptr, keys_rv, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
-            RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
+            RETVAL = memcached_mget(ptr, (const char * const*)keys, key_length, number_of_keys);
         }
     OUTPUT:
         RETVAL
@@ -623,7 +623,7 @@ memcached_mget_by_key(Memcached__libmemcached ptr, lmc_key master_key, size_t le
         unsigned int number_of_keys;
     CODE:
         if ((RETVAL = _prep_keys_lengths(ptr, keys_rv, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
-            RETVAL = memcached_mget_by_key(ptr, master_key, XSauto_length_of_master_key, keys, key_length, number_of_keys);
+            RETVAL = memcached_mget_by_key(ptr, master_key, XSauto_length_of_master_key, (const char * const*)keys, key_length, number_of_keys);
         }
     OUTPUT:
         RETVAL
@@ -789,7 +789,7 @@ get(Memcached__libmemcached ptr, SV *key_sv)
             warn("get with array ref as key is deprecated");
         }
         key = SvPV(key_sv, key_len);
-        error = memcached_mget_by_key(ptr, master_key, master_key_len, &key, &key_len, 1);
+        error = memcached_mget_by_key(ptr, master_key, master_key_len, (const char * const*)&key, &key_len, 1);
         RETVAL = _fetch_one_sv(ptr, &flags, &error);
     OUTPUT:
         RETVAL
@@ -817,11 +817,11 @@ get_multi(Memcached__libmemcached ptr, ...)
             keys[items] = SvPV(ST(items+1), key_length[items]);
         }
 
-        ret = memcached_mget(ptr, keys, key_length, number_of_keys);
+        ret = memcached_mget(ptr, (const char * const*)keys, key_length, number_of_keys);
         _fetch_all_into_hashref(ptr, ret, hv);
         if (lmc_cb_context->lmc_state->trace_level)
             warn("get_multi of %d keys: mget %s, fetched %d",
-                number_of_keys, memcached_strerror(ptr,ret), lmc_cb_context->result_count);
+                number_of_keys, memcached_strerror(ptr,ret), (int)lmc_cb_context->result_count);
         PUSHs(dest_ref);
         XSRETURN(1);
 
@@ -838,7 +838,7 @@ mget_into_hashref(Memcached__libmemcached ptr, SV *keys_ref, HV *dest_ref)
     CODE:
         PERL_UNUSED_VAR(ix);
         if ((RETVAL = _prep_keys_lengths(ptr, keys_ref, &keys, &key_length, &number_of_keys)) == MEMCACHED_SUCCESS) {
-            RETVAL = memcached_mget(ptr, keys, key_length, number_of_keys);
+            RETVAL = memcached_mget(ptr, (const char * const*)keys, key_length, number_of_keys);
             RETVAL = _fetch_all_into_hashref(ptr, RETVAL, dest_ref);
         }
     OUTPUT:
@@ -892,8 +892,8 @@ walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
             char *val;
 
             hostport_sv = sv_2mortal(newSVpvf("%s:%d",
-                memcached_server_name(ptr),
-                memcached_server_port(ptr)
+                memcached_server_name((memcached_server_instance_st)ptr),
+                memcached_server_port((memcached_server_instance_st)ptr)
             ));
 
             keys = memcached_stat_get_keys(ptr, &stat[i], &rc);

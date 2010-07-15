@@ -26,7 +26,7 @@ ok defined MEMCACHED_SUCCESS();
 
 ok !exists &MEMCACHED_HASH_MD5, 'should not import MEMCACHED_HASH_MD5 by default';
 ok !exists &MEMCACHED_HASH_CRC, 'should not import MEMCACHED_HASH_CRC by default';
-Memcached::libmemcached->import( ':memcached_hash' );
+Memcached::libmemcached->import( ':memcached_hash_t' );
 ok  exists &MEMCACHED_HASH_MD5, 'should import MEMCACHED_HASH_MD5 by :memcached_hash tag';
 ok  exists &MEMCACHED_HASH_CRC, 'should import MEMCACHED_HASH_CRC by :memcached_hash tag';
 

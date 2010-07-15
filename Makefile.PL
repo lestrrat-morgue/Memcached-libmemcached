@@ -130,7 +130,7 @@ libmemcached.c : $(XSUBPPDIR)/ParseXS.pm typemap
 $(OBJECT) : $(LMCD_BUILT_LIB)
 
 svnmanifest::
-	svn list -R .@HEAD | sort | grep -v '/$$' > MANIFEST
+	svn list -R -r HEAD | sort |grep -v '/$$' > MANIFEST
 	svn diff MANIFEST
 	svn status
 
@@ -261,13 +261,11 @@ sub extract_libmemcached_constants {
         while (<$fh>) {
             if ($in_enum) {
                 if (m/^ \s* } \s* (\w+)/x) { # end of enum
-                    print STDERR "CONST: $_, $1\n";
                     $libmemcached_const{$_} = $1 for @const;
                     @const = ();
                     $in_enum = 0;
                 }
                 elsif (m/^ \s* (MEMCACHED_\w+)/x) {
-                    print STDERR "CONST: $1\n";
                     push @const, $1;
                 }
             }
