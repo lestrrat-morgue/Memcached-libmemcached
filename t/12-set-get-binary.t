@@ -28,7 +28,7 @@ use Memcached::libmemcached
 use lib 't/lib';
 use libmemcached_test;
 
-my $memc = libmemcached_test_create();
+my $memc = libmemcached_test_create({ min_version => "1.4.0" });
 
 plan tests => 5;
 
