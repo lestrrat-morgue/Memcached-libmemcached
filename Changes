@@ -3,7 +3,12 @@
 Memcached::libmemcached::Changes - List of significant changes
 
 
-=head2 Changes in 0.4201 (svn r163) 17th Dec 2008
+=head2 Changes in 0.4202  2nd Aug 2010
+
+  Fix memcached_version() to properly return a list when called in list context
+     this should resolve rt #59864
+
+=head2 Changes in 0.4201 16th Jul 2010
 
   Sync with libmemcached 0.42
   Squashed various compile warnings

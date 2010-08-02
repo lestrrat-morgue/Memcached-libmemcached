@@ -9,11 +9,11 @@ Memcached::libmemcached - Thin fast full interface to the libmemcached client AP
 
 =head1 VERSION
 
-Version 0.4201 (with libmemcached-0.42 embedded)
+Version 0.4202 (with libmemcached-0.42 embedded)
 
 =cut
 
-our $VERSION = '0.4201';
+our $VERSION = '0.4202';
 
 use Carp;
 use base qw(Exporter);
@@ -683,7 +683,7 @@ your bug as I make changes.
 
 =head1 CONTRIBUTING
 
-The source is hosted at L<http://perl-libmemcached.googlecode.com/>
+The source is hosted at github: L<http://github.com/lestrrat/Memcached-libmemcached>
 Patches and volunteers always welcome.
 
 =head1 COPYRIGHT & LICENSE
