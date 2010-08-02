@@ -732,7 +732,6 @@ memcached_version(Memcached__libmemcached ptr)
 
             keys = memcached_stat_get_keys(ptr, &stat[i], &rc);
             while (keys && *keys) {
-                SV *version_sv;
                 val = memcached_stat_get_value(ptr, stat, *keys, &rc);
                 if (! val) {
                     keys++;
@@ -743,13 +742,33 @@ memcached_version(Memcached__libmemcached ptr)
                     keys++;
                     continue;
                 }
-                version_sv = sv_newmortal();
-                sv_setpvf(version_sv, "%s", val);
-                XPUSHs(version_sv);
+                if (GIMME_V == G_SCALAR) {
+                    SV *version_sv;
+                    version_sv = sv_newmortal();
+                    sv_setpvf(version_sv, "%s", val);
+                    XPUSHs(version_sv);
+                    XSRETURN(1);
+                } else {
+                    SV *version_sv;
+                    char *p = val;
+                    char *c = val;
+                    int count = 0;
+                    while (count < 3 && *c != '\0') {
+                        while (*c != '\0' && *c != '.') {
+                            c++;
+                        }
+                        version_sv = sv_newmortal();
+                        sv_setpvn(version_sv, p, c - p);
+                        XPUSHs(version_sv);
+                        c++;
+                        p = c;
+                        count++;
+                    }
+                    XSRETURN(count);
+                }
                 keys++;
             }
         }
-        XSRETURN(1);
 
 
 =head2 Memcached::libmemcached Methods
