@@ -920,6 +920,7 @@ walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
         for (i = 0; i < server_count; i++) {
             SV *hostport_sv;
             char **keys;
+            char **keys_list;
             char *val;
 
             hostport_sv = sv_2mortal(newSVpvf("%s:%d",
@@ -927,8 +928,7 @@ walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
                 memcached_server_port((memcached_server_instance_st)ptr)
             ));
 
-            keys = memcached_stat_get_keys(clone, &stat[i], &rc);
-            SAVEFREEPV(keys); /* free memory when done, even on exception */
+            keys = keys_list = memcached_stat_get_keys(clone, &stat[i], &rc);
             while (keys && *keys) {
                 int items;
                 dSP;
@@ -959,6 +959,7 @@ walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
 
                 keys++;
             }
+            free(keys_list);
             memcached_stat_free(clone, stat);
 
         }
