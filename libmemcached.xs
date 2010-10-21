@@ -936,6 +936,7 @@ walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
             ));
 
             keys = memcached_stat_get_keys(clone, &stat[i], &rc);
+            SAVEFREEPV(keys); /* free memory when done, even on exception */
             while (keys && *keys) {
                 int items;
                 dSP;
