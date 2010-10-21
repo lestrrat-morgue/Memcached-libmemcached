@@ -84,13 +84,15 @@ noinst_PROGRAMS = tests/atomsmasher$(EXEEXT) tests/hashplus$(EXEEXT) \
 	tests/testapp$(EXEEXT) tests/testhashkit$(EXEEXT) \
 	tests/testplus$(EXEEXT) tests/testudp$(EXEEXT) $(am__EXEEXT_3)
 check_PROGRAMS = $(am__EXEEXT_2)
+@BUILD_DOCS_TRUE@am__append_1 = test-docs
 DIST_COMMON = README $(am__configure_deps) \
 	$(am__nobase_include_HEADERS_DIST) $(include_HEADERS) \
 	$(noinst_HEADERS) $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/clients/include.am $(srcdir)/config.h.in \
 	$(srcdir)/example/include.am $(srcdir)/libhashkit/include.am \
-	$(srcdir)/libmemcached/include.am $(srcdir)/support/include.am \
-	$(srcdir)/tests/include.am $(srcdir)/unittests/include.am \
+	$(srcdir)/libmemcached/include.am $(srcdir)/poll/include.am \
+	$(srcdir)/support/include.am $(srcdir)/tests/include.am \
+	$(srcdir)/unittests/include.am $(srcdir)/win32/include.am \
 	$(top_srcdir)/configure \
 	$(top_srcdir)/libhashkit/configure.h.in \
 	$(top_srcdir)/libmemcached/configure.h.in \
@@ -100,39 +102,45 @@ DIST_COMMON = README $(am__configure_deps) \
 	ChangeLog NEWS THANKS TODO config/compile config/config.guess \
 	config/config.rpath config/config.sub config/depcomp \
 	config/install-sh config/ltmain.sh config/missing
-@BUILD_LIBMEMCACHEDUTIL_TRUE@am__append_1 = \
+@BUILD_LIBMEMCACHEDUTIL_TRUE@am__append_2 = \
 @BUILD_LIBMEMCACHEDUTIL_TRUE@			 libmemcached/memcached_util.h \
 @BUILD_LIBMEMCACHEDUTIL_TRUE@			 libmemcached/util.h \
 @BUILD_LIBMEMCACHEDUTIL_TRUE@			 libmemcached/util/ping.h \
 @BUILD_LIBMEMCACHEDUTIL_TRUE@			 libmemcached/util/pool.h \
 @BUILD_LIBMEMCACHEDUTIL_TRUE@			 libmemcached/util/version.h
 
-@BUILD_LIBMEMCACHEDUTIL_TRUE@am__append_2 = libmemcached/libmemcachedutil.la
-@BUILD_BYTEORDER_TRUE@am__append_3 = libmemcached/libbyteorder.la
+@BUILD_LIBMEMCACHEDUTIL_TRUE@am__append_3 = libmemcached/libmemcachedutil.la
 @BUILD_BYTEORDER_TRUE@am__append_4 = libmemcached/libbyteorder.la
 @BUILD_BYTEORDER_TRUE@am__append_5 = libmemcached/libbyteorder.la
-@HAVE_SASL_TRUE@am__append_6 = $(LIBSASL)
-@HAVE_SASL_TRUE@am__append_7 = libmemcached/sasl.c
-@HAVE_DTRACE_TRUE@am__append_8 = libmemcached/dtrace_probes.h
+@BUILD_BYTEORDER_TRUE@am__append_6 = libmemcached/libbyteorder.la
+@HAVE_SASL_TRUE@am__append_7 = $(LIBSASL)
+@HAVE_SASL_TRUE@am__append_8 = libmemcached/sasl.c
 @HAVE_DTRACE_TRUE@am__append_9 = libmemcached/dtrace_probes.h
-@DTRACE_NEEDS_OBJECTS_TRUE@am__append_10 = libmemcached/libmemcached_probes.d
-@DTRACE_NEEDS_OBJECTS_TRUE@am__append_11 = libmemcached/libmemcached_probes.o
+@HAVE_DTRACE_TRUE@am__append_10 = libmemcached/dtrace_probes.h
+@DTRACE_NEEDS_OBJECTS_TRUE@am__append_11 = libmemcached/libmemcached_probes.d
 @DTRACE_NEEDS_OBJECTS_TRUE@am__append_12 = libmemcached/libmemcached_probes.o
-@HAVE_SASL_TRUE@am__append_13 = $(LIBSASL)
-@HAVE_LIBEVENT_TRUE@am__append_14 = clients/memslap
-@INCLUDE_HSIEH_SRC_TRUE@am__append_15 = libhashkit/hsieh.c
-@HAVE_LIBGTEST_TRUE@am__append_16 = unittests/unittests
-@BUILD_LIBMEMCACHEDUTIL_TRUE@am__append_17 = libmemcached/libmemcachedutil.la
-@HAVE_LIBEVENT_TRUE@am__append_18 = example/memcached_light
-@BUILD_BYTEORDER_TRUE@am__append_19 = libmemcached/libbyteorder.la
-@HAVE_LIBINNODB_TRUE@am__append_20 = example/storage_innodb.c
-@HAVE_LIBINNODB_FALSE@am__append_21 = example/storage.c
+@DTRACE_NEEDS_OBJECTS_TRUE@am__append_13 = libmemcached/libmemcached_probes.o
+@HAVE_SASL_TRUE@am__append_14 = $(LIBSASL)
+@BUILD_WIN32_WRAPPERS_FALSE@@HAVE_LIBEVENT_TRUE@am__append_15 = clients/memslap
+@BUILD_BYTEORDER_TRUE@am__append_16 = libmemcached/libbyteorder.la
+@INCLUDE_HSIEH_SRC_TRUE@am__append_17 = libhashkit/hsieh.c
+@HAVE_LIBGTEST_TRUE@am__append_18 = unittests/unittests
+@BUILD_LIBMEMCACHEDUTIL_TRUE@am__append_19 = libmemcached/libmemcachedutil.la
+@HAVE_LIBEVENT_TRUE@am__append_20 = example/memcached_light
+@BUILD_BYTEORDER_TRUE@am__append_21 = libmemcached/libbyteorder.la
+@HAVE_LIBINNODB_TRUE@am__append_22 = example/storage_innodb.c
+@HAVE_LIBINNODB_FALSE@am__append_23 = example/storage.c
+@BUILD_POLL_TRUE@am__append_24 = poll/poll.c
+@BUILD_WIN32_WRAPPERS_TRUE@am__append_25 = -no-undefined
+@BUILD_WIN32_WRAPPERS_TRUE@am__append_26 = -no-undefined
+@BUILD_WIN32_WRAPPERS_TRUE@am__append_27 = -no-undefined
+@BUILD_WIN32_WRAPPERS_TRUE@am__append_28 = -no-undefined
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_cxx_compile_stdcxx_0x.m4 \
 	$(top_srcdir)/m4/ac_cxx_header_stdcxx_98.m4 \
 	$(top_srcdir)/m4/acx_pthread.m4 $(top_srcdir)/m4/byteorder.m4 \
-	$(top_srcdir)/m4/deprecated.m4 \
+	$(top_srcdir)/m4/deprecated.m4 $(top_srcdir)/m4/eagain.m4 \
 	$(top_srcdir)/m4/enable_utillib.m4 $(top_srcdir)/m4/hsieh.m4 \
 	$(top_srcdir)/m4/lib-ld.m4 $(top_srcdir)/m4/lib-link.m4 \
 	$(top_srcdir)/m4/lib-prefix.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -296,9 +304,11 @@ am__libmemcached_libmemcached_la_SOURCES_DIST =  \
 	libmemcached/stats.c libmemcached/storage.c \
 	libmemcached/strerror.c libmemcached/verbosity.c \
 	libmemcached/version.c libmemcached/sasl.c \
-	libmemcached/libmemcached_probes.d
+	libmemcached/libmemcached_probes.d poll/poll.c
 @HAVE_SASL_TRUE@am__objects_4 = libmemcached/libmemcached_libmemcached_la-sasl.lo
 am__objects_5 =
+@BUILD_POLL_TRUE@am__objects_6 =  \
+@BUILD_POLL_TRUE@	poll/libmemcached_libmemcached_la-poll.lo
 am_libmemcached_libmemcached_la_OBJECTS =  \
 	libmemcached/libmemcached_libmemcached_la-allocators.lo \
 	libmemcached/libmemcached_libmemcached_la-analyze.lo \
@@ -329,7 +339,7 @@ am_libmemcached_libmemcached_la_OBJECTS =  \
 	libmemcached/libmemcached_libmemcached_la-strerror.lo \
 	libmemcached/libmemcached_libmemcached_la-verbosity.lo \
 	libmemcached/libmemcached_libmemcached_la-version.lo \
-	$(am__objects_4) $(am__objects_5)
+	$(am__objects_4) $(am__objects_5) $(am__objects_6)
 libmemcached_libmemcached_la_OBJECTS =  \
 	$(am_libmemcached_libmemcached_la_OBJECTS)
 libmemcached_libmemcached_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -349,27 +359,27 @@ am_libmemcached_libmemcachedinternal_la_OBJECTS =  \
 	libmemcached/string.lo
 libmemcached_libmemcachedinternal_la_OBJECTS =  \
 	$(am_libmemcached_libmemcachedinternal_la_OBJECTS)
-am_libmemcached_libmemcachedprotocol_la_OBJECTS =  \
-	libmemcached/protocol/ascii_handler.lo \
-	libmemcached/protocol/binary_handler.lo \
-	libmemcached/protocol/cache.lo \
-	libmemcached/protocol/pedantic.lo \
-	libmemcached/protocol/protocol_handler.lo
+am_libmemcached_libmemcachedprotocol_la_OBJECTS = libmemcached/protocol/libmemcached_libmemcachedprotocol_la-ascii_handler.lo \
+	libmemcached/protocol/libmemcached_libmemcachedprotocol_la-binary_handler.lo \
+	libmemcached/protocol/libmemcached_libmemcachedprotocol_la-cache.lo \
+	libmemcached/protocol/libmemcached_libmemcachedprotocol_la-pedantic.lo \
+	libmemcached/protocol/libmemcached_libmemcachedprotocol_la-protocol_handler.lo
 libmemcached_libmemcachedprotocol_la_OBJECTS =  \
 	$(am_libmemcached_libmemcachedprotocol_la_OBJECTS)
 libmemcached_libmemcachedprotocol_la_LINK = $(LIBTOOL) $(AM_V_lt) \
 	--tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link \
-	$(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(libmemcached_libmemcachedprotocol_la_LDFLAGS) $(LDFLAGS) -o \
-	$@
+	$(CCLD) $(libmemcached_libmemcachedprotocol_la_CFLAGS) \
+	$(CFLAGS) $(libmemcached_libmemcachedprotocol_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_libmemcached_libmemcachedutil_la_OBJECTS =  \
-	libmemcached/util/ping.lo libmemcached/util/pool.lo \
-	libmemcached/util/version.lo
+	libmemcached/util/libmemcached_libmemcachedutil_la-ping.lo \
+	libmemcached/util/libmemcached_libmemcachedutil_la-pool.lo \
+	libmemcached/util/libmemcached_libmemcachedutil_la-version.lo
 libmemcached_libmemcachedutil_la_OBJECTS =  \
 	$(am_libmemcached_libmemcachedutil_la_OBJECTS)
 libmemcached_libmemcachedutil_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) \
+	$(libmemcached_libmemcachedutil_la_CFLAGS) $(CFLAGS) \
 	$(libmemcached_libmemcachedutil_la_LDFLAGS) $(LDFLAGS) -o $@
 @BUILD_LIBMEMCACHEDUTIL_TRUE@am_libmemcached_libmemcachedutil_la_rpath =  \
 @BUILD_LIBMEMCACHEDUTIL_TRUE@	-rpath $(libdir)
@@ -379,19 +389,19 @@ tests_libserver_la_OBJECTS = $(am_tests_libserver_la_OBJECTS)
 tests_libtest_la_LIBADD =
 am_tests_libtest_la_OBJECTS = tests/test.lo
 tests_libtest_la_OBJECTS = $(am_tests_libtest_la_OBJECTS)
-@HAVE_LIBEVENT_TRUE@am__EXEEXT_1 = clients/memslap$(EXEEXT)
+@BUILD_WIN32_WRAPPERS_FALSE@@HAVE_LIBEVENT_TRUE@am__EXEEXT_1 = clients/memslap$(EXEEXT)
 @HAVE_LIBGTEST_TRUE@am__EXEEXT_2 = unittests/unittests$(EXEEXT)
 @HAVE_LIBEVENT_TRUE@am__EXEEXT_3 = example/memcached_light$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_clients_memcapable_OBJECTS = clients/memcapable.$(OBJEXT)
 clients_memcapable_OBJECTS = $(am_clients_memcapable_OBJECTS)
-@BUILD_BYTEORDER_TRUE@clients_memcapable_DEPENDENCIES =  \
-@BUILD_BYTEORDER_TRUE@	libmemcached/libbyteorder.la
-am_clients_memcat_OBJECTS = clients/memcat.$(OBJEXT)
-clients_memcat_OBJECTS = $(am_clients_memcat_OBJECTS)
 @HAVE_SASL_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1) clients/libutilities.la \
 	libmemcached/libmemcached.la $(am__DEPENDENCIES_2)
+clients_memcapable_DEPENDENCIES = $(am__DEPENDENCIES_3) \
+	$(am__append_16)
+am_clients_memcat_OBJECTS = clients/memcat.$(OBJEXT)
+clients_memcat_OBJECTS = $(am_clients_memcat_OBJECTS)
 clients_memcat_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am_clients_memcp_OBJECTS = clients/memcp.$(OBJEXT)
 clients_memcp_OBJECTS = $(am_clients_memcp_OBJECTS)
@@ -422,17 +432,17 @@ am__example_memcached_light_SOURCES_DIST = example/interface_v0.c \
 	example/interface_v1.c example/memcached_light.c \
 	example/memcached_light.h example/storage.h \
 	example/storage_innodb.c example/storage.c
-@HAVE_LIBINNODB_TRUE@am__objects_6 = example/storage_innodb.$(OBJEXT)
-@HAVE_LIBINNODB_FALSE@am__objects_7 = example/storage.$(OBJEXT)
+@HAVE_LIBINNODB_TRUE@am__objects_7 = example/storage_innodb.$(OBJEXT)
+@HAVE_LIBINNODB_FALSE@am__objects_8 = example/storage.$(OBJEXT)
 am_example_memcached_light_OBJECTS = example/interface_v0.$(OBJEXT) \
 	example/interface_v1.$(OBJEXT) \
-	example/memcached_light.$(OBJEXT) $(am__objects_6) \
-	$(am__objects_7)
+	example/memcached_light.$(OBJEXT) $(am__objects_7) \
+	$(am__objects_8)
 example_memcached_light_OBJECTS =  \
 	$(am_example_memcached_light_OBJECTS)
 example_memcached_light_DEPENDENCIES =  \
 	libmemcached/libmemcachedprotocol.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__append_19)
+	$(am__DEPENDENCIES_1) $(am__append_21)
 am_tests_atomsmasher_OBJECTS = tests/atomsmasher.$(OBJEXT)
 tests_atomsmasher_OBJECTS = $(am_tests_atomsmasher_OBJECTS)
 am_tests_hashplus_OBJECTS = tests/tests_hashplus-hash_plus.$(OBJEXT)
@@ -577,7 +587,8 @@ am__nobase_include_HEADERS_DIST = libmemcached/allocators.h \
 	libmemcached/get.h libmemcached/hash.h \
 	libmemcached/memcached.h libmemcached/memcached.hpp \
 	libmemcached/memcached/protocol_binary.h libmemcached/parse.h \
-	libmemcached/protocol/cache.h libmemcached/protocol/callback.h \
+	libmemcached/platform.h libmemcached/protocol/cache.h \
+	libmemcached/protocol/callback.h \
 	libmemcached/protocol_handler.h libmemcached/quit.h \
 	libmemcached/result.h libmemcached/sasl.h \
 	libmemcached/server.h libmemcached/server_list.h \
@@ -604,7 +615,7 @@ ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
 red=; grn=; lgn=; blu=; std=
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = docs
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -836,8 +847,16 @@ ACLOCAL_AMFLAGS = -I m4
 # includes append to these:
 SUFFIXES = .d
 PHONY = valgrind cachegrind callgrind helgrind helgrind-slap
-CLEANFILES = $(am__append_9) $(am__append_12) tests/cachegrind.out \
+CLEANFILES = $(am__append_10) $(am__append_13) tests/cachegrind.out \
 	tests/callgrind.out helgrind.out.*
+
+# vim:ft=automake
+# included from Top Level Makefile.am
+# All paths should be given relative to the root
+
+# vim:ft=automake
+# included from Top Level Makefile.am
+# All paths should be given relative to the root
 noinst_HEADERS = libmemcached/byteorder.h libmemcached/common.h \
 	libmemcached/do.h libmemcached/internal.h libmemcached/io.h \
 	libmemcached/libmemcached_probes.h \
@@ -850,16 +869,17 @@ noinst_HEADERS = libmemcached/byteorder.h libmemcached/common.h \
 	clients/ms_task.h clients/ms_thread.h clients/utilities.h \
 	libhashkit/common.h tests/hash_results.h \
 	tests/ketama_test_cases.h tests/ketama_test_cases_spy.h \
-	tests/libmemcached_world.h tests/server.h tests/test.h
+	tests/libmemcached_world.h tests/server.h tests/test.h \
+	poll/poll.h win32/wrappers.h
 lib_LTLIBRARIES = libmemcached/libmemcachedprotocol.la \
-	libmemcached/libmemcached.la $(am__append_2) \
+	libmemcached/libmemcached.la $(am__append_3) \
 	libhashkit/libhashkit.la
 
 # This noinst lib contains things we want to be ABI private but still want to
 # either use in client programs or be able to test in test cases
 # These symbols will not be exposed in the shipped .so
 noinst_LTLIBRARIES = libmemcached/libmemcachedcallbacks.la \
-	libmemcached/libmemcachedinternal.la $(am__append_3) \
+	libmemcached/libmemcachedinternal.la $(am__append_4) \
 	clients/libutilities.la clients/libgenexec.la \
 	libhashkit/libhashkitinc.la tests/libserver.la \
 	tests/libtest.la
@@ -874,7 +894,8 @@ nobase_include_HEADERS = libmemcached/allocators.h \
 	libmemcached/get.h libmemcached/hash.h \
 	libmemcached/memcached.h libmemcached/memcached.hpp \
 	libmemcached/memcached/protocol_binary.h libmemcached/parse.h \
-	libmemcached/protocol/cache.h libmemcached/protocol/callback.h \
+	libmemcached/platform.h libmemcached/protocol/cache.h \
+	libmemcached/protocol/callback.h \
 	libmemcached/protocol_handler.h libmemcached/quit.h \
 	libmemcached/result.h libmemcached/sasl.h \
 	libmemcached/server.h libmemcached/server_list.h \
@@ -882,14 +903,14 @@ nobase_include_HEADERS = libmemcached/allocators.h \
 	libmemcached/strerror.h libmemcached/string.h \
 	libmemcached/types.h libmemcached/verbosity.h \
 	libmemcached/version.h libmemcached/visibility.h \
-	libmemcached/watchpoint.h $(am__append_1) \
+	libmemcached/watchpoint.h $(am__append_2) \
 	libhashkit/algorithm.h libhashkit/behavior.h \
 	libhashkit/configure.h libhashkit/digest.h \
 	libhashkit/function.h libhashkit/hashkit.h \
 	libhashkit/strerror.h libhashkit/types.h \
 	libhashkit/visibility.h
 EXTRA_HEADERS = 
-BUILT_SOURCES = $(am__append_8)
+BUILT_SOURCES = $(am__append_9)
 EXTRA_DIST = ${srcdir}/m4/pandora_*.m4 .quickly README.FIRST \
 	config/autorun.sh config/pandora-plugin config/uncrustify.cfg \
 	m4/ac_cxx_header_stdcxx_98.m4 m4/acx_pthread.m4 m4/gettext.m4 \
@@ -898,7 +919,8 @@ EXTRA_DIST = ${srcdir}/m4/pandora_*.m4 .quickly README.FIRST \
 	libmemcached/memcached/README.txt libhashkit/configure.h.in \
 	support/libmemcached.spec support/libmemcached-fc.spec.in \
 	support/set_benchmark.sh
-SUBDIRS = docs
+TEST_DOCS = $(am__append_1)
+@BUILD_DOCS_TRUE@SUBDIRS = docs
 libmemcached_libmemcachedprotocol_la_SOURCES = \
 						libmemcached/protocol/ascii_handler.c \
 						libmemcached/protocol/binary_handler.c \
@@ -906,7 +928,10 @@ libmemcached_libmemcachedprotocol_la_SOURCES = \
 						libmemcached/protocol/pedantic.c \
 						libmemcached/protocol/protocol_handler.c
 
-libmemcached_libmemcachedprotocol_la_LDFLAGS = ${AM_LDFLAGS} -version-info ${MEMCACHED_PROTOCAL_LIBRARY_VERSION}
+libmemcached_libmemcachedprotocol_la_CFLAGS = ${AM_CFLAGS} ${NO_CONVERSION} ${PTHREAD_CFLAGS}
+libmemcached_libmemcachedprotocol_la_LDFLAGS = ${AM_LDFLAGS} \
+	${PTHREAD_LIBS} -version-info \
+	${MEMCACHED_PROTOCAL_LIBRARY_VERSION} $(am__append_26)
 libmemcached_libmemcachedcallbacks_la_CFLAGS = ${AM_CFLAGS} ${NO_STRICT_ALIASING}
 libmemcached_libmemcachedcallbacks_la_SOURCES = libmemcached/callback.c
 libmemcached_libmemcachedinternal_la_SOURCES = \
@@ -926,30 +951,34 @@ libmemcached_libmemcached_la_SOURCES = libmemcached/allocators.c \
 	libmemcached/server.c libmemcached/server_list.c \
 	libmemcached/stats.c libmemcached/storage.c \
 	libmemcached/strerror.c libmemcached/verbosity.c \
-	libmemcached/version.c $(am__append_7) $(am__append_10)
+	libmemcached/version.c $(am__append_8) $(am__append_11) \
+	$(am__append_24)
 libmemcached_libmemcached_la_DEPENDENCIES =  \
 	libmemcached/libmemcachedcallbacks.la \
 	libmemcached/libmemcachedinternal.la \
-	libhashkit/libhashkitinc.la $(am__append_5) $(am__append_11)
+	libhashkit/libhashkitinc.la $(am__append_6) $(am__append_12)
 libmemcached_libmemcached_la_LIBADD = $(LIBM) \
 	libmemcached/libmemcachedcallbacks.la \
 	libmemcached/libmemcachedinternal.la \
-	libhashkit/libhashkitinc.la $(am__append_4)
+	libhashkit/libhashkitinc.la $(am__append_5)
 libmemcached_libmemcached_la_LDFLAGS = ${AM_LDFLAGS} -version-info \
-	${MEMCACHED_LIBRARY_VERSION} $(am__append_6)
+	${MEMCACHED_LIBRARY_VERSION} $(am__append_7) $(am__append_25)
 libmemcached_libmemcachedutil_la_SOURCES = \
 					  libmemcached/util/ping.c \
 					  libmemcached/util/pool.c \
 					  libmemcached/util/version.c
 
+libmemcached_libmemcachedutil_la_CFLAGS = ${AM_CFLAGS} ${NO_CONVERSION} ${PTHREAD_CFLAGS}
 libmemcached_libmemcachedutil_la_LIBADD = libmemcached/libmemcached.la
-libmemcached_libmemcachedutil_la_LDFLAGS = ${AM_LDFLAGS} -version-info ${MEMCACHED_UTIL_LIBRARY_VERSION}
+libmemcached_libmemcachedutil_la_LDFLAGS = ${AM_LDFLAGS} \
+	${PTHREAD_LIBS} -version-info \
+	${MEMCACHED_UTIL_LIBRARY_VERSION} $(am__append_27)
 libmemcached_libmemcachedutil_la_DEPENDENCIES = libmemcached/libmemcached.la
 @BUILD_BYTEORDER_TRUE@libmemcached_libbyteorder_la_SOURCES = libmemcached/byteorder.c
 @BUILD_BYTEORDER_TRUE@libmemcached_libmemcachedprotocol_la_LIBADD = libmemcached/libbyteorder.la
 @BUILD_BYTEORDER_TRUE@libmemcached_libmemcachedprotocol_la_DEPENDENCIES = libmemcached/libbyteorder.la
 CLIENTS_LDADDS = $(LIBM) clients/libutilities.la \
-	libmemcached/libmemcached.la $(am__append_13)
+	libmemcached/libmemcached.la $(am__append_14)
 clients_libutilities_la_SOURCES = clients/utilities.c
 clients_libgenexec_la_SOURCES = clients/generator.c clients/execute.c
 clients_memcat_SOURCES = clients/memcat.c
@@ -977,21 +1006,19 @@ clients_memslap_SOURCES = \
 
 clients_memslap_LDADD = $(LTLIBEVENT) clients/libgenexec.la $(CLIENTS_LDADDS)
 clients_memcapable_SOURCES = clients/memcapable.c
-@BUILD_BYTEORDER_TRUE@clients_memcapable_LDADD = libmemcached/libbyteorder.la
+clients_memcapable_LDADD = $(CLIENTS_LDADDS) $(am__append_16)
 libhashkit_libhashkit_la_SOURCES = libhashkit/algorithm.c \
 	libhashkit/behavior.c libhashkit/crc32.c libhashkit/fnv.c \
 	libhashkit/digest.c libhashkit/function.c libhashkit/hashkit.c \
 	libhashkit/jenkins.c libhashkit/ketama.c libhashkit/md5.c \
 	libhashkit/murmur.c libhashkit/one_at_a_time.c \
-	libhashkit/strerror.c $(am__append_15)
+	libhashkit/strerror.c $(am__append_17)
 libhashkit_libhashkit_la_CFLAGS = \
 				 ${AM_CFLAGS} \
 				 -DBUILDING_HASHKIT
 
-libhashkit_libhashkit_la_LDFLAGS = \
-				  $(LIBM) \
-				  -version-info $(HASHKIT_LIBRARY_VERSION)
-
+libhashkit_libhashkit_la_LDFLAGS = $(LIBM) -version-info \
+	$(HASHKIT_LIBRARY_VERSION) $(am__append_28)
 libhashkit_libhashkitinc_la_SOURCES = ${libhashkit_libhashkit_la_SOURCES}
 libhashkit_libhashkitinc_la_CFLAGS = ${libhashkit_libhashkit_la_CFLAGS}
 libhashkit_libhashkitinc_la_LDFLAGS = $(LIBM)
@@ -1005,7 +1032,7 @@ unittests_unittests_LDADD = \
 			   libmemcached/libmemcachedinternal.la \
 			   ${TESTS_LDADDS} ${LTLIBGTEST}
 
-TESTS_LDADDS = libmemcached/libmemcached.la $(am__append_17)
+TESTS_LDADDS = libmemcached/libmemcached.la $(am__append_19)
 VALGRIND_COMMAND = $(LIBTOOL) --mode=execute valgrind --leak-check=yes --show-reachable=yes --track-fds=yes
 DEBUG_COMMAND = $(LIBTOOL) --mode=execute gdb
 PAHOLE_COMMAND = $(LIBTOOL) --mode=execute pahole
@@ -1021,7 +1048,12 @@ tests_testapp_DEPENDENCIES = \
 			    libmemcached/libmemcachedinternal.la \
 			    $(TESTS_LDADDS)
 
-tests_testapp_LDADD = $(tests_testapp_DEPENDENCIES) $(LIBSASL)
+tests_testapp_LDADD = clients/libgenexec.la \
+		     tests/libserver.la \
+		     tests/libtest.la \
+		     libmemcached/libmemcachedinternal.la \
+		     $(TESTS_LDADDS) $(LIBSASL)
+
 tests_testplus_SOURCES = tests/plus.cpp
 tests_testplus_CXXFLAGS = $(AM_CXXFLAGS) $(NO_EFF_CXX)
 tests_testplus_DEPENDENCIES = tests/libtest.la tests/libserver.la $(TESTS_LDADDS)
@@ -1067,10 +1099,10 @@ UDP_COMMAND = tests/testudp $(COLLECTION) $(SUITE)
 HASH_COMMAND = tests/testhashkit $(COLLECTION) $(SUITE)
 example_memcached_light_SOURCES = example/interface_v0.c \
 	example/interface_v1.c example/memcached_light.c \
-	example/memcached_light.h example/storage.h $(am__append_20) \
-	$(am__append_21)
+	example/memcached_light.h example/storage.h $(am__append_22) \
+	$(am__append_23)
 example_memcached_light_LDADD = libmemcached/libmemcachedprotocol.la \
-	$(LIBINNODB) $(LTLIBEVENT) $(am__append_19)
+	$(LIBINNODB) $(LTLIBEVENT) $(am__append_21)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = support/libmemcached.pc
 all: $(BUILT_SOURCES) config.h
@@ -1080,7 +1112,7 @@ all: $(BUILT_SOURCES) config.h
 .SUFFIXES: .d .c .cc .cpp .lo .o .obj
 am--refresh:
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/libmemcached/include.am $(srcdir)/clients/include.am $(srcdir)/libhashkit/include.am $(srcdir)/unittests/include.am $(srcdir)/tests/include.am $(srcdir)/example/include.am $(srcdir)/support/include.am $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/libmemcached/include.am $(srcdir)/clients/include.am $(srcdir)/libhashkit/include.am $(srcdir)/unittests/include.am $(srcdir)/tests/include.am $(srcdir)/example/include.am $(srcdir)/support/include.am $(srcdir)/poll/include.am $(srcdir)/win32/include.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -1389,6 +1421,14 @@ libmemcached/libmemcached_libmemcached_la-version.lo:  \
 libmemcached/libmemcached_libmemcached_la-sasl.lo:  \
 	libmemcached/$(am__dirstamp) \
 	libmemcached/$(DEPDIR)/$(am__dirstamp)
+poll/$(am__dirstamp):
+	@$(MKDIR_P) poll
+	@: > poll/$(am__dirstamp)
+poll/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) poll/$(DEPDIR)
+	@: > poll/$(DEPDIR)/$(am__dirstamp)
+poll/libmemcached_libmemcached_la-poll.lo: poll/$(am__dirstamp) \
+	poll/$(DEPDIR)/$(am__dirstamp)
 libmemcached/libmemcached.la: $(libmemcached_libmemcached_la_OBJECTS) $(libmemcached_libmemcached_la_DEPENDENCIES) libmemcached/$(am__dirstamp)
 	$(AM_V_CCLD)$(libmemcached_libmemcached_la_LINK) -rpath $(libdir) $(libmemcached_libmemcached_la_OBJECTS) $(libmemcached_libmemcached_la_LIBADD) $(LIBS)
 libmemcached/libmemcached_libmemcachedcallbacks_la-callback.lo:  \
@@ -1406,18 +1446,19 @@ libmemcached/protocol/$(am__dirstamp):
 libmemcached/protocol/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) libmemcached/protocol/$(DEPDIR)
 	@: > libmemcached/protocol/$(DEPDIR)/$(am__dirstamp)
-libmemcached/protocol/ascii_handler.lo:  \
+libmemcached/protocol/libmemcached_libmemcachedprotocol_la-ascii_handler.lo:  \
 	libmemcached/protocol/$(am__dirstamp) \
 	libmemcached/protocol/$(DEPDIR)/$(am__dirstamp)
-libmemcached/protocol/binary_handler.lo:  \
+libmemcached/protocol/libmemcached_libmemcachedprotocol_la-binary_handler.lo:  \
 	libmemcached/protocol/$(am__dirstamp) \
 	libmemcached/protocol/$(DEPDIR)/$(am__dirstamp)
-libmemcached/protocol/cache.lo: libmemcached/protocol/$(am__dirstamp) \
-	libmemcached/protocol/$(DEPDIR)/$(am__dirstamp)
-libmemcached/protocol/pedantic.lo:  \
+libmemcached/protocol/libmemcached_libmemcachedprotocol_la-cache.lo:  \
 	libmemcached/protocol/$(am__dirstamp) \
 	libmemcached/protocol/$(DEPDIR)/$(am__dirstamp)
-libmemcached/protocol/protocol_handler.lo:  \
+libmemcached/protocol/libmemcached_libmemcachedprotocol_la-pedantic.lo:  \
+	libmemcached/protocol/$(am__dirstamp) \
+	libmemcached/protocol/$(DEPDIR)/$(am__dirstamp)
+libmemcached/protocol/libmemcached_libmemcachedprotocol_la-protocol_handler.lo:  \
 	libmemcached/protocol/$(am__dirstamp) \
 	libmemcached/protocol/$(DEPDIR)/$(am__dirstamp)
 libmemcached/libmemcachedprotocol.la: $(libmemcached_libmemcachedprotocol_la_OBJECTS) $(libmemcached_libmemcachedprotocol_la_DEPENDENCIES) libmemcached/$(am__dirstamp)
@@ -1428,11 +1469,14 @@ libmemcached/util/$(am__dirstamp):
 libmemcached/util/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) libmemcached/util/$(DEPDIR)
 	@: > libmemcached/util/$(DEPDIR)/$(am__dirstamp)
-libmemcached/util/ping.lo: libmemcached/util/$(am__dirstamp) \
+libmemcached/util/libmemcached_libmemcachedutil_la-ping.lo:  \
+	libmemcached/util/$(am__dirstamp) \
 	libmemcached/util/$(DEPDIR)/$(am__dirstamp)
-libmemcached/util/pool.lo: libmemcached/util/$(am__dirstamp) \
+libmemcached/util/libmemcached_libmemcachedutil_la-pool.lo:  \
+	libmemcached/util/$(am__dirstamp) \
 	libmemcached/util/$(DEPDIR)/$(am__dirstamp)
-libmemcached/util/version.lo: libmemcached/util/$(am__dirstamp) \
+libmemcached/util/libmemcached_libmemcachedutil_la-version.lo:  \
+	libmemcached/util/$(am__dirstamp) \
 	libmemcached/util/$(DEPDIR)/$(am__dirstamp)
 libmemcached/libmemcachedutil.la: $(libmemcached_libmemcachedutil_la_OBJECTS) $(libmemcached_libmemcachedutil_la_DEPENDENCIES) libmemcached/$(am__dirstamp)
 	$(AM_V_CCLD)$(libmemcached_libmemcachedutil_la_LINK) $(am_libmemcached_libmemcachedutil_la_rpath) $(libmemcached_libmemcachedutil_la_OBJECTS) $(libmemcached_libmemcachedutil_la_LIBADD) $(LIBS)
@@ -1787,24 +1831,26 @@ mostlyclean-compile:
 	-rm -f libmemcached/libmemcached_libmemcached_la-version.lo
 	-rm -f libmemcached/libmemcached_libmemcachedcallbacks_la-callback.$(OBJEXT)
 	-rm -f libmemcached/libmemcached_libmemcachedcallbacks_la-callback.lo
-	-rm -f libmemcached/protocol/ascii_handler.$(OBJEXT)
-	-rm -f libmemcached/protocol/ascii_handler.lo
-	-rm -f libmemcached/protocol/binary_handler.$(OBJEXT)
-	-rm -f libmemcached/protocol/binary_handler.lo
-	-rm -f libmemcached/protocol/cache.$(OBJEXT)
-	-rm -f libmemcached/protocol/cache.lo
-	-rm -f libmemcached/protocol/pedantic.$(OBJEXT)
-	-rm -f libmemcached/protocol/pedantic.lo
-	-rm -f libmemcached/protocol/protocol_handler.$(OBJEXT)
-	-rm -f libmemcached/protocol/protocol_handler.lo
+	-rm -f libmemcached/protocol/libmemcached_libmemcachedprotocol_la-ascii_handler.$(OBJEXT)
+	-rm -f libmemcached/protocol/libmemcached_libmemcachedprotocol_la-ascii_handler.lo
+	-rm -f libmemcached/protocol/libmemcached_libmemcachedprotocol_la-binary_handler.$(OBJEXT)
+	-rm -f libmemcached/protocol/libmemcached_libmemcachedprotocol_la-binary_handler.lo
+	-rm -f libmemcached/protocol/libmemcached_libmemcachedprotocol_la-cache.$(OBJEXT)
+	-rm -f libmemcached/protocol/libmemcached_libmemcachedprotocol_la-cache.lo
+	-rm -f libmemcached/protocol/libmemcached_libmemcachedprotocol_la-pedantic.$(OBJEXT)
+	-rm -f libmemcached/protocol/libmemcached_libmemcachedprotocol_la-pedantic.lo
+	-rm -f libmemcached/protocol/libmemcached_libmemcachedprotocol_la-protocol_handler.$(OBJEXT)
+	-rm -f libmemcached/protocol/libmemcached_libmemcachedprotocol_la-protocol_handler.lo
 	-rm -f libmemcached/string.$(OBJEXT)
 	-rm -f libmemcached/string.lo
-	-rm -f libmemcached/util/ping.$(OBJEXT)
-	-rm -f libmemcached/util/ping.lo
-	-rm -f libmemcached/util/pool.$(OBJEXT)
-	-rm -f libmemcached/util/pool.lo
-	-rm -f libmemcached/util/version.$(OBJEXT)
-	-rm -f libmemcached/util/version.lo
+	-rm -f libmemcached/util/libmemcached_libmemcachedutil_la-ping.$(OBJEXT)
+	-rm -f libmemcached/util/libmemcached_libmemcachedutil_la-ping.lo
+	-rm -f libmemcached/util/libmemcached_libmemcachedutil_la-pool.$(OBJEXT)
+	-rm -f libmemcached/util/libmemcached_libmemcachedutil_la-pool.lo
+	-rm -f libmemcached/util/libmemcached_libmemcachedutil_la-version.$(OBJEXT)
+	-rm -f libmemcached/util/libmemcached_libmemcachedutil_la-version.lo
+	-rm -f poll/libmemcached_libmemcached_la-poll.$(OBJEXT)
+	-rm -f poll/libmemcached_libmemcached_la-poll.lo
 	-rm -f tests/atomsmasher.$(OBJEXT)
 	-rm -f tests/hashkit_functions.$(OBJEXT)
 	-rm -f tests/server.$(OBJEXT)
@@ -1907,14 +1953,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@libmemcached/$(DEPDIR)/libmemcached_libmemcached_la-version.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@libmemcached/$(DEPDIR)/libmemcached_libmemcachedcallbacks_la-callback.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@libmemcached/$(DEPDIR)/string.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/protocol/$(DEPDIR)/ascii_handler.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/protocol/$(DEPDIR)/binary_handler.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/protocol/$(DEPDIR)/cache.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/protocol/$(DEPDIR)/pedantic.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/protocol/$(DEPDIR)/protocol_handler.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/util/$(DEPDIR)/ping.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/util/$(DEPDIR)/pool.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/util/$(DEPDIR)/version.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-ascii_handler.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-binary_handler.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-cache.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-pedantic.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-protocol_handler.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-ping.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-pool.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-version.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@poll/$(DEPDIR)/libmemcached_libmemcached_la-poll.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/atomsmasher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/hashkit_functions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/server.Plo@am__quote@
@@ -2419,6 +2466,14 @@ libmemcached/libmemcached_libmemcached_la-sasl.lo: libmemcached/sasl.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcached_la_CFLAGS) $(CFLAGS) -c -o libmemcached/libmemcached_libmemcached_la-sasl.lo `test -f 'libmemcached/sasl.c' || echo '$(srcdir)/'`libmemcached/sasl.c
 
+poll/libmemcached_libmemcached_la-poll.lo: poll/poll.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcached_la_CFLAGS) $(CFLAGS) -MT poll/libmemcached_libmemcached_la-poll.lo -MD -MP -MF poll/$(DEPDIR)/libmemcached_libmemcached_la-poll.Tpo -c -o poll/libmemcached_libmemcached_la-poll.lo `test -f 'poll/poll.c' || echo '$(srcdir)/'`poll/poll.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) poll/$(DEPDIR)/libmemcached_libmemcached_la-poll.Tpo poll/$(DEPDIR)/libmemcached_libmemcached_la-poll.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='poll/poll.c' object='poll/libmemcached_libmemcached_la-poll.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcached_la_CFLAGS) $(CFLAGS) -c -o poll/libmemcached_libmemcached_la-poll.lo `test -f 'poll/poll.c' || echo '$(srcdir)/'`poll/poll.c
+
 libmemcached/libmemcached_libmemcachedcallbacks_la-callback.lo: libmemcached/callback.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedcallbacks_la_CFLAGS) $(CFLAGS) -MT libmemcached/libmemcached_libmemcachedcallbacks_la-callback.lo -MD -MP -MF libmemcached/$(DEPDIR)/libmemcached_libmemcachedcallbacks_la-callback.Tpo -c -o libmemcached/libmemcached_libmemcachedcallbacks_la-callback.lo `test -f 'libmemcached/callback.c' || echo '$(srcdir)/'`libmemcached/callback.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) libmemcached/$(DEPDIR)/libmemcached_libmemcachedcallbacks_la-callback.Tpo libmemcached/$(DEPDIR)/libmemcached_libmemcachedcallbacks_la-callback.Plo
@@ -2426,6 +2481,70 @@ libmemcached/libmemcached_libmemcachedcallbacks_la-callback.lo: libmemcached/cal
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='libmemcached/callback.c' object='libmemcached/libmemcached_libmemcachedcallbacks_la-callback.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedcallbacks_la_CFLAGS) $(CFLAGS) -c -o libmemcached/libmemcached_libmemcachedcallbacks_la-callback.lo `test -f 'libmemcached/callback.c' || echo '$(srcdir)/'`libmemcached/callback.c
+
+libmemcached/protocol/libmemcached_libmemcachedprotocol_la-ascii_handler.lo: libmemcached/protocol/ascii_handler.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedprotocol_la_CFLAGS) $(CFLAGS) -MT libmemcached/protocol/libmemcached_libmemcachedprotocol_la-ascii_handler.lo -MD -MP -MF libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-ascii_handler.Tpo -c -o libmemcached/protocol/libmemcached_libmemcachedprotocol_la-ascii_handler.lo `test -f 'libmemcached/protocol/ascii_handler.c' || echo '$(srcdir)/'`libmemcached/protocol/ascii_handler.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-ascii_handler.Tpo libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-ascii_handler.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='libmemcached/protocol/ascii_handler.c' object='libmemcached/protocol/libmemcached_libmemcachedprotocol_la-ascii_handler.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedprotocol_la_CFLAGS) $(CFLAGS) -c -o libmemcached/protocol/libmemcached_libmemcachedprotocol_la-ascii_handler.lo `test -f 'libmemcached/protocol/ascii_handler.c' || echo '$(srcdir)/'`libmemcached/protocol/ascii_handler.c
+
+libmemcached/protocol/libmemcached_libmemcachedprotocol_la-binary_handler.lo: libmemcached/protocol/binary_handler.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedprotocol_la_CFLAGS) $(CFLAGS) -MT libmemcached/protocol/libmemcached_libmemcachedprotocol_la-binary_handler.lo -MD -MP -MF libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-binary_handler.Tpo -c -o libmemcached/protocol/libmemcached_libmemcachedprotocol_la-binary_handler.lo `test -f 'libmemcached/protocol/binary_handler.c' || echo '$(srcdir)/'`libmemcached/protocol/binary_handler.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-binary_handler.Tpo libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-binary_handler.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='libmemcached/protocol/binary_handler.c' object='libmemcached/protocol/libmemcached_libmemcachedprotocol_la-binary_handler.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedprotocol_la_CFLAGS) $(CFLAGS) -c -o libmemcached/protocol/libmemcached_libmemcachedprotocol_la-binary_handler.lo `test -f 'libmemcached/protocol/binary_handler.c' || echo '$(srcdir)/'`libmemcached/protocol/binary_handler.c
+
+libmemcached/protocol/libmemcached_libmemcachedprotocol_la-cache.lo: libmemcached/protocol/cache.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedprotocol_la_CFLAGS) $(CFLAGS) -MT libmemcached/protocol/libmemcached_libmemcachedprotocol_la-cache.lo -MD -MP -MF libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-cache.Tpo -c -o libmemcached/protocol/libmemcached_libmemcachedprotocol_la-cache.lo `test -f 'libmemcached/protocol/cache.c' || echo '$(srcdir)/'`libmemcached/protocol/cache.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-cache.Tpo libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-cache.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='libmemcached/protocol/cache.c' object='libmemcached/protocol/libmemcached_libmemcachedprotocol_la-cache.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedprotocol_la_CFLAGS) $(CFLAGS) -c -o libmemcached/protocol/libmemcached_libmemcachedprotocol_la-cache.lo `test -f 'libmemcached/protocol/cache.c' || echo '$(srcdir)/'`libmemcached/protocol/cache.c
+
+libmemcached/protocol/libmemcached_libmemcachedprotocol_la-pedantic.lo: libmemcached/protocol/pedantic.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedprotocol_la_CFLAGS) $(CFLAGS) -MT libmemcached/protocol/libmemcached_libmemcachedprotocol_la-pedantic.lo -MD -MP -MF libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-pedantic.Tpo -c -o libmemcached/protocol/libmemcached_libmemcachedprotocol_la-pedantic.lo `test -f 'libmemcached/protocol/pedantic.c' || echo '$(srcdir)/'`libmemcached/protocol/pedantic.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-pedantic.Tpo libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-pedantic.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='libmemcached/protocol/pedantic.c' object='libmemcached/protocol/libmemcached_libmemcachedprotocol_la-pedantic.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedprotocol_la_CFLAGS) $(CFLAGS) -c -o libmemcached/protocol/libmemcached_libmemcachedprotocol_la-pedantic.lo `test -f 'libmemcached/protocol/pedantic.c' || echo '$(srcdir)/'`libmemcached/protocol/pedantic.c
+
+libmemcached/protocol/libmemcached_libmemcachedprotocol_la-protocol_handler.lo: libmemcached/protocol/protocol_handler.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedprotocol_la_CFLAGS) $(CFLAGS) -MT libmemcached/protocol/libmemcached_libmemcachedprotocol_la-protocol_handler.lo -MD -MP -MF libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-protocol_handler.Tpo -c -o libmemcached/protocol/libmemcached_libmemcachedprotocol_la-protocol_handler.lo `test -f 'libmemcached/protocol/protocol_handler.c' || echo '$(srcdir)/'`libmemcached/protocol/protocol_handler.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-protocol_handler.Tpo libmemcached/protocol/$(DEPDIR)/libmemcached_libmemcachedprotocol_la-protocol_handler.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='libmemcached/protocol/protocol_handler.c' object='libmemcached/protocol/libmemcached_libmemcachedprotocol_la-protocol_handler.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedprotocol_la_CFLAGS) $(CFLAGS) -c -o libmemcached/protocol/libmemcached_libmemcachedprotocol_la-protocol_handler.lo `test -f 'libmemcached/protocol/protocol_handler.c' || echo '$(srcdir)/'`libmemcached/protocol/protocol_handler.c
+
+libmemcached/util/libmemcached_libmemcachedutil_la-ping.lo: libmemcached/util/ping.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedutil_la_CFLAGS) $(CFLAGS) -MT libmemcached/util/libmemcached_libmemcachedutil_la-ping.lo -MD -MP -MF libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-ping.Tpo -c -o libmemcached/util/libmemcached_libmemcachedutil_la-ping.lo `test -f 'libmemcached/util/ping.c' || echo '$(srcdir)/'`libmemcached/util/ping.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-ping.Tpo libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-ping.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='libmemcached/util/ping.c' object='libmemcached/util/libmemcached_libmemcachedutil_la-ping.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedutil_la_CFLAGS) $(CFLAGS) -c -o libmemcached/util/libmemcached_libmemcachedutil_la-ping.lo `test -f 'libmemcached/util/ping.c' || echo '$(srcdir)/'`libmemcached/util/ping.c
+
+libmemcached/util/libmemcached_libmemcachedutil_la-pool.lo: libmemcached/util/pool.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedutil_la_CFLAGS) $(CFLAGS) -MT libmemcached/util/libmemcached_libmemcachedutil_la-pool.lo -MD -MP -MF libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-pool.Tpo -c -o libmemcached/util/libmemcached_libmemcachedutil_la-pool.lo `test -f 'libmemcached/util/pool.c' || echo '$(srcdir)/'`libmemcached/util/pool.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-pool.Tpo libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-pool.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='libmemcached/util/pool.c' object='libmemcached/util/libmemcached_libmemcachedutil_la-pool.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedutil_la_CFLAGS) $(CFLAGS) -c -o libmemcached/util/libmemcached_libmemcachedutil_la-pool.lo `test -f 'libmemcached/util/pool.c' || echo '$(srcdir)/'`libmemcached/util/pool.c
+
+libmemcached/util/libmemcached_libmemcachedutil_la-version.lo: libmemcached/util/version.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedutil_la_CFLAGS) $(CFLAGS) -MT libmemcached/util/libmemcached_libmemcachedutil_la-version.lo -MD -MP -MF libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-version.Tpo -c -o libmemcached/util/libmemcached_libmemcachedutil_la-version.lo `test -f 'libmemcached/util/version.c' || echo '$(srcdir)/'`libmemcached/util/version.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-version.Tpo libmemcached/util/$(DEPDIR)/libmemcached_libmemcachedutil_la-version.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='libmemcached/util/version.c' object='libmemcached/util/libmemcached_libmemcachedutil_la-version.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmemcached_libmemcachedutil_la_CFLAGS) $(CFLAGS) -c -o libmemcached/util/libmemcached_libmemcachedutil_la-version.lo `test -f 'libmemcached/util/version.c' || echo '$(srcdir)/'`libmemcached/util/version.c
 
 tests/tests_testapp-mem_functions.o: tests/mem_functions.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_testapp_CFLAGS) $(CFLAGS) -MT tests/tests_testapp-mem_functions.o -MD -MP -MF tests/$(DEPDIR)/tests_testapp-mem_functions.Tpo -c -o tests/tests_testapp-mem_functions.o `test -f 'tests/mem_functions.c' || echo '$(srcdir)/'`tests/mem_functions.c
@@ -2572,6 +2691,7 @@ clean-libtool:
 	-rm -rf libmemcached/.libs libmemcached/_libs
 	-rm -rf libmemcached/protocol/.libs libmemcached/protocol/_libs
 	-rm -rf libmemcached/util/.libs libmemcached/util/_libs
+	-rm -rf poll/.libs poll/_libs
 	-rm -rf tests/.libs tests/_libs
 	-rm -rf unittests/.libs unittests/_libs
 
@@ -3092,6 +3212,8 @@ distclean-generic:
 	-rm -f libmemcached/protocol/$(am__dirstamp)
 	-rm -f libmemcached/util/$(DEPDIR)/$(am__dirstamp)
 	-rm -f libmemcached/util/$(am__dirstamp)
+	-rm -f poll/$(DEPDIR)/$(am__dirstamp)
+	-rm -f poll/$(am__dirstamp)
 	-rm -f tests/$(DEPDIR)/$(am__dirstamp)
 	-rm -f tests/$(am__dirstamp)
 	-rm -f unittests/$(DEPDIR)/$(am__dirstamp)
@@ -3109,7 +3231,7 @@ clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf clients/$(DEPDIR) example/$(DEPDIR) libhashkit/$(DEPDIR) libmemcached/$(DEPDIR) libmemcached/protocol/$(DEPDIR) libmemcached/util/$(DEPDIR) tests/$(DEPDIR) unittests/$(DEPDIR)
+	-rm -rf clients/$(DEPDIR) example/$(DEPDIR) libhashkit/$(DEPDIR) libmemcached/$(DEPDIR) libmemcached/protocol/$(DEPDIR) libmemcached/util/$(DEPDIR) poll/$(DEPDIR) tests/$(DEPDIR) unittests/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -3158,7 +3280,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf clients/$(DEPDIR) example/$(DEPDIR) libhashkit/$(DEPDIR) libmemcached/$(DEPDIR) libmemcached/protocol/$(DEPDIR) libmemcached/util/$(DEPDIR) tests/$(DEPDIR) unittests/$(DEPDIR)
+	-rm -rf clients/$(DEPDIR) example/$(DEPDIR) libhashkit/$(DEPDIR) libmemcached/$(DEPDIR) libmemcached/protocol/$(DEPDIR) libmemcached/util/$(DEPDIR) poll/$(DEPDIR) tests/$(DEPDIR) unittests/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -3217,7 +3339,7 @@ libmemcached/dtrace_probes.h: libmemcached/libmemcached_probes.d
 libmemcached/libmemcached_probes.o: libmemcached/libmemcached_probes.d ${libmemcached_libmemcached_la_OBJECTS} config.h
 
 .d.o:
-	$(DTRACE) $(DTRACEFLAGS) -o libmemcached/libmemcached_probes.o -G -s ${top_srcdir}/libmemcached/libmemcached_probes.d `grep '^pic_object' ${top_builddir}/libmemcached/*.lo | cut -f 2 -d\' | sed "s/^/${top_builddir}\//"`
+	$(DTRACE) $(DTRACEFLAGS) -o libmemcached/libmemcached_probes.o -G -s ${top_srcdir}/libmemcached/libmemcached_probes.d `grep '^pic_object' ${top_builddir}/libmemcached/*.lo | cut -f 2 -d\' | sed "s/^/${top_builddir}\/libmemcached\//"`
 
 test-start-server:
 	clients/memflush --servers=localhost
@@ -3246,21 +3368,21 @@ unit: check-TESTS
 
 test: check
 
-check-local: test-docs test-mem test-hash memcapable
-	echo "Tests completed"
+check-local: $(TEST_DOCS) test-mem test-hash memcapable
+	@echo "Tests completed"
 
 test-x: check-local test-plus test-memcat test-memcp test-memrm test-memerror test-memdump test-memflush test-memstat
-	echo "Tests completed"
+	@echo "Tests completed"
 
 memcapable: clients/memcapable
-	@@MEMC_BINARY@ -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@@MEMC_BINARY@ -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@clients/memcapable -p 12555 || echo "Your memcached server does not support all commands"
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
 	@rm tests/Xumemc.pid
 
 test-memcat: clients/memcat clients/memcp
 	@echo "Testing memcat"
-	@@MEMC_BINARY@ -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@@MEMC_BINARY@ -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@clients/memcp --servers="localhost:12555" `pwd`/clients/memcp
 	@clients/memcat --servers="localhost:12555" memcp > `pwd`/tests/scratch
 	@clients/memcat --servers="localhost:12555" --file=`pwd`/tests/scratch2 memcp
@@ -3272,7 +3394,7 @@ test-memcat: clients/memcat clients/memcp
 
 valgrind-memcat: clients/memcat clients/memcp
 	@echo "Testing memcat"
-	@@MEMC_BINARY@ -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@@MEMC_BINARY@ -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@clients/memcp --servers="localhost:12555" clients/memcp
 	@$(VALGRIND_COMMAND) clients/memcat --servers="localhost:12555" memcp > tests/scratch
 #	@diff clients/memcp tests/scratch
@@ -3282,21 +3404,21 @@ valgrind-memcat: clients/memcat clients/memcp
 
 test-memcp: clients/memcp
 	@echo "Testing memcp"
-	@@MEMC_BINARY@ -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@@MEMC_BINARY@ -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@clients/memcp --servers="localhost:12555" clients/memcp clients/memcat clients/memstat
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
 	@rm tests/Xumemc.pid
 
 valgrind-memcp: clients/memcat clients/memcp
 	@echo "Testing memcp"
-	@@MEMC_BINARY@ -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@@MEMC_BINARY@ -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@$(VALGRIND_COMMAND) clients/memcp --servers="localhost:12555" clients/memcp clients/memcat clients/memstat
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
 	@rm tests/Xumemc.pid
 
 test-memrm: clients/memrm clients/memcp
 	@echo "Testing memrm"
-	@@MEMC_BINARY@ -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@@MEMC_BINARY@ -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@clients/memcp --servers="localhost:12555" clients/memcat
 	@clients/memrm --servers="localhost:12555" memcat
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
@@ -3304,7 +3426,7 @@ test-memrm: clients/memrm clients/memcp
 
 valgrind-memrm: clients/memcat clients/memcp
 	@echo "Testing memrm"
-	@@MEMC_BINARY@ -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@@MEMC_BINARY@ -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@clients/memcp --servers="localhost:12555" clients/memcat
 	@$(VALGRIND_COMMAND) clients/memrm --servers="localhost:12555" memcat
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
@@ -3312,21 +3434,21 @@ valgrind-memrm: clients/memcat clients/memcp
 
 test-memflush: clients/memflush
 	@echo "Testing memflush"
-	@$(MEMC_BINARY) -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@$(MEMC_BINARY) -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@clients/memflush --servers="localhost:12555"
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
 	@rm tests/Xumemc.pid
 
 valgrind-memflush: clients/memflush
 	@echo "Testing memflush"
-	@$(MEMC_BINARY) -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@$(MEMC_BINARY) -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@$(VALGRIND_COMMAND) clients/memflush --servers="localhost:12555"
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
 	@rm tests/Xumemc.pid
 
 test-memdump: clients/memdump clients/memcp
 	@echo "Testing memdump"
-	@$(MEMC_BINARY) -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@$(MEMC_BINARY) -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@clients/memcp --servers="localhost:12555" clients/memcat
 	@clients/memdump --servers="localhost:12555" > /dev/null
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
@@ -3334,7 +3456,7 @@ test-memdump: clients/memdump clients/memcp
 
 valgrind-memdump: clients/memcat clients/memcp
 	@echo "Testing memdump"
-	@$(MEMC_BINARY) -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@$(MEMC_BINARY) -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@clients/memcp --servers="localhost:12555" clients/memcat
 	@$(VALGRIND_COMMAND) clients/memdump --servers="localhost:12555" > /dev/null
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
@@ -3342,14 +3464,14 @@ valgrind-memdump: clients/memcat clients/memcp
 
 test-memstat: clients/memstat
 	@echo "Testing memstat"
-	@$(MEMC_BINARY) -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@$(MEMC_BINARY) -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@clients/memstat --servers="localhost:12555" > /dev/null
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
 	@rm tests/Xumemc.pid
 
 valgrind-memstat: clients/memstat
 	@echo "Testing memstat"
-	@$(MEMC_BINARY) -d -P `pwd`/tests/Xumemc.pid -p 12555
+	@$(MEMC_BINARY) -d -u root -P `pwd`/tests/Xumemc.pid -p 12555
 	@$(VALGRIND_COMMAND) clients/memstat --servers="localhost:12555" > /dev/null
 	@cat tests/Xumemc.pid | xargs kill || echo "Failed to kill memcached server"
 	@rm tests/Xumemc.pid
@@ -3491,7 +3613,7 @@ lcov: lcov-clean check
 	genhtml -o lcov --function-coverage -t libmemcached libmemcached/lcov.out
 
 lcov-clean: clean
-	rm -rf lcov */lcov.out 
+	rm -rf lcov */lcov.out
 	find . -name '*.gcno' | xargs rm -f
 	find . -name '*.gcda' | xargs rm -f
 

@@ -17,7 +17,7 @@
                       +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif
 
-uint32_t hashkit_hsieh(const char *key, size_t key_length, void *context__attribute__((unused)))
+uint32_t hashkit_hsieh(const char *key, size_t key_length, void *context __attribute__((unused)))
 {
   uint32_t hash = 0, tmp;
   int rem;
@@ -43,16 +43,18 @@ uint32_t hashkit_hsieh(const char *key, size_t key_length, void *context__attrib
   {
   case 3: hash += get16bits (key);
           hash ^= hash << 16;
-          hash ^= key[sizeof (uint16_t)] << 18;
+          hash ^= (uint32_t)key[sizeof (uint16_t)] << 18;
           hash += hash >> 11;
           break;
   case 2: hash += get16bits (key);
           hash ^= hash << 11;
           hash += hash >> 17;
           break;
-  case 1: hash += *key;
+  case 1: hash += (unsigned char)(*key);
           hash ^= hash << 10;
           hash += hash >> 1;
+  default:
+          break;
   }
 
   /* Force "avalanching" of final 127 bits */

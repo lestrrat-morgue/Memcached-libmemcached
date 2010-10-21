@@ -2781,7 +2781,7 @@ static test_return_t user_supplied_bug16(memcached_st *memc)
   return TEST_SUCCESS;
 }
 
-#ifndef __sun
+#if !defined(__sun) && !defined(__OpenBSD__)
 /* Check the validity of chinese key*/
 static test_return_t user_supplied_bug17(memcached_st *memc)
 {
@@ -2945,6 +2945,11 @@ static void fail(int unused __attribute__((unused)))
 
 static test_return_t _user_supplied_bug21(memcached_st* memc, size_t key_count)
 {
+#ifdef WIN32
+  (void)memc;
+  (void)key_count;
+  return TEST_SKIPPED;
+#else
   memcached_return_t rc;
   unsigned int x;
   char **keys;
@@ -2993,6 +2998,7 @@ static test_return_t _user_supplied_bug21(memcached_st* memc, size_t key_count)
   memcached_free(memc_clone);
 
   return TEST_SUCCESS;
+#endif
 }
 
 static test_return_t user_supplied_bug21(memcached_st *memc)
@@ -4425,20 +4431,20 @@ static test_return_t util_version_test(memcached_st *memc)
   test_true(if_successful == true);
 
   if (instance->micro_version > 0)
-    if_successful= libmemcached_util_version_check(memc, instance->major_version, instance->minor_version, instance->micro_version -1);
+    if_successful= libmemcached_util_version_check(memc, instance->major_version, instance->minor_version, (uint8_t)(instance->micro_version -1));
   else if (instance->minor_version > 0)
-    if_successful= libmemcached_util_version_check(memc, instance->major_version, instance->minor_version - 1, instance->micro_version);
+    if_successful= libmemcached_util_version_check(memc, instance->major_version, (uint8_t)(instance->minor_version - 1), instance->micro_version);
   else if (instance->major_version > 0)
-    if_successful= libmemcached_util_version_check(memc, instance->major_version -1, instance->minor_version, instance->micro_version);
+    if_successful= libmemcached_util_version_check(memc, (uint8_t)(instance->major_version -1), instance->minor_version, instance->micro_version);
 
   test_true(if_successful == true);
 
   if (instance->micro_version > 0)
-    if_successful= libmemcached_util_version_check(memc, instance->major_version, instance->minor_version, instance->micro_version +1);
+    if_successful= libmemcached_util_version_check(memc, instance->major_version, instance->minor_version, (uint8_t)(instance->micro_version +1));
   else if (instance->minor_version > 0)
-    if_successful= libmemcached_util_version_check(memc, instance->major_version, instance->minor_version +1, instance->micro_version);
+    if_successful= libmemcached_util_version_check(memc, instance->major_version, (uint8_t)(instance->minor_version +1), instance->micro_version);
   else if (instance->major_version > 0)
-    if_successful= libmemcached_util_version_check(memc, instance->major_version +1, instance->minor_version, instance->micro_version);
+    if_successful= libmemcached_util_version_check(memc, (uint8_t)(instance->major_version +1), instance->minor_version, instance->micro_version);
 
   test_true(if_successful == false);
 
@@ -5725,6 +5731,39 @@ static test_return_t test_cull_servers(memcached_st *memc)
   return TEST_SUCCESS;
 }
 
+
+static memcached_return_t stat_printer(memcached_server_instance_st server,
+                                       const char *key, size_t key_length,
+                                       const char *value, size_t value_length,
+                                       void *context)
+{
+  (void)server;
+  (void)context;
+  (void)key;
+  (void)key_length;
+  (void)value;
+  (void)value_length;
+
+  return MEMCACHED_SUCCESS;
+}
+
+static test_return_t memcached_stat_execute_test(memcached_st *memc)
+{
+  memcached_return_t rc= memcached_stat_execute(memc, NULL, stat_printer, NULL);
+  test_true(rc == MEMCACHED_SUCCESS);
+
+  rc= memcached_stat_execute(memc, "slabs", stat_printer, NULL);
+  test_true(rc == MEMCACHED_SUCCESS);
+
+  rc= memcached_stat_execute(memc, "items", stat_printer, NULL);
+  test_true(rc == MEMCACHED_SUCCESS);
+
+  rc= memcached_stat_execute(memc, "sizes", stat_printer, NULL);
+  test_true(rc == MEMCACHED_SUCCESS);
+
+  return TEST_SUCCESS;
+}
+
 /*
  * This test ensures that the failure counter isn't incremented during
  * normal termination of the memcached instance.
@@ -6118,6 +6157,7 @@ test_st tests[] ={
   {"verbosity", 1, (test_callback_fn)test_verbosity},
   {"test_server_failure", 1, (test_callback_fn)test_server_failure},
   {"cull_servers", 1, (test_callback_fn)test_cull_servers},
+  {"memcached_stat_execute", 1, (test_callback_fn)memcached_stat_execute_test},
   {0, 0, 0}
 };
 
@@ -6182,7 +6222,7 @@ test_st user_tests[] ={
   {"user_supplied_bug14", 1, (test_callback_fn)user_supplied_bug14 },
   {"user_supplied_bug15", 1, (test_callback_fn)user_supplied_bug15 },
   {"user_supplied_bug16", 1, (test_callback_fn)user_supplied_bug16 },
-#ifndef __sun
+#if !defined(__sun) && !defined(__OpenBSD__)
   /*
   ** It seems to be something weird with the character sets..
   ** value_fetch is unable to parse the value line (iscntrl "fails"), so I

@@ -61,6 +61,7 @@ static const char *lookup_help(memcached_options option)
   case OPT_USERNAME: return "Username to use for SASL authentication";
   case OPT_PASSWD: return "Password to use for SASL authentication";
   case OPT_FILE: return "Path to file in which to save result";
+  case OPT_STAT_ARGS: return "Argument for statistics";
   default: WATCHPOINT_ASSERT(0);
   };
 
@@ -213,5 +214,18 @@ void shutdown_sasl(void)
 #ifdef LIBMEMCACHED_WITH_SASL_SUPPORT
   if (username != NULL || passwd != NULL)
     sasl_done();
+#endif
+}
+
+void initialize_sockets(void)
+{
+  /* Define the function for all platforms to avoid #ifdefs in each program */
+#ifdef WIN32
+  WSADATA wsaData;
+  if (WSAStartup(MAKEWORD(2,0), &wsaData) != 0)
+  {
+    fprintf(stderr, "Socket Initialization Error. Program aborted\n");
+    exit(EXIT_FAILURE);
+  }
 #endif
 }

@@ -63,7 +63,7 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_cxx_compile_stdcxx_0x.m4 \
 	$(top_srcdir)/m4/ac_cxx_header_stdcxx_98.m4 \
 	$(top_srcdir)/m4/acx_pthread.m4 $(top_srcdir)/m4/byteorder.m4 \
-	$(top_srcdir)/m4/deprecated.m4 \
+	$(top_srcdir)/m4/deprecated.m4 $(top_srcdir)/m4/eagain.m4 \
 	$(top_srcdir)/m4/enable_utillib.m4 $(top_srcdir)/m4/hsieh.m4 \
 	$(top_srcdir)/m4/lib-ld.m4 $(top_srcdir)/m4/lib-link.m4 \
 	$(top_srcdir)/m4/lib-prefix.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -459,7 +459,8 @@ SET_PAGES = \
 
 STATS_PAGES = \
 	     memcached_stat.pop \
-	     memcached_stat_get_keys.pop .pop\
+	     memcached_stat_execute.pop\
+	     memcached_stat_get_keys.pop\
 	     memcached_stat_get_value.pop \
 	     memcached_stat_servername.pop
 
@@ -541,12 +542,13 @@ HTML_FILES = hashkit_clone.html hashkit_crc32.html hashkit_create.html \
 	memcached_server_push.html memcached_servers_parse.html \
 	memcached_set_by_key.html memcached_set_memory_allocators.html \
 	memcached_set.html memcached_set_user_data.html \
-	memcached_stat_get_keys.html memcached_stat_get_value.html \
-	memcached_stat.html memcached_stat_servername.html \
-	memcached_strerror.html memcached_verbosity.html \
-	memcached_version.html memcapable.html memcat.html memcp.html \
-	memdump.html memerror.html memflush.html memrm.html \
-	memslap.html memstat.html $(am__append_3)
+	memcached_stat_execute.html memcached_stat_get_keys.html \
+	memcached_stat_get_value.html memcached_stat.html \
+	memcached_stat_servername.html memcached_strerror.html \
+	memcached_verbosity.html memcached_version.html \
+	memcapable.html memcat.html memcp.html memdump.html \
+	memerror.html memflush.html memrm.html memslap.html \
+	memstat.html $(am__append_3)
 POD_FILES = hashkit_create.pod hashkit_functions.pod hashkit_value.pod \
 	libmemcached.pod libmemcached_examples.pod \
 	libmemcachedutil.pod memcached_analyze.pod memcached_auto.pod \
@@ -593,11 +595,11 @@ man_MANS = hashkit_clone.3 hashkit_crc32.3 hashkit_create.3 \
 	memcached_servers_parse.3 memcached_set.3 \
 	memcached_set_by_key.3 memcached_set_memory_allocators.3 \
 	memcached_set_user_data.3 memcached_stat.3 \
-	memcached_stat_get_keys.3 memcached_stat_get_value.3 \
-	memcached_stat_servername.3 memcached_strerror.3 \
-	memcached_verbosity.3 memcached_version.3 memcapable.1 \
-	memcat.1 memcp.1 memdump.1 memerror.1 memflush.1 memrm.1 \
-	memslap.1 memstat.1 $(am__append_2) $(am__append_5)
+	memcached_stat_execute.3 memcached_stat_get_keys.3 \
+	memcached_stat_get_value.3 memcached_stat_servername.3 \
+	memcached_strerror.3 memcached_verbosity.3 memcached_version.3 \
+	memcapable.1 memcat.1 memcp.1 memdump.1 memerror.1 memflush.1 \
+	memrm.1 memslap.1 memstat.1 $(am__append_2) $(am__append_5)
 @HAVE_SASL_TRUE@SASL_PAGES = \
 @HAVE_SASL_TRUE@           memcached_destroy_sasl_auth_data.pop \
 @HAVE_SASL_TRUE@           memcached_get_sasl_callbacks.pop \

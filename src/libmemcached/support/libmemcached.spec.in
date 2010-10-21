@@ -83,11 +83,11 @@ you will need to install %{name}-devel.
 %exclude %{_libdir}/libmemcachedutil.la
 %exclude %{_libdir}/libmemcachedprotocol.la
 %{_libdir}/libhashkit.so.0.0.0
-%{_libdir}/libmemcached.so.5.0.1
+%{_libdir}/libmemcached.so.6.0.0
 %{_libdir}/libmemcachedutil.so.1.0.0
 %{_libdir}/libmemcachedprotocol.so.0.0.0
 %{_libdir}/libhashkit.so.0
-%{_libdir}/libmemcached.so.5
+%{_libdir}/libmemcached.so.6
 %{_libdir}/libmemcachedprotocol.so.0
 %{_libdir}/libmemcachedutil.so.1
 %{_mandir}/man1/memcapable.1.gz
@@ -132,6 +132,7 @@ you will need to install %{name}-devel.
 %{_includedir}/libmemcached/memcached.hpp
 %{_includedir}/libmemcached/memcached_util.h
 %{_includedir}/libmemcached/parse.h
+%{_includedir}/libmemcached/platform.h
 %{_includedir}/libmemcached/protocol/cache.h
 %{_includedir}/libmemcached/protocol/callback.h
 %{_includedir}/libmemcached/protocol_handler.h
@@ -241,6 +242,7 @@ you will need to install %{name}-devel.
 %{_mandir}/man3/memcached_set_sasl_callbacks.3.gz
 %{_mandir}/man3/memcached_set_user_data.3.gz
 %{_mandir}/man3/memcached_stat.3.gz
+%{_mandir}/man3/memcached_stat_execute.3.gz
 %{_mandir}/man3/memcached_stat_get_keys.3.gz
 %{_mandir}/man3/memcached_stat_get_value.3.gz
 %{_mandir}/man3/memcached_stat_servername.3.gz

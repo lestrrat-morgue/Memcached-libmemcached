@@ -17,7 +17,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/mman.h>
 #include <fcntl.h>
 #include <string.h>
 #include <getopt.h>
@@ -41,10 +40,12 @@ static int opt_verbose= 0;
 static int opt_displayflag= 0;
 static int opt_analyze= 0;
 static char *opt_servers= NULL;
+static char *stat_args= NULL;
 static char *analyze_mode= NULL;
 
 static struct option long_options[]=
 {
+  {(OPTIONSTRING)"args", required_argument, NULL, OPT_STAT_ARGS},
   {(OPTIONSTRING)"version", no_argument, NULL, OPT_VERSION},
   {(OPTIONSTRING)"help", no_argument, NULL, OPT_HELP},
   {(OPTIONSTRING)"verbose", no_argument, &opt_verbose, OPT_VERBOSE},
@@ -56,36 +57,22 @@ static struct option long_options[]=
 };
 
 
-static memcached_return_t server_print_callback(const memcached_st *memc,
-                                                memcached_server_instance_st instance,
-                                                void *context)
+static memcached_return_t stat_printer(memcached_server_instance_st instance,
+                                       const char *key, size_t key_length,
+                                       const char *value, size_t value_length,
+                                       void *context)
 {
-  memcached_stat_st server_stat;
-  memcached_return_t rc;
-  char **list;
-  char **ptr;
-
+  static memcached_server_instance_st last= NULL;
   (void)context;
 
-  rc= memcached_stat_servername(&server_stat, NULL,
-                                memcached_server_name(instance),
-                                memcached_server_port(instance));
-
-  list= memcached_stat_get_keys(memc, &server_stat, &rc);
-
-  printf("Server: %s (%u)\n", memcached_server_name(instance),
-         (uint32_t)memcached_server_port(instance));
-
-  for (ptr= list; *ptr; ptr++)
+  if (last != instance)
   {
-    char *value= memcached_stat_get_value(memc, &server_stat, *ptr, &rc);
-
-    printf("\t %s: %s\n", *ptr, value);
-    free(value);
+    printf("Server: %s (%u)\n", memcached_server_name(instance),
+           (uint32_t)memcached_server_port(instance));
+    last= instance;
   }
 
-  free(list);
-  printf("\n");
+  printf("\t %.*s: %.*s\n", (int)key_length, key, (int)value_length, value);
 
   return MEMCACHED_SUCCESS;
 }
@@ -97,6 +84,7 @@ int main(int argc, char *argv[])
   memcached_server_st *servers;
 
   options_parse(argc, argv);
+  initialize_sockets();
 
   if (! opt_servers)
   {
@@ -140,12 +128,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    memcached_server_fn callbacks[1];
-
-    callbacks[0]= server_print_callback;
-    rc= memcached_server_cursor(memc, callbacks,
-                                NULL, 1);
-
+    rc= memcached_stat_execute(memc, stat_args, stat_printer, NULL);
   }
 
   free(opt_servers);
@@ -350,6 +333,9 @@ static void options_parse(int argc, char *argv[])
       break;
     case OPT_SERVERS: /* --servers or -s */
       opt_servers= strdup(optarg);
+      break;
+    case OPT_STAT_ARGS:
+      stat_args= strdup(optarg);
       break;
     case OPT_ANALYZE: /* --analyze or -a */
       opt_analyze= OPT_ANALYZE;

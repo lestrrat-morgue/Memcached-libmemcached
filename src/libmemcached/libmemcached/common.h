@@ -24,16 +24,10 @@
 #include <strings.h>
 #include <ctype.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <unistd.h>
 #include <limits.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <sys/un.h>
-#include <netinet/tcp.h>
 #ifdef TIME_WITH_SYS_TIME
 # include <sys/time.h>
 # include <time.h>
@@ -56,8 +50,16 @@
 
 typedef struct memcached_server_st * memcached_server_write_instance_st;
 
+typedef memcached_return_t (*memcached_server_execute_fn)(memcached_st *ptr, memcached_server_write_instance_st server, void *context);
+
 LIBMEMCACHED_LOCAL
 memcached_server_write_instance_st memcached_server_instance_fetch(memcached_st *ptr, uint32_t server_key);
+
+LIBMEMCACHED_LOCAL
+memcached_return_t memcached_server_execute(memcached_st *ptr,
+                                            memcached_server_execute_fn callback,
+                                            void *context);
+
 
 /* These are private not to be installed headers */
 #include "libmemcached/io.h"
