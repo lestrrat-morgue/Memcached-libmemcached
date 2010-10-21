@@ -51,11 +51,7 @@ T_RETURN
 OUTPUT
 T_RETURN:init
         /* T_RETURN:init */
-        if (LMC_TRACE_LEVEL_FROM_PTR(ptr)) {
-            if (LMC_TRACE_LEVEL_FROM_PTR(ptr) > 1 || !LMC_RETURN_OK($var))
-                warn(\"\t<= %s return %d %s\", \"${func_name}\", $var, memcached_strerror(ptr, $var));
-        }
-        LMC_RECORD_RETURN_ERR(ptr, $var);
+        LMC_RECORD_RETURN_ERR(\"${func_name}\", ptr, $var);
 T_RETURN
         /* T_RETURN */
         if (!SvREADONLY($arg)) {
