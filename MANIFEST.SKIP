@@ -10,11 +10,12 @@
 ^cover_db/
 ^src/libmemcached/docs/.*\.[13]
 ^src/libmemcached-.*
-^src/libmemcached.hg
 ^src/.*/\.libs
 ^src/.*/\.deps
 ^src/.*\.o
 ^src/.*\.lo
+^src/.*\.la
+^src/.*/\.dirstamp
 ^src_inst/
 ^Memcached-libmemcached-\d
 ^const-xs.inc$
