@@ -14,6 +14,8 @@
 #define MEMCACHED_CALLBACK_REALLOC_FUNCTION 5
 #define MEMCACHED_CALLBACK_FREE_FUNCTION 6
 
+/* See also the typemap as most of the interesting glue is there */
+
 /* mapping C types to perl classes - keep typemap file in sync */
 typedef memcached_st*        Memcached__libmemcached;
 typedef uint32_t             lmc_data_flags_t;
@@ -52,8 +54,13 @@ typedef time_t               lmc_expiration;
 #define LMC_RECORD_RETURN_ERR(ptr, ret) \
     STMT_START {    \
         lmc_state_st* lmc_state = LMC_STATE_FROM_PTR(ptr); \
-        lmc_state->last_return = ret;   \
-        lmc_state->last_errno  = ptr->cached_errno; /* if MEMCACHED_ERRNO */ \
+        if (lmc_state) { \
+            lmc_state->last_return = ret;   \
+            lmc_state->last_errno  = ptr->cached_errno; /* if MEMCACHED_ERRNO */ \
+        } else { /* should never happen */ \
+            warn("LMC_RECORD_RETURN_ERR(%d %s): no lmc_state structure in memcached_st so error not recorded!", \
+                ret, memcached_strerror(ptr, ret)); \
+        } \
     } STMT_END
 
 
