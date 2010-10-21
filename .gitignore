@@ -11,6 +11,7 @@
 *~
 .deps
 Makefile
+Memcached-libmemcached-*
 blib/
 const-xs.inc
 lib/Memcached/libmemcached/const_hash.pl
@@ -32,10 +33,7 @@ src/libmemcached/clients/memrm
 src/libmemcached/clients/memslap
 src/libmemcached/clients/memstat
 src/libmemcached/config.h
-src/libmemcached/config.h
 src/libmemcached/config.log
-src/libmemcached/config.log
-src/libmemcached/config.status
 src/libmemcached/config.status
 src/libmemcached/docs/Makefile
 src/libmemcached/docs/memcapable.1
