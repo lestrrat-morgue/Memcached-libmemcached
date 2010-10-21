@@ -18,6 +18,8 @@ Makefile
 pm_to_blib
 *.pop
 src_inst/
+src/libmemcached-prev
+src/libmemcached-*.tar.gz
 src/libmemcached/clients/.dirstamp
 src/libmemcached/clients/memcapable
 src/libmemcached/clients/memcat

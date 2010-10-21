@@ -16,4 +16,4 @@ rm -rf libmemcached-prev
 mv libmemcached libmemcached-prev
 mv libmemcached-$v libmemcached
 git add libmemcached
-#make svnmanifest
+(cd .. && make manifest)

@@ -31,7 +31,7 @@ If you'd like to have the commandline tools that come with libmemcached installe
 
     perl Makefile.PL --bin
     
-See http://tangent.org/552/libmemcached.html for details.
+See http://libmemcached.org for details.
 
 
 TESTING
