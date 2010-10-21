@@ -897,27 +897,17 @@ set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get_cb)
 memcached_return
 walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
     PREINIT:
-        lmc_state_st *lmc_state;
         memcached_return rc;
         memcached_stat_st *stat;
         size_t i;
-        memcached_server_st *servers;
         size_t server_count;
         SV *stats_args_sv;
         Memcached__libmemcached clone;
     CODE:
-        clone = memcached_create(NULL);
-        memcached_clone(clone, ptr);
+        /* TODO: rewrite this to use memcached_stat_execute() */
+
+        clone = memcached_clone(NULL, ptr);
         memcached_behavior_set(clone, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 0);
-
-        lmc_state     = LMC_STATE_FROM_PTR(ptr);
-        servers       = memcached_server_list(ptr);
-        server_count  = memcached_server_count(ptr);
-        for(i = 0; i < server_count; i++) {
-            memcached_server_add(clone, servers[i].hostname, servers[i].port);
-        }
-
-        stats_args_sv = sv_2mortal(newSVpv(stats_args, 0));
 
         stat = memcached_stat(clone, stats_args, &RETVAL);
         if (!stat || !LMC_RETURN_OK(RETVAL)) {
@@ -925,6 +915,8 @@ walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
             XSRETURN_NO;
         }
 
+        stats_args_sv = sv_2mortal(newSVpv(stats_args, 0));
+        server_count  = memcached_server_count(ptr);
         for (i = 0; i < server_count; i++) {
             SV *hostport_sv;
             char **keys;
