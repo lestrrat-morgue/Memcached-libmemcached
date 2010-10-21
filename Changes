@@ -3,6 +3,12 @@
 Memcached::libmemcached::Changes - List of significant changes
 
 
+=head2 Changes in 0.4401 21st Oct 2010
+
+  Sync with libmemcached 0.44
+  Fixed core dump in stats function.
+  Improved error reporting in trace log.
+
 =head2 Changes in 0.4202  2nd Aug 2010
 
   Fix memcached_version() to properly return a list when called in list context
