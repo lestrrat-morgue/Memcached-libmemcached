@@ -1,4 +1,5 @@
-\B\.svn\b
+^.git/
+^.gitignore
 ^MANIFEST\.
 ^Makefile$
 ~$
