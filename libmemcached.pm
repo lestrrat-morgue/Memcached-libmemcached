@@ -613,6 +613,15 @@ The callback will be passed 4 parameters:
 
 Currently the callback I<must> return an empty list.
 
+=head3 get_server_for_key
+
+  $memc->get_server_for_key( $key )
+
+This method uses the internal I<memcached_generate_hash_with_redistribution> hashing 
+funciton to determine which server should handle the specified $key.
+
+It returns the index of the appropriate index of the servers added via L</memcached_server_add>.
+
 =head1 EXTRA INFORMATION
 
 =head2 Tracing Execution

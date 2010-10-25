@@ -967,3 +967,8 @@ walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
     OUTPUT:
         RETVAL
 
+unsigned long get_server_for_key(Memcached__libmemcached ptr, char *key)
+    CODE:
+        RETVAL = memcached_generate_hash_with_redistribution(ptr, key, strlen(key));
+    OUTPUT:
+        RETVAL
