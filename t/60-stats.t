@@ -38,7 +38,7 @@ ok $memc;
     my (%seen_hostport, %seen_distinct);
     my $walk_stats_rc = $memc->walk_stats("", sub {
         $arg_count_ok = scalar(@_) == 4 if $arg_count_ok;
-        my ($key, $value, $hostport, $type) = @_;
+        my ($key, $value, $hostport, $type) = @_; # $type is deprecated
         print "$hostport $type: $key=$value\n";
         $keys_defined_ok = defined $key if $keys_defined_ok;
         $hostport_defined_ok = defined $hostport if $hostport_defined_ok;

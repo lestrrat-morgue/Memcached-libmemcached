@@ -3,6 +3,12 @@
 Memcached::libmemcached::Changes - List of significant changes
 
 
+=head2 Changes in 0.4402 26th Oct 2010
+
+  Changed walk_stats() API. Now uses the memcached_stat_execute() function
+    and no longer passes $stats_arg as the forth argument to the callback.
+  Minor updates to docs.
+
 =head2 Changes in 0.4401 21st Oct 2010
 
   Sync with libmemcached 0.44

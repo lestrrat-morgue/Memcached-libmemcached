@@ -408,6 +408,32 @@ _fetch_all_into_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
 }
 
 
+static memcached_return_t
+_walk_stats_cb(memcached_server_instance_st instance,
+    const char *key,   size_t key_length,
+    const char *value, size_t value_length,
+    void *cb)
+{
+    dSP;
+    int items;
+
+    /* callback is called with key, value, hostname, typename */
+    PUSHMARK(SP);
+    XPUSHs(sv_2mortal(newSVpv(key, key_length)));
+    XPUSHs(sv_2mortal(newSVpv(value, value_length)));
+    XPUSHs(sv_2mortal(newSVpvf("%s:%d",
+        memcached_server_name(instance), memcached_server_port(instance))));
+    XPUSHs(DEFSV); /* XXX deprecated $stats_arg in $_ */
+    PUTBACK;
+    items = call_sv((SV*)cb, G_ARRAY);
+    SPAGAIN;
+    if (items) /* XXX may use returned items for signalling later */
+        croak("walk_stats callback returned non-empty list");
+
+    return MEMCACHED_SUCCESS;
+}
+
+
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached
 
 PROTOTYPES: DISABLED
@@ -895,75 +921,34 @@ set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get_cb)
 
 
 memcached_return
-walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
+walk_stats(Memcached__libmemcached ptr, SV *stats_args, CV *cb)
     PREINIT:
-        memcached_return rc;
-        memcached_stat_st *stat;
-        size_t i;
-        size_t server_count;
-        SV *stats_args_sv;
         Memcached__libmemcached clone;
     CODE:
-        /* TODO: rewrite this to use memcached_stat_execute() */
+        if (LMC_TRACE_LEVEL_FROM_PTR(ptr) >= 2)
+            warn("walk_stats(%s, %s)\n", SvPV_nolen(stats_args), SvPV_nolen((SV*)CvGV(cb)));
 
         clone = memcached_clone(NULL, ptr);
         memcached_behavior_set(clone, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 0);
 
-        stat = memcached_stat(clone, stats_args, &RETVAL);
-        if (!stat || !LMC_RETURN_OK(RETVAL)) {
-            LMC_RECORD_RETURN_ERR("memcached_stat", clone, RETVAL);
+        ENTER;
+        SAVETMPS;
+
+        /* this local($_) assignment is to aid migration from the old api */
+        SAVE_DEFSV; /* local($_) */
+        DEFSV = sv_mortalcopy(stats_args);
+
+        RETVAL = memcached_stat_execute(clone, SvPV_nolen(stats_args), _walk_stats_cb, cb);
+        if (!LMC_RETURN_OK(RETVAL)) {
+            LMC_RECORD_RETURN_ERR("memcached_stat_execute", ptr, RETVAL);
+            LMC_STATE_FROM_PTR(ptr)->last_errno = clone->cached_errno;
+            memcached_free(clone);
             XSRETURN_NO;
         }
-
-        stats_args_sv = sv_2mortal(newSVpv(stats_args, 0));
-        server_count  = memcached_server_count(ptr);
-        for (i = 0; i < server_count; i++) {
-            SV *hostport_sv;
-            char **keys;
-            char **keys_list;
-            char *val;
-
-            hostport_sv = sv_2mortal(newSVpvf("%s:%d",
-                memcached_server_name((memcached_server_instance_st)ptr),
-                memcached_server_port((memcached_server_instance_st)ptr)
-            ));
-
-            keys = keys_list = memcached_stat_get_keys(clone, &stat[i], &rc);
-            while (keys && *keys) {
-                int items;
-                dSP;
-                val = memcached_stat_get_value(clone, stat, *keys, &rc);
-                if (! val) {
-                    continue;
-                }
-
-                ENTER;
-                SAVETMPS;
-
-                /* callback is called with key, value, hostname, typename */
-                PUSHMARK(SP);
-                XPUSHs(sv_2mortal(newSVpv(*keys, 0)));
-                XPUSHs(sv_2mortal(newSVpv(val, 0)));
-                XPUSHs(hostport_sv);
-                XPUSHs(stats_args_sv);
-                PUTBACK;
-
-                items = call_sv((SV*)cb, G_ARRAY);
-                SPAGAIN;
-
-                if (items) /* XXX may use returned items for signalling later */
-                    croak("walk_stats callback returned non-empty list");
-
-                FREETMPS;
-                LEAVE;
-
-                keys++;
-            }
-            free(keys_list);
-            memcached_stat_free(clone, stat);
-
-        }
         memcached_free(clone);
+
+        FREETMPS;
+        LEAVE;
     OUTPUT:
         RETVAL
 

@@ -9,11 +9,11 @@ Memcached::libmemcached - Thin fast full interface to the libmemcached client AP
 
 =head1 VERSION
 
-Version 0.4401 (with libmemcached-0.44 embedded)
+Version 0.4402 (with libmemcached-0.44 embedded)
 
 =cut
 
-our $VERSION = '0.4401';
+our $VERSION = '0.4402';
 
 use Carp;
 use base qw(Exporter);
@@ -57,10 +57,9 @@ access to server side methods.
  - Implements both modulo and consistent hashing solutions. 
 
 (At the moment Memcached::libmemcached is very new and not all the functions in
-libmemcached have perl interfaces yet. We're focussing on the core
-infrastructure and the most common functions. It's usually trivial to add
-functions - just a few lines in libmemcached.xs, a few lines of documentation,
-and a few lines of testing.  Volunteers welcome!)
+libmemcached have perl interfaces yet.  It's usually trivial to add functions -
+just a few lines in libmemcached.xs, a few lines of documentation, and a few
+lines of testing.  Volunteers welcome!)
 
 The libmemcached library documentation (which is bundled with this module)
 serves as the primary reference for the functionality.
@@ -69,7 +68,7 @@ This documentation provides summary of the functions, along with any issues
 specific to this perl interface, and references to the documentation for the
 corresponding functions in the underlying library.
 
-For more information on libmemcached, see L<http://tangent.org/552/libmemcached.html>
+For more information on libmemcached, see L<http://libmemcached.org>
 
 =head1 CONVENTIONS
 
@@ -148,8 +147,6 @@ likely to be deprecated by libmemcached.
 Functions relating to iterating through results (memcached_result_*) have not
 been implemented yet. They're not a priority because similar functionality is
 available via the callbacks. See L</set_callback_coderefs>.
-
-Functions relating to stats should be implemented soonish. Patches welcome!
 
 =cut
 
@@ -450,6 +447,7 @@ a I<dualvar> that already contains the error string.
 =head2 Unsupported Functions
 
 =head3 (stats)   
+
 =cut
 
 =head2 Grouping Keys On Servers
@@ -599,19 +597,26 @@ warning and then cease to exist in future versions.
 
 This interface is I<experimental> and I<likely to change>.
 
-Calls the memcached_stat() function to issue a "STAT $stats_args" command to
+Calls the memcached_stat_execute() function to issue a "STAT $stats_args" command to
 the connected memcached servers. The $stats_args argument is usually an empty string.
 
 The callback function is called for each return value from each server.
-The callback will be passed 4 parameters:
+The callback will be passed at least these parameters:
 
   sub my_stats_callback {
-    my ($key, $value, $hostport, $stats_args) = @_;
+    my ($key, $value, $hostport) = @_;
     # Do what you like with the above!
     return;
   }
 
 Currently the callback I<must> return an empty list.
+
+Prior to version 0.4402 the callback was passed a fourth argument which was a
+copy of the $stats_args value. That is no longer the case. As a I<temporary> aid
+to migration, the C<walk_stats> method does C<local $_ = $stats_args> and
+passes C<$_> as the forth argument. That will work so long as the code in the
+callback doesn't alter C<$_>. If your callback code requires $stats_args you
+should change it to be a closure instead.
 
 =head1 EXTRA INFORMATION
 
@@ -623,8 +628,6 @@ tracing. The value is read when L<memcached_create> is called.
 If set >= 1 then any non-success memcached_return value will be logged via warn().
 
 If set >= 2 or more then some data types will list conversions of input and output values for function calls.
-
-More flexible mechanisms will be added later.
 
 =head2 Type Mapping
 
