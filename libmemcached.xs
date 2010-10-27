@@ -471,7 +471,13 @@ memcached_return
 memcached_server_add(Memcached__libmemcached ptr, char *hostname, unsigned int port=0)
 
 memcached_return
+memcached_server_add_with_weight(Memcached__libmemcached ptr, char *hostname, unsigned int port=0, unsigned int weight)
+
+memcached_return
 memcached_server_add_unix_socket(Memcached__libmemcached ptr, char *socket)
+
+memcached_return
+memcached_server_add_unix_socket_with_weight(Memcached__libmemcached ptr, char *socket, unsigned int weight)
 
 void
 memcached_free(Memcached__libmemcached ptr)

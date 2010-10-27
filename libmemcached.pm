@@ -13,7 +13,7 @@ Version 0.4402 (with libmemcached-0.44 embedded)
 
 =cut
 
-our $VERSION = '0.4402';
+our $VERSION = '0.4403';
 
 use Carp;
 use base qw(Exporter);
