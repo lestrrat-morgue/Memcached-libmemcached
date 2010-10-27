@@ -7,6 +7,7 @@ Memcached::libmemcached::Changes - List of significant changes
 
   Added new methods memcached_server_add_with_weight() and
     memcached_server_add_unix_socket_with_weight().
+  Added new trace_level() method.
 
 =head2 Changes in 0.4402 26th Oct 2010
 

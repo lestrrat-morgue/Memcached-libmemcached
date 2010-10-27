@@ -379,9 +379,9 @@ memcached after that many seconds.
 
 =head2 Functions for Accessing Statistics from memcached
 
-Not yet implemented.
+Not yet implemented. See L<Memcached::libmemcached::memcached_stats>.
 
-See L<Memcached::libmemcached::memcached_stats>.
+See L<walk_stats>.
 
 =cut
 
@@ -441,12 +441,6 @@ See also L<Memcached::libmemcached::memcached_strerror>.
 
 This function is rarely needed in the Perl interface because the return code is
 a I<dualvar> that already contains the error string.
-
-=cut
-
-=head2 Unsupported Functions
-
-=head3 (stats)   
 
 =cut
 
@@ -622,12 +616,14 @@ should change it to be a closure instead.
 
 =head2 Tracing Execution
 
-The C<PERL_LIBMEMCACHED_TRACE> environment variable can be used to control
-tracing. The value is read when L<memcached_create> is called.
+    $memc->trace_level($trace_level);
 
 If set >= 1 then any non-success memcached_return value will be logged via warn().
 
 If set >= 2 or more then some data types will list conversions of input and output values for function calls.
+
+The C<PERL_LIBMEMCACHED_TRACE> environment variable provides a default.
+The value is read when L<memcached_create> is called.
 
 =head2 Type Mapping
 
@@ -662,7 +658,7 @@ L<http://www.tim.bunce.name>
 
 =head1 CURRENT MAINTAINER
 
-Daisuke Maki C<< <daisuke@endeworks.jp> >>
+Daisuke Maki C<< <daisuke@endeworks.jp> >> with occasional bursts of input from Tim Bunce.
 
 =head1 ACKNOWLEDGEMENTS
 

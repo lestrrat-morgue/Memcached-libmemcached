@@ -814,6 +814,20 @@ memcached_version(Memcached__libmemcached ptr)
 
 =cut
 
+IV
+trace_level(Memcached__libmemcached ptr, IV level = IV_MIN)
+    PREINIT:
+        lmc_state_st* lmc_state;
+    CODE:
+        lmc_state = LMC_STATE_FROM_PTR(ptr);
+        /* return previous level */
+        RETVAL = newSV(LMC_TRACE_LEVEL_FROM_PTR(ptr));
+        if (level != IV_MIN && lmc_state)
+            lmc_state->trace_level = level;
+    OUTPUT:
+        RETVAL
+
+
 SV *
 errstr(Memcached__libmemcached ptr)
     ALIAS:
