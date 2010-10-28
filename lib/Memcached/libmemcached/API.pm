@@ -44,7 +44,6 @@ my %libmemcached_extra_functions = (
 my %libmemcached_unimplemented_functions = (
     # inappropriate for perl
     memcached_callback_get => 0,
-    memcached_callback_set => 0,
     # memcached_server_st
     memcached_server_push => 0,
     memcached_servers_parse => 0,

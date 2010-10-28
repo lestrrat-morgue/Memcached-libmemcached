@@ -2,6 +2,10 @@
 
 Memcached::libmemcached::Changes - List of significant changes
 
+=head2 Changes in 0.4404 28th Oct 2010
+
+  Added memcached_callback_set() to enable MEMCACHED_CALLBACK_PREFIX_KEY.
+
 =head2 Changes in 0.4403 28th Oct 2010
 
   Changed memcached_version() to return the lowest server version seen.

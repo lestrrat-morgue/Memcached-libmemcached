@@ -17,6 +17,7 @@ size_t                 T_UV
 
 # --- simple types ---
 memcached_behavior                      T_IV
+memcached_callback                      T_IV
 memcached_return                        T_RETURN
 
 # --- generic simple types ---

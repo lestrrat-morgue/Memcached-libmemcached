@@ -9,11 +9,11 @@ Memcached::libmemcached - Thin fast full interface to the libmemcached client AP
 
 =head1 VERSION
 
-Version 0.4402 (with libmemcached-0.44 embedded)
+Version 0.4404 (with libmemcached-0.44 embedded)
 
 =cut
 
-our $VERSION = '0.4403';
+our $VERSION = '0.4404';
 
 use Carp;
 use base qw(Exporter);
@@ -239,6 +239,16 @@ See L<Memcached::libmemcached::memcached_behavior>.
 
 Get the value of a particular option.
 See L<Memcached::libmemcached::memcached_behavior>.
+
+=head3 memcached_callback_set
+
+  memcached_callback_set($memc, $flag, $value);
+
+Set callback flag value.
+
+The only flag currently supported is C<MEMCACHED_CALLBACK_PREFIX_KEY>.
+The $value must be less than MEMCACHED_PREFIX_KEY_MAX_SIZE  (eg 128) bytes.
+It also can't be empty L<https://bugs.launchpad.net/libmemcached/+bug/667878>
 
 =cut
 

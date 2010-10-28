@@ -408,6 +408,7 @@ t/21-set-by-key.t
 t/25-get.t
 t/26-get-cb.t
 t/27-set-cb.t
+t/28-get-prefix.t
 t/30-prepend-append.t
 t/31-prepend-append-by-key.t
 t/35-replace.t
