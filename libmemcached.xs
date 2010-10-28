@@ -92,7 +92,7 @@ struct lmc_cb_context_st {
 struct lmc_state_st {
     memcached_st    *ptr;
     HV              *hv;    /* pointer back to HV (not refcntd) */
-    int              trace_level;
+    IV               trace_level;
     int              options;
     memcached_return last_return;
     int              last_errno;
@@ -114,7 +114,7 @@ lmc_state_new(memcached_st *ptr, HV *memc_hv)
     lmc_state->cb_context->set_cb = newSV(0);
     lmc_state->cb_context->get_cb = newSV(0);
     if (trace) {
-        lmc_state->trace_level = atoi(trace);
+        lmc_state->trace_level = (IV)atoi(trace);
     }
     return lmc_state;
 }
@@ -126,7 +126,7 @@ lmc_state_new(memcached_st *ptr, HV *memc_hv)
 static void
 _prep_keys_buffer(lmc_cb_context_st *lmc_cb_context, int keys_needed)
 {
-    int trace_level = lmc_cb_context->lmc_state->trace_level;
+    IV trace_level = lmc_cb_context->lmc_state->trace_level;
     if (keys_needed <= lmc_cb_context->key_alloc_count) {
         if (trace_level >= 9)
             warn("reusing keys buffer");
@@ -801,8 +801,7 @@ trace_level(Memcached__libmemcached ptr, IV level = IV_MIN)
         lmc_state_st* lmc_state;
     CODE:
         lmc_state = LMC_STATE_FROM_PTR(ptr);
-        /* return previous level */
-        RETVAL = newSV(LMC_TRACE_LEVEL_FROM_PTR(ptr));
+        RETVAL = LMC_TRACE_LEVEL_FROM_PTR(ptr); /* return previous level */
         if (level != IV_MIN && lmc_state)
             lmc_state->trace_level = level;
     OUTPUT:
