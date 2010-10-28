@@ -11,6 +11,7 @@ use Memcached::libmemcached
     #   functions explicitly tested by this file
     qw(
         memcached_callback_set
+        memcached_callback_get
         MEMCACHED_CALLBACK_PREFIX_KEY
         MEMCACHED_BEHAVIOR_HASH_WITH_PREFIX_KEY
     ),
@@ -26,7 +27,7 @@ use libmemcached_test;
 my $memc = libmemcached_test_create();
 my $expire = 5;
 
-plan tests => 11;
+plan tests => 13;
 
 ok $memc->memcached_set("f1:a", 4201, $expire);
 ok $memc->memcached_set("f2:a", 4202, $expire);
@@ -34,9 +35,11 @@ is $memc->memcached_get("f1:a"), 4201;
 is $memc->memcached_get("f2:a"), 4202;
 
 ok $memc->memcached_callback_set(MEMCACHED_CALLBACK_PREFIX_KEY, "f1:");
+is $memc->memcached_callback_get(MEMCACHED_CALLBACK_PREFIX_KEY), "f1:";
 is $memc->memcached_get("a"), 4201;
 
 ok $memc->memcached_callback_set(MEMCACHED_CALLBACK_PREFIX_KEY, "f2:");
+is $memc->memcached_callback_get(MEMCACHED_CALLBACK_PREFIX_KEY), "f2:";
 is $memc->memcached_get("a"), 4202;
 
 TODO: {

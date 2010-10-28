@@ -250,6 +250,14 @@ The only flag currently supported is C<MEMCACHED_CALLBACK_PREFIX_KEY>.
 The $value must be less than MEMCACHED_PREFIX_KEY_MAX_SIZE  (eg 128) bytes.
 It also can't be empty L<https://bugs.launchpad.net/libmemcached/+bug/667878>
 
+=head3 memcached_callback_get
+
+  $value = memcached_callback_set($memc, $flag, $return_status);
+
+Get callback flag value. Sets return status in $return_status.
+The only flag currently supported is C<MEMCACHED_CALLBACK_PREFIX_KEY>.
+Returns undef on error.
+
 =cut
 
 
