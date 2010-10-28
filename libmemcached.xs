@@ -748,68 +748,6 @@ memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 const char *
 memcached_lib_version()
 
-void
-memcached_version(Memcached__libmemcached ptr)
-    PREINIT:
-        memcached_stat_st *stat;
-        memcached_return  rc;
-        lmc_state_st* lmc_state;
-        int i;
-        size_t server_count;
-    PPCODE:
-        server_count = memcached_server_count(ptr);
-        lmc_state = LMC_STATE_FROM_PTR(ptr);
-        stat = memcached_stat(ptr, NULL, &rc);
-        if (!stat || !LMC_RETURN_OK(rc)) {
-            LMC_RECORD_RETURN_ERR("memcached_stat", ptr, rc);
-            XSRETURN_NO;
-        }
-
-        for (i = 0; i < server_count; i++) {
-            char **keys;
-            char *val;
-
-            keys = memcached_stat_get_keys(ptr, &stat[i], &rc);
-            while (keys && *keys) {
-                val = memcached_stat_get_value(ptr, stat, *keys, &rc);
-                if (! val) {
-                    keys++;
-                    continue;
-                }
-
-                if ( strNE(*keys, "version") ) {
-                    keys++;
-                    continue;
-                }
-                if (GIMME_V == G_SCALAR) {
-                    SV *version_sv;
-                    version_sv = sv_newmortal();
-                    sv_setpvf(version_sv, "%s", val);
-                    XPUSHs(version_sv);
-                    XSRETURN(1);
-                } else {
-                    SV *version_sv;
-                    char *p = val;
-                    char *c = val;
-                    int count = 0;
-                    while (count < 3 && *c != '\0') {
-                        while (*c != '\0' && *c != '.') {
-                            c++;
-                        }
-                        version_sv = sv_newmortal();
-                        sv_setpvn(version_sv, p, c - p);
-                        XPUSHs(version_sv);
-                        c++;
-                        p = c;
-                        count++;
-                    }
-                    XSRETURN(count);
-                }
-                keys++;
-            }
-        }
-
-
 =head2 Memcached::libmemcached Methods
 
 =cut

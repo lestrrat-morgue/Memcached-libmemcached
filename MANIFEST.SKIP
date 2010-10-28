@@ -16,6 +16,7 @@
 ^src/.*\.lo
 ^src/.*\.la
 ^src/.*/\.dirstamp
+^src/.*/.pop
 ^src_inst/
 ^Memcached-libmemcached-\d
 ^const-xs.inc$

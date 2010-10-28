@@ -400,7 +400,7 @@ version (version of the client library, not server).
   $version = memcached_version($memc)
   ($version1, $version2, $version3) = memcached_version($memc)
 
-Returns the version of all memcached servers to respond to the version request.
+Returns the I<lowest> version of all the memcached servers.
 
 In scalar context returns a simple version string, like "1.2.3".
 In list context returns the individual version component numbers.
@@ -408,6 +408,29 @@ Returns an empty list if there was an error.
 
 Note that the return value differs from that of the underlying libmemcached
 library memcached_version() function.
+
+=cut
+
+sub memcached_version {
+    my $self = shift;
+
+    my @versions;
+    # XXX should be rewritten to use underlying memcached_version then
+    # return the lowest cached version from the server structures
+    $self->walk_stats('', sub {
+        my ($key, $value, $hostport) = @_;
+        push @versions, [ split /\./, $value ] if $key eq 'version';
+        return;
+    });
+
+    my $lowest = (sort {
+        $a->[0] <=> $b->[0] or $a->[1] <=> $b->[1] or $a->[2] <=> $b->[2]
+    } @versions)[0];
+
+    return join '.', @$lowest unless wantarray;
+    return @$lowest;
+}
+
 
 =head2 memcached_verbosity
 
@@ -611,6 +634,13 @@ to migration, the C<walk_stats> method does C<local $_ = $stats_args> and
 passes C<$_> as the forth argument. That will work so long as the code in the
 callback doesn't alter C<$_>. If your callback code requires $stats_args you
 should change it to be a closure instead.
+
+=head2 trace_level
+
+    $memc->trace_level($trace_level);
+    $trace_level = $memc->trace_level;
+
+Sets the trace level (see L</Tracing Execution). Returns the previous trace level.
 
 =head1 EXTRA INFORMATION
 
