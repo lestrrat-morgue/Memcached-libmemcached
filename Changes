@@ -6,6 +6,7 @@ Memcached::libmemcached::Changes - List of significant changes
 =head2 Changes in 0.4403 27th Oct 2010
 
   Changed memcached_version() to return the lowest server version seen.
+  Added new memcached_{inc,dec}rement{_with_initial,}{_by_key,} methods.
   Added new methods memcached_server_add_with_weight() and
     memcached_server_add_unix_socket_with_weight().
   Added new trace_level() method.

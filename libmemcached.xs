@@ -615,8 +615,51 @@ memcached_decrement(Memcached__libmemcached ptr, \
         lmc_key key, size_t length(key), \
         unsigned int offset, IN_OUT uint64_t value=NO_INIT)
 
+memcached_return
+memcached_increment_by_key(Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, IN_OUT uint64_t value=NO_INIT)
 
+memcached_return
+memcached_decrement_by_key(Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, IN_OUT uint64_t value=NO_INIT)
 
+memcached_return
+memcached_increment_with_initial (Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, \
+        uint64_t initial, \
+        lmc_expiration expiration= 0, \
+        IN_OUT uint64_t value=NO_INIT)
+
+memcached_return
+memcached_decrement_with_initial (Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, \
+        uint64_t initial, \
+        lmc_expiration expiration= 0, \
+        IN_OUT uint64_t value=NO_INIT)
+
+memcached_return
+memcached_increment_with_initial_by_key (Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, \
+        uint64_t initial, \
+        lmc_expiration expiration= 0, \
+        IN_OUT uint64_t value=NO_INIT)
+
+memcached_return
+memcached_decrement_with_initial_by_key (Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, \
+        uint64_t initial, \
+        lmc_expiration expiration= 0, \
+        IN_OUT uint64_t value=NO_INIT)
 
 
 =head2 Functions for Fetching Values from memcached

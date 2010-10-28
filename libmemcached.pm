@@ -208,17 +208,23 @@ See L<Memcached::libmemcached::memcached_servers>.
 
 =head3 memcached_server_add
 
+=head3 memcached_server_add_with_weight
+
   memcached_server_add($memc, $hostname, $port);
+  memcached_server_add_with_weight($memc, $hostname, $port, $weight);
 
 Adds details of a single memcached server (accessed via TCP/IP) to $memc.
-See L<Memcached::libmemcached::memcached_servers>.
+See L<Memcached::libmemcached::memcached_servers>. The default weight is 0.
 
 =head3 memcached_server_add_unix_socket
 
+=head3 memcached_server_add_unix_socket_with_weight
+
   memcached_server_add_unix_socket($memc, $socket_path);
+  memcached_server_add_unix_socket_with_weight($memc, $socket_path);
 
 Adds details of a single memcached server (accessed via a UNIX domain socket) to $memc.
-See L<Memcached::libmemcached::memcached_servers>.
+See L<Memcached::libmemcached::memcached_servers>. The default weight is 0.
 
 =head3 memcached_behavior_set
 
@@ -345,21 +351,62 @@ Usually you'd just use the L</mget_into_hashref> method instead.
 
 =head2 Functions for Incrementing and Decrementing Values
 
+memcached servers have the ability to increment and decrement unsigned integer keys
+(overflow and underflow are not detected). This gives you the ability to use
+memcached to generate shared sequences of values.  
+
+See L<Memcached::libmemcached::memcached_auto>.
+
 =head3 memcached_increment
 
   memcached_increment( $key, $offset, $new_value_out );
 
-Increments the integer value associated with $key by $offset and returns the new value in $new_value_out.
-See also L<Memcached::libmemcached::memcached_auto>.
+Increments the integer value associated with $key by $offset and returns the
+new value in $new_value_out.
 
 =head3 memcached_decrement 
 
   memcached_decrement( $key, $offset, $new_value_out );
 
-Decrements the integer value associated with $key by $offset and returns the new value in $new_value_out.
-See also L<Memcached::libmemcached::memcached_auto>.
+Decrements the integer value associated with $key by $offset and returns the
+new value in $new_value_out.
 
-=cut
+=head3 memcached_increment_with_initial
+
+  memcached_increment_with_initial( $key, $offset, $initial, $expiration, $new_value_out );
+
+Increments the integer value associated with $key by $offset and returns the
+new value in $new_value_out.
+
+If the object specified by key does not exist, one of two things may happen:
+If the expiration value is MEMCACHED_EXPIRATION_NOT_ADD, the operation will fail.
+For all other expiration values, the operation will succeed by seeding the
+value for that key with a initial value to expire with the provided expiration time.
+The flags will be set to zero.
+
+=head3 memcached_decrement_with_initial
+
+  memcached_decrement_with_initial( $key, $offset, $initial, $expiration, $new_value_out );
+
+Decrements the integer value associated with $key by $offset and returns the
+new value in $new_value_out.
+
+If the object specified by key does not exist, one of two things may happen:
+If the expiration value is MEMCACHED_EXPIRATION_NOT_ADD, the operation will fail.
+For all other expiration values, the operation will succeed by seeding the
+value for that key with a initial value to expire with the provided expiration time.
+The flags will be set to zero.
+
+=head3 memcached_increment_by_key
+
+=head3 memcached_decrement_by_key
+
+=head3 memcached_increment_with_initial_by_key
+
+=head3 memcached_decrement_with_initial_by_key
+
+These are the master key equivalents of the above. They all take an extra
+initial $master_key parameter.
 
 
 =head2 Functions for Deleting Values from memcached
@@ -640,7 +687,7 @@ should change it to be a closure instead.
     $memc->trace_level($trace_level);
     $trace_level = $memc->trace_level;
 
-Sets the trace level (see L</Tracing Execution). Returns the previous trace level.
+Sets the trace level (see L</Tracing Execution>). Returns the previous trace level.
 
 =head1 EXTRA INFORMATION
 
