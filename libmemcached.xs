@@ -542,7 +542,7 @@ memcached_callback_get(Memcached__libmemcached ptr, memcached_callback flag, IN_
     switch (flag) {
     case MEMCACHED_CALLBACK_PREFIX_KEY:
         data = memcached_callback_get(ptr, flag, &ret);
-        RETVAL = newSVpv(data, 0);
+        RETVAL = (data) ? newSVpv((data, 0) : &PL_sv_undef;
         break;
     default:
         ret = MEMCACHED_FAILURE;
