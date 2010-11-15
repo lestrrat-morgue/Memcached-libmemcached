@@ -23,8 +23,8 @@ is ref $memc, 'Memcached::libmemcached';
 
 ok memcached_server_add($memc, "localhost", 11211);
 ok memcached_server_add($memc, "localhost", 11212);
-ok $memc->get_server_for_key("test3") == 0, "get_server_for_key test3 == 0";
-ok $memc->get_server_for_key("test") == 1, "get_server_for_key test == 1";
+ok $memc->get_server_for_key("test3") eq "localhost:11211", "get_server_for_key test3 == localhost:11211";
+ok $memc->get_server_for_key("test") eq "localhost:11212", "get_server_for_key test == localhost:11212";
 
 undef $memc;
 
