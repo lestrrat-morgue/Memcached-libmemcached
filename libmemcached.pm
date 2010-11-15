@@ -617,10 +617,10 @@ Currently the callback I<must> return an empty list.
 
   $memc->get_server_for_key( $key )
 
-This method uses the internal I<memcached_generate_hash_with_redistribution> hashing 
-funciton to determine which server should handle the specified $key.
+This method uses I<memcached_server_by_key> to get information about which server should contain
+the specified $key.
 
-It returns the index of the appropriate index of the servers added via L</memcached_server_add>.
+It returns a string containing the hostname:port of the appropriate server, or undef on failure.
 
 =head1 EXTRA INFORMATION
 
