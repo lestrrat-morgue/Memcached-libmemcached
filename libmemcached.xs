@@ -988,3 +988,18 @@ walk_stats(Memcached__libmemcached ptr, SV *stats_args, CV *cb)
     OUTPUT:
         RETVAL
 
+SV * get_server_for_key(Memcached__libmemcached ptr, char *key)
+    CODE:
+        memcached_return_t err;
+        memcached_server_instance_st sp = memcached_server_by_key(ptr, key, strlen(key), &err);
+        if (sp == NULL)
+            XSRETURN_UNDEF;
+
+        RETVAL = newSVpvf("%s:%d",
+            memcached_server_name(sp),
+            memcached_server_port(sp)
+        );
+        memcached_server_free(sp);
+    
+    OUTPUT:
+        RETVAL

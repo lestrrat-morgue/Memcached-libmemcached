@@ -707,6 +707,15 @@ should change it to be a closure instead.
 
 Sets the trace level (see L</Tracing Execution>). Returns the previous trace level.
 
+=head3 get_server_for_key
+
+  $memc->get_server_for_key( $key )
+
+This method uses I<memcached_server_by_key> to get information about which server should contain
+the specified $key.
+
+It returns a string containing the hostname:port of the appropriate server, or undef on failure.
+
 =head1 EXTRA INFORMATION
 
 =head2 Tracing Execution
