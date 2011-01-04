@@ -2,6 +2,10 @@
 
 Memcached::libmemcached::Changes - List of significant changes
 
+=head2 Changes in 0.4406 4th Jan 2011
+
+  Added get_server_for_key() thanks to Roy Hooper.
+
 =head2 Changes in 0.4405 29th Oct 2010
 
   Fix crash if memcached_callback_get(MEMCACHED_CALLBACK_PREFIX_KEY) returns NULL.
