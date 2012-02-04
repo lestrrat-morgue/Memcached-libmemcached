@@ -172,6 +172,8 @@ sub run {
 }
 
 sub build_libmemcached {
+    local $ENV{DESTDIR};  # do not let Perl module config leak through
+
     sync_libmemcached_pod();
     extract_libmemcached_functions();
     extract_libmemcached_constants();
