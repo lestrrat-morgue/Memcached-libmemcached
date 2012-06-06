@@ -54,6 +54,7 @@ if (my $gccversion = $Config{gccversion}) {     # ask gcc to be more pedantic
         $opts{DEFINE} .= ' -Wmissing-prototypes';
     }
 }
+$opts{LIBS} = ["-lstdc++"]; # else error: libmemcached.so: undefined symbol: __gxx_personality_v0
 $opts{OPTIMIZE} = "-g"  if $opt_g;
 $opts{CCFLAGS}  = "-pg" if $opt_pg;
 my $coverage_flags = "";
