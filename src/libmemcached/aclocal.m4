@@ -13,8 +13,8 @@
 
 m4_ifndef([AC_AUTOCONF_VERSION],
   [m4_copy([m4_PACKAGE_VERSION], [AC_AUTOCONF_VERSION])])dnl
-m4_if(m4_defn([AC_AUTOCONF_VERSION]), [2.65],,
-[m4_warning([this file was generated for autoconf 2.65.
+m4_if(m4_defn([AC_AUTOCONF_VERSION]), [2.68],,
+[m4_warning([this file was generated for autoconf 2.68.
 You have another version of autoconf.  It may work, but is not guaranteed to.
 If you have problems, you may need to regenerate the build system entirely.
 To do so, use the procedure documented by the package, typically `autoreconf'.])])
@@ -776,6 +776,23 @@ AC_DEFUN([_AM_SET_OPTIONS],
 AC_DEFUN([_AM_IF_OPTION],
 [m4_ifset(_AM_MANGLE_OPTION([$1]), [$2], [$3])])
 
+# Copyright (C) 2001, 2003, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# AM_RUN_LOG(COMMAND)
+# -------------------
+# Run COMMAND, save the exit status in ac_status, and log it.
+# (This has been adapted from Autoconf's _AC_RUN_LOG macro.)
+AC_DEFUN([AM_RUN_LOG],
+[{ echo "$as_me:$LINENO: $1" >&AS_MESSAGE_LOG_FD
+   ($1) >&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD
+   ac_status=$?
+   echo "$as_me:$LINENO: \$? = $ac_status" >&AS_MESSAGE_LOG_FD
+   (exit $ac_status); }])
+
 # Check to make sure that the build environment is sane.    -*- Autoconf -*-
 
 # Copyright (C) 1996, 1997, 2000, 2001, 2003, 2005, 2008
@@ -1011,50 +1028,44 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
-m4_include([m4/ac_cxx_compile_stdcxx_0x.m4])
-m4_include([m4/ac_cxx_header_stdcxx_98.m4])
-m4_include([m4/acx_pthread.m4])
+m4_include([m4/ax_check_library.m4])
+m4_include([m4/ax_compiler_vendor.m4])
+m4_include([m4/ax_cxx_gcc_abi_demangle.m4])
+m4_include([m4/ax_cxx_header_stdcxx_98.m4])
+m4_include([m4/ax_pthread.m4])
+m4_include([m4/ax_sasl.m4])
+m4_include([m4/ax_with_prog.m4])
+m4_include([m4/bottom.m4])
 m4_include([m4/byteorder.m4])
 m4_include([m4/deprecated.m4])
-m4_include([m4/eagain.m4])
-m4_include([m4/enable_utillib.m4])
+m4_include([m4/fnv.m4])
+m4_include([m4/have_cinttypes.m4])
+m4_include([m4/have_cstdint.m4])
 m4_include([m4/hsieh.m4])
-m4_include([m4/lib-ld.m4])
-m4_include([m4/lib-link.m4])
 m4_include([m4/lib-prefix.m4])
 m4_include([m4/libtool.m4])
 m4_include([m4/ltoptions.m4])
 m4_include([m4/ltsugar.m4])
 m4_include([m4/ltversion.m4])
 m4_include([m4/lt~obsolete.m4])
-m4_include([m4/memcached.m4])
+m4_include([m4/memaslap.m4])
+m4_include([m4/murmur.m4])
 m4_include([m4/pandora_64bit.m4])
 m4_include([m4/pandora_canonical.m4])
 m4_include([m4/pandora_check_compiler_version.m4])
-m4_include([m4/pandora_check_cxx_standard.m4])
 m4_include([m4/pandora_clock_gettime.m4])
-m4_include([m4/pandora_cxx_demangle.m4])
 m4_include([m4/pandora_enable_dtrace.m4])
 m4_include([m4/pandora_extensions.m4])
 m4_include([m4/pandora_have_better_malloc.m4])
 m4_include([m4/pandora_have_gcc_atomics.m4])
-m4_include([m4/pandora_have_libevent.m4])
-m4_include([m4/pandora_have_libgtest.m4])
-m4_include([m4/pandora_have_libinnodb.m4])
 m4_include([m4/pandora_header_assert.m4])
-m4_include([m4/pandora_libtool.m4])
 m4_include([m4/pandora_optimize.m4])
 m4_include([m4/pandora_platform.m4])
-m4_include([m4/pandora_print_callstack.m4])
-m4_include([m4/pandora_pthread.m4])
-m4_include([m4/pandora_sasl.m4])
 m4_include([m4/pandora_use_pipe.m4])
 m4_include([m4/pandora_vc_build.m4])
 m4_include([m4/pandora_version.m4])
-m4_include([m4/pandora_visibility.m4])
 m4_include([m4/pandora_warnings.m4])
-m4_include([m4/pandora_with_gettext.m4])
-m4_include([m4/pod2man.m4])
-m4_include([m4/podchecker.m4])
 m4_include([m4/protocol_binary.m4])
 m4_include([m4/setsockopt.m4])
+m4_include([m4/socket_send_flags.m4])
+m4_include([m4/visibility.m4])

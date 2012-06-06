@@ -9,10 +9,11 @@
  *
  */
 
+#pragma once
+
 #include <getopt.h>
-#include <libmemcached/memcached.h>
-#include "libmemcached/watchpoint.h"
-#include "client_options.h"
+#include <libmemcached-1.0/memcached.h>
+#include "clients/client_options.h"
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -41,6 +42,10 @@ struct memcached_programs_help_st
   char *not_used_yet;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 char *strdup_cleanup(const char *str);
 void cleanup(void);
 long int timedif(struct timeval a, struct timeval b);
@@ -52,3 +57,8 @@ void process_hash_option(memcached_st *memc, char *opt_hash);
 bool initialize_sasl(memcached_st *memc, char *user, char *password);
 void shutdown_sasl(void);
 void initialize_sockets(void);
+void close_stdio(void);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

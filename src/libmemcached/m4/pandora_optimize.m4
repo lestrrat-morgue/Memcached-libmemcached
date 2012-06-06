@@ -1,5 +1,5 @@
-dnl  Copyright (C) 2009 Sun Microsystems
-dnl This file is free software; Sun Microsystems
+dnl  Copyright (C) 2009 Sun Microsystems, Inc.
+dnl This file is free software; Sun Microsystems, Inc.
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
 
@@ -18,29 +18,21 @@ AC_DEFUN([PANDORA_OPTIMIZE],[
       ;;
     esac
 
-    dnl Once we can use a modern autoconf, we can replace the std=gnu99 here
-    dnl with using AC_CC_STD_C99 above
-    CC="${CC} -std=gnu99"
-
-    AM_CPPFLAGS="-ggdb3 ${AM_CPPFLAGS}"
+    AM_CPPFLAGS="-ggdb ${AM_CPPFLAGS}"
 
     DEBUG_CFLAGS="-O0"
     DEBUG_CXXFLAGS="-O0"
 
-    OPTIMIZE_CFLAGS="-O3"
-    OPTIMIZE_CXXFLAGS="-O3"
+    OPTIMIZE_CFLAGS="-O2"
+    OPTIMIZE_CXXFLAGS="-O2"
   ])
   AS_IF([test "$INTELCC" = "yes"],[
-    dnl Once we can use a modern autoconf, we can replace the std=gnu99 here
-    dnl with using AC_CC_STD_C99 above
-    CC="${CC} -std=c99"
-
     AM_CPPFLAGS="-g ${AM_CPPFLAGS}"
 
     DEBUG_CFLAGS="-O0"
     DEBUG_CXXFLAGS="-O0"
 
-    OPTIMIZE_CFLAGS="-xHOST -O3 -no-prec-div -static"
+    OPTIMIZE_CFLAGS="-xHOST -O2 -no-prec-div -static"
     OPTIMIZE_CXXFLAGS="${OPTIMIZE_CFLAGS}"
 
   ])
@@ -71,9 +63,11 @@ AC_DEFUN([PANDORA_OPTIMIZE],[
     # Debugging. No optimization.
     AM_CFLAGS="${AM_CFLAGS} ${DEBUG_CFLAGS} -DDEBUG"
     AM_CXXFLAGS="${AM_CXXFLAGS} ${DEBUG_CXXFLAGS} -DDEBUG"
+    AC_DEFINE(DEBUG, [ 1 ], [Define to 1 to enable debugging code.])
   ],[
     # Optimized version. No debug
     AM_CFLAGS="${AM_CFLAGS} ${OPTIMIZE_CFLAGS}"
     AM_CXXFLAGS="${AM_CXXFLAGS} ${OPTIMIZE_CXXFLAGS}"
+    AC_DEFINE(DEBUG, [ 0 ], [Define to 1 to enable debugging code.])
   ])
 ])

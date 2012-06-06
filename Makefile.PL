@@ -19,15 +19,19 @@ BEGIN {
 my $lmcd_src = "src/libmemcached";
 GetOptions(
     'g!'    => \my $opt_g,      # enable debugging
+    'd!'    => \my $opt_d,      # debug Makefile.PL
     'pg!'   => \my $opt_pg,     # enable profiling
     'cov!'  => \my $opt_cov,    # enable test coverage analysis
     'bin!'  => \my $opt_bin,    # install bintools from libmemcached
     'src=s' => \$lmcd_src,     # unpacked source code for libmemcached
 ) or exit 1;
 
+$Data::Dumper::Indent = 1;
+$Data::Dumper::Sortkeys = 1;
+
+my $lmcd_api_ver = "1.0"; # eg $lmcd_src/libmemcached-$lmcd_api_ver/
 my $lmcd_inst = getcwd()."/src_inst";
 my $lmcd_built_lib = "$lmcd_inst/lib/libmemcached$Config{lib_ext}";
-my @lmcd_pod = sort <$lmcd_src/docs/memcached_*.pod>;
 my $is_developer = (-d ".svn" || -d ".git");
 
 my ($lmcd_h) = eval { build_libmemcached() };
@@ -106,6 +110,7 @@ sub postamble {
 return qq{
 COVER = cover
 LMCD_SRC=$lmcd_src
+LMCD_API_VER=$lmcd_api_ver
 LMCD_INST=$lmcd_inst
 LMCD_BUILT_LIB=$lmcd_built_lib
 }.q{
@@ -181,9 +186,13 @@ sub build_libmemcached {
     return if -d "$lmcd_inst/lib"; # XXX assume it built ok. use 'make realclean' to rm
     mkdir $lmcd_inst, 0775 unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
-    my $configure_args = '--disable-sasl --with-pic --disable-shared';
-    $configure_args .= ' --enable-debug' if $opt_g;
-    $configure_args .= ' CFLAGS=-pg LDFLAGS=-pg' if $opt_pg;
+    my $configure_args = '--with-pic --disable-shared';
+    $configure_args .= ' --with-lib-prefix=/opt/local'
+        if -d "/opt/local" and $^O eq 'darwin'; # macports
+    $configure_args .= ' --enable-debug'
+        if $opt_g;
+    $configure_args .= ' --enable-profiling'
+        if $opt_pg;
     if ($is_developer) {    # XXX make a Makefile.PL argument/option
     }
     run("cd $lmcd_src && ./configure --prefix=$lmcd_inst $configure_args");
@@ -195,6 +204,8 @@ sub sync_libmemcached_pod {
     return unless -d ".svn";
     # we duplicate the libmemcached pod in svn so that the docs can be read on search.cpan.org
     my $perl_pod_dir = "lib/Memcached/libmemcached";
+    my @lmcd_pod;
+warn "sync_libmemcached_pod XXXXXXXXXXXXXX";
     for my $src_pod (@lmcd_pod) {
         (my $dst_pod = $src_pod) =~ s!$lmcd_src/docs!$perl_pod_dir!;
         $dst_pod =~ s/\.pod/\.pm/;
@@ -220,8 +231,9 @@ sub extract_libmemcached_functions {
     my %libmemcached_func;
 
     # find all memcached_* functions
-    warn "Reading libmemcached pod docs to find all public functions\n";
-    for my $src_pod (@lmcd_pod) {
+    warn "Finding all public functions\n";
+    my @headers = <$lmcd_src/libmemcached-$lmcd_api_ver/*.h>;
+    for my $src_pod (@headers) {
         open my $fh, "<$src_pod" or die "Can't open $src_pod: $!";
         #warn $src_pod;
         while (<$fh>) {
@@ -251,35 +263,44 @@ sub extract_libmemcached_constants {
     my %libmemcached_const;
 
     # find all MEMCACHED_* constants (#define and enum)
-    warn "Reading headers to find all constants\n";
     my $in_enum = 0;
     my @const;
 
-    my @headers = ("$lmcd_src/libmemcached/memcached.h", 
-                   "$lmcd_src/libmemcached/constants.h");
+    #my @headers = ("$lmcd_src/libmemcached/memcached.h", "$lmcd_src/libmemcached/constants.h");
+    my @headers = (
+        <$lmcd_src/libmemcached-$lmcd_api_ver/types/*.h>,
+        "$lmcd_src/libmemcached-$lmcd_api_ver/limits.h",
+        "$lmcd_src/libmemcached-$lmcd_api_ver/defaults.h",
+    );
+    warn "Reading ".@headers." header files to find all constants\n";
     for my $h (@headers) {
+        warn "  $h\n" if $opt_d;
         open my $fh, "<$h" or die "Can't open $h: $!";
         while (<$fh>) {
             if ($in_enum) {
-                if (m/^ \s* } \s* (\w+)/x) { # end of enum
-                    $libmemcached_const{$_} = $1 for @const;
+                if (m/^ \s* }/x) { # end of enum
+                    $libmemcached_const{$_} = $in_enum for @const;
                     @const = ();
                     $in_enum = 0;
+                    warn "  << $in_enum" if $opt_d;
                 }
                 elsif (m/^ \s* (MEMCACHED_\w+)/x) {
                     my $symbol = $1;
                     if ( $symbol !~ /MEMCACHED_CALLBACK_(MALLOC|REALLOC|FREE)_FUNCTION/) {
                         push @const, $symbol;
+                        warn "  enum $_" if $opt_d;
                     }
                 }
             }
-            elsif (m/^ \s* typedef \s+ enum /x) {
-                $in_enum = 1;
+            elsif (m/^ \s* (?:typedef \s+)? enum \s+ (\w+) \s+ {/x) {
+                $in_enum = $1;
+                warn "  >> $_" if $opt_d;
             }
             elsif (m/\# \s* define \s+ (MEMCACHED_\w+)/x) {
                 my $symbol = $1;
                 if ($symbol !~ /_H$/) {
                     $libmemcached_const{$1} = "defines";
+                    warn "  $_" if $opt_d;
                 }
             }
         }

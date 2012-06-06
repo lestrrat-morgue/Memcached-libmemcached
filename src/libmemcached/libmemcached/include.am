@@ -2,175 +2,138 @@
 # included from Top Level Makefile.am
 # All paths should be given relative to the root
 
-EXTRA_DIST+= \
-	     libmemcached/configure.h.in \
-	     libmemcached/libmemcached_probes.d \
-	     libmemcached/memcached/README.txt
+libmemcached_libmemcached_la_SOURCES =
 
-noinst_HEADERS+= \
-		 libmemcached/byteorder.h \
-		 libmemcached/common.h \
-		 libmemcached/do.h \
-		 libmemcached/internal.h \
-		 libmemcached/io.h \
-		 libmemcached/libmemcached_probes.h \
-		 libmemcached/protocol/ascii_handler.h \
-		 libmemcached/protocol/binary_handler.h \
-		 libmemcached/protocol/common.h \
-		 libmemcached/response.h
+include libmemcached/csl/include.am
 
-nobase_include_HEADERS+= \
-			 libmemcached/allocators.h \
-			 libmemcached/analyze.h \
-			 libmemcached/auto.h \
-			 libmemcached/behavior.h \
-			 libmemcached/callback.h \
-			 libmemcached/configure.h \
-			 libmemcached/constants.h \
-			 libmemcached/delete.h \
-			 libmemcached/dump.h \
-			 libmemcached/exception.hpp \
-			 libmemcached/fetch.h \
-			 libmemcached/flush.h \
-			 libmemcached/flush_buffers.h \
-			 libmemcached/get.h \
-			 libmemcached/hash.h \
-			 libmemcached/memcached.h \
-			 libmemcached/memcached.hpp \
-			 libmemcached/memcached/protocol_binary.h \
-			 libmemcached/parse.h \
-                         libmemcached/platform.h \
-			 libmemcached/protocol/cache.h \
-			 libmemcached/protocol/callback.h \
-			 libmemcached/protocol_handler.h \
-			 libmemcached/quit.h \
-			 libmemcached/result.h \
-                         libmemcached/sasl.h \
-			 libmemcached/server.h \
-			 libmemcached/server_list.h \
-			 libmemcached/stats.h \
-			 libmemcached/storage.h \
-			 libmemcached/strerror.h \
-			 libmemcached/string.h \
-			 libmemcached/types.h \
-			 libmemcached/verbosity.h \
-			 libmemcached/version.h \
-			 libmemcached/visibility.h \
-			 libmemcached/watchpoint.h
+EXTRA_DIST+= libmemcached/libmemcached_probes.d
+EXTRA_DIST+= libmemcached/memcached/README.txt
 
-lib_LTLIBRARIES+= libmemcached/libmemcachedprotocol.la
-libmemcached_libmemcachedprotocol_la_SOURCES =  \
-						libmemcached/protocol/ascii_handler.c \
-						libmemcached/protocol/binary_handler.c \
-						libmemcached/protocol/cache.c \
-						libmemcached/protocol/pedantic.c \
-						libmemcached/protocol/protocol_handler.c
+nobase_include_HEADERS+= libmemcached/memcached.h
+nobase_include_HEADERS+= libmemcached/memcached.hpp
+nobase_include_HEADERS+= libmemcached/util.h
 
-libmemcached_libmemcachedprotocol_la_CFLAGS= ${AM_CFLAGS} ${NO_CONVERSION} ${PTHREAD_CFLAGS}
-libmemcached_libmemcachedprotocol_la_LDFLAGS= ${AM_LDFLAGS} ${PTHREAD_LIBS} -version-info ${MEMCACHED_PROTOCAL_LIBRARY_VERSION}
-
-noinst_LTLIBRARIES+= \
-		     libmemcached/libmemcachedcallbacks.la
-
-libmemcached_libmemcachedcallbacks_la_CFLAGS = ${AM_CFLAGS} ${NO_STRICT_ALIASING}
-libmemcached_libmemcachedcallbacks_la_SOURCES = libmemcached/callback.c
-
-# This noinst lib contains things we want to be ABI private but still want to
-# either use in client programs or be able to test in test cases
-# These symbols will not be exposed in the shipped .so
-noinst_LTLIBRARIES+= libmemcached/libmemcachedinternal.la
-libmemcached_libmemcachedinternal_la_SOURCES= \
-					      libmemcached/string.c
+noinst_HEADERS+= libmemcached/array.h 
+noinst_HEADERS+= libmemcached/assert.hpp 
+noinst_HEADERS+= libmemcached/backtrace.hpp 
+noinst_HEADERS+= libmemcached/byteorder.h 
+noinst_HEADERS+= libmemcached/common.h 
+noinst_HEADERS+= libmemcached/connect.hpp 
+noinst_HEADERS+= libmemcached/continuum.hpp 
+noinst_HEADERS+= libmemcached/do.hpp 
+noinst_HEADERS+= libmemcached/encoding_key.h 
+noinst_HEADERS+= libmemcached/error.hpp 
+noinst_HEADERS+= libmemcached/initialize_query.h 
+noinst_HEADERS+= libmemcached/internal.h 
+noinst_HEADERS+= libmemcached/io.h 
+noinst_HEADERS+= libmemcached/io.hpp 
+noinst_HEADERS+= libmemcached/is.h 
+noinst_HEADERS+= libmemcached/key.hpp 
+noinst_HEADERS+= libmemcached/libmemcached_probes.h 
+noinst_HEADERS+= libmemcached/memcached/protocol_binary.h 
+noinst_HEADERS+= libmemcached/memcached/vbucket.h 
+noinst_HEADERS+= libmemcached/memory.h 
+noinst_HEADERS+= libmemcached/namespace.h 
+noinst_HEADERS+= libmemcached/options.hpp 
+noinst_HEADERS+= libmemcached/response.h 
+noinst_HEADERS+= libmemcached/result.h
+noinst_HEADERS+= libmemcached/sasl.hpp 
+noinst_HEADERS+= libmemcached/server.hpp 
+noinst_HEADERS+= libmemcached/server_instance.h 
+noinst_HEADERS+= libmemcached/socket.hpp 
+noinst_HEADERS+= libmemcached/string.hpp 
+noinst_HEADERS+= libmemcached/udp.hpp 
+noinst_HEADERS+= libmemcached/virtual_bucket.h 
+noinst_HEADERS+= libmemcached/watchpoint.h
 
 lib_LTLIBRARIES+= libmemcached/libmemcached.la
-libmemcached_libmemcached_la_CFLAGS= ${AM_CFLAGS} ${NO_CONVERSION}
-libmemcached_libmemcached_la_SOURCES = \
-				       libmemcached/allocators.c \
-				       libmemcached/analyze.c \
-				       libmemcached/auto.c \
-				       libmemcached/behavior.c \
-				       libmemcached/connect.c \
-				       libmemcached/delete.c \
-				       libmemcached/do.c \
-				       libmemcached/dump.c \
-				       libmemcached/fetch.c \
-				       libmemcached/flush.c \
-				       libmemcached/flush_buffers.c \
-				       libmemcached/get.c \
-				       libmemcached/hash.c \
-				       libmemcached/hosts.c \
-				       libmemcached/io.c \
-				       libmemcached/key.c \
-				       libmemcached/memcached.c \
-				       libmemcached/parse.c \
-				       libmemcached/purge.c \
-				       libmemcached/quit.c \
-				       libmemcached/response.c \
-				       libmemcached/result.c \
-				       libmemcached/server.c \
-				       libmemcached/server_list.c \
-				       libmemcached/stats.c \
-				       libmemcached/storage.c \
-				       libmemcached/strerror.c \
-				       libmemcached/verbosity.c \
-				       libmemcached/version.c
+libmemcached_libmemcached_la_CFLAGS= -DBUILDING_LIBMEMCACHED
+
+libmemcached_libmemcached_la_CXXFLAGS= -DBUILDING_LIBMEMCACHED
+
+libmemcached_libmemcached_la_SOURCES+= \
+				       ${libhashkit_libhashkit_la_SOURCES} \
+				       libmemcached/allocators.cc \
+				       libmemcached/allocators.hpp \
+				       libmemcached/analyze.cc \
+				       libmemcached/array.c \
+				       libmemcached/auto.cc \
+				       libmemcached/backtrace.cc \
+				       libmemcached/behavior.cc \
+				       libmemcached/behavior.hpp \
+				       libmemcached/byteorder.cc \
+				       libmemcached/callback.cc \
+				       libmemcached/connect.cc \
+				       libmemcached/delete.cc \
+				       libmemcached/do.cc \
+				       libmemcached/dump.cc \
+				       libmemcached/error.cc \
+				       libmemcached/exist.cc \
+				       libmemcached/fetch.cc \
+				       libmemcached/flush.cc \
+				       libmemcached/flush_buffers.cc \
+				       libmemcached/get.cc \
+				       libmemcached/hash.cc \
+				       libmemcached/hash.hpp \
+				       libmemcached/hosts.cc \
+				       libmemcached/initialize_query.cc \
+				       libmemcached/io.cc \
+				       libmemcached/key.cc \
+				       libmemcached/memcached.cc \
+				       libmemcached/encoding_key.cc \
+				       libmemcached/namespace.cc \
+				       libmemcached/options.cc \
+				       libmemcached/parse.cc \
+				       libmemcached/purge.cc \
+				       libmemcached/quit.cc \
+				       libmemcached/quit.hpp \
+				       libmemcached/response.cc \
+				       libmemcached/result.cc \
+				       libmemcached/sasl.cc \
+				       libmemcached/server.cc \
+				       libmemcached/server_list.cc \
+				       libmemcached/server_list.hpp \
+				       libmemcached/stats.cc \
+				       libmemcached/storage.cc \
+				       libmemcached/strerror.cc \
+				       libmemcached/string.cc \
+				       libmemcached/touch.cc \
+				       libmemcached/verbosity.cc \
+				       libmemcached/version.cc \
+				       libmemcached/udp.cc \
+				       libmemcached/virtual_bucket.c
+
+libmemcached/options.cc: libmemcached/csl/parser.h
 
 
-libmemcached_libmemcached_la_DEPENDENCIES= libmemcached/libmemcachedcallbacks.la libmemcached/libmemcachedinternal.la libhashkit/libhashkitinc.la
-libmemcached_libmemcached_la_LIBADD= $(LIBM) libmemcached/libmemcachedcallbacks.la libmemcached/libmemcachedinternal.la libhashkit/libhashkitinc.la
-libmemcached_libmemcached_la_LDFLAGS= ${AM_LDFLAGS} -version-info ${MEMCACHED_LIBRARY_VERSION}
-
-if BUILD_LIBMEMCACHEDUTIL
-nobase_include_HEADERS+= \
-			 libmemcached/memcached_util.h \
-			 libmemcached/util.h \
-			 libmemcached/util/ping.h \
-			 libmemcached/util/pool.h \
-			 libmemcached/util/version.h
-lib_LTLIBRARIES+= libmemcached/libmemcachedutil.la
-endif
-
-libmemcached_libmemcachedutil_la_SOURCES= \
-					  libmemcached/util/ping.c \
-					  libmemcached/util/pool.c \
-					  libmemcached/util/version.c
-libmemcached_libmemcachedutil_la_CFLAGS= ${AM_CFLAGS} ${NO_CONVERSION} ${PTHREAD_CFLAGS}
-libmemcached_libmemcachedutil_la_LIBADD= libmemcached/libmemcached.la
-libmemcached_libmemcachedutil_la_LDFLAGS= ${AM_LDFLAGS} ${PTHREAD_LIBS} -version-info ${MEMCACHED_UTIL_LIBRARY_VERSION}
-libmemcached_libmemcachedutil_la_DEPENDENCIES= libmemcached/libmemcached.la
-
-if BUILD_BYTEORDER
-noinst_LTLIBRARIES += libmemcached/libbyteorder.la
-libmemcached_libbyteorder_la_SOURCES= libmemcached/byteorder.c
-libmemcached_libmemcached_la_LIBADD += libmemcached/libbyteorder.la
-libmemcached_libmemcached_la_DEPENDENCIES+= libmemcached/libbyteorder.la
-libmemcached_libmemcachedprotocol_la_LIBADD=libmemcached/libbyteorder.la
-libmemcached_libmemcachedprotocol_la_DEPENDENCIES=libmemcached/libbyteorder.la
-endif
+libmemcached_libmemcached_la_DEPENDENCIES=
+libmemcached_libmemcached_la_LIBADD=
+libmemcached_libmemcached_la_LDFLAGS=
+libmemcached_libmemcached_la_LDFLAGS+= -version-info ${MEMCACHED_LIBRARY_VERSION}
 
 if HAVE_SASL
-libmemcached_libmemcached_la_LDFLAGS+= $(LIBSASL)
-libmemcached_libmemcached_la_SOURCES += libmemcached/sasl.c
+libmemcached_libmemcached_la_CXXFLAGS+= $(LIBSASL_CPPFLAGS)
+libmemcached_libmemcached_la_CXXFLAGS+= $(PTHREAD_CFLAGS)
+libmemcached_libmemcached_la_LIBADD+= $(PTHREAD_LIBS)
+libmemcached_libmemcached_la_LIBADD+= $(LIBSASL_LDFLAGS)
 endif
 
 if HAVE_DTRACE
 BUILT_SOURCES+= libmemcached/dtrace_probes.h
 CLEANFILES+= libmemcached/dtrace_probes.h
-endif
-
-if DTRACE_NEEDS_OBJECTS
-libmemcached_libmemcached_la_SOURCES += libmemcached/libmemcached_probes.d
-libmemcached_libmemcached_la_DEPENDENCIES += libmemcached/libmemcached_probes.o
 CLEANFILES+= libmemcached/libmemcached_probes.o
+
+libmemcached_libmemcached_la_DEPENDENCIES += libmemcached/libmemcached_probes.o
+libmemcached_libmemcached_la_LIBADD += libmemcached/libmemcached_probes.o
+libmemcached_libmemcached_la_SOURCES += libmemcached/libmemcached_probes.d
 endif
 
 SUFFIXES+= .d
 
 libmemcached/dtrace_probes.h: libmemcached/libmemcached_probes.d
-	$(DTRACE) $(DTRACEFLAGS) -h -o libmemcached/dtrace_probes.h -s ${top_srcdir}/libmemcached/libmemcached_probes.d
+	$(DTRACE) $(DTRACEFLAGS) -h -o ${top_srcdir}/libmemcached/dtrace_probes.h -s ${top_srcdir}/libmemcached/libmemcached_probes.d
 
-libmemcached/libmemcached_probes.o: libmemcached/libmemcached_probes.d ${libmemcached_libmemcached_la_OBJECTS} config.h
+libmemcached/libmemcached_probes.o: libmemcached/libmemcached_probes.d ${libmemcached_libmemcached_la_OBJECTS}
 
 .d.o:
-	$(DTRACE) $(DTRACEFLAGS) -o libmemcached/libmemcached_probes.o -G -s ${top_srcdir}/libmemcached/libmemcached_probes.d `grep '^pic_object' ${top_builddir}/libmemcached/*.lo | cut -f 2 -d\' | sed "s/^/${top_builddir}\/libmemcached\//"`
-
+	$(DTRACE) $(DTRACEFLAGS) -o $@ -G -s libmemcached/libmemcached_probes.d
