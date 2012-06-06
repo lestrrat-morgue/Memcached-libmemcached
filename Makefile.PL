@@ -186,7 +186,7 @@ sub build_libmemcached {
     return if -d "$lmcd_inst/lib"; # XXX assume it built ok. use 'make realclean' to rm
     mkdir $lmcd_inst, 0775 unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
-    my $configure_args = '--with-pic --disable-shared';
+    my $configure_args = '--with-pic';# --disable-shared';
     $configure_args .= ' --with-lib-prefix=/opt/local'
         if -d "/opt/local" and $^O eq 'darwin'; # macports
     $configure_args .= ' --enable-debug'

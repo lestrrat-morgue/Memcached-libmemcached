@@ -8,7 +8,6 @@
 #include "ppport.h"
 
 #include <libmemcached/memcached.h>
-#include <libmemcached/constants.h>
 
 #define MEMCACHED_CALLBACK_MALLOC_FUNCTION 4
 #define MEMCACHED_CALLBACK_REALLOC_FUNCTION 5
@@ -58,7 +57,7 @@ typedef time_t               lmc_expiration;
             if (lmc_state->trace_level > 1 || (lmc_state->trace_level && !LMC_RETURN_OK(ret))) \
                 warn("\t<= %s return %d %s", what, ret, memcached_strerror(ptr, ret)); \
             lmc_state->last_return = ret;   \
-            lmc_state->last_errno  = ptr->cached_errno; /* if MEMCACHED_ERRNO */ \
+            lmc_state->last_errno  = memcached_last_error_errno(ptr); /* if MEMCACHED_ERRNO */ \
         } else { /* should never happen */ \
             warn("LMC_RECORD_RETURN_ERR(%d %s): no lmc_state structure in memcached_st so error not recorded!", \
                 ret, memcached_strerror(ptr, ret)); \
@@ -977,7 +976,7 @@ walk_stats(Memcached__libmemcached ptr, SV *stats_args, CV *cb)
         RETVAL = memcached_stat_execute(clone, SvPV_nolen(stats_args), _walk_stats_cb, cb);
         if (!LMC_RETURN_OK(RETVAL)) {
             LMC_RECORD_RETURN_ERR("memcached_stat_execute", ptr, RETVAL);
-            LMC_STATE_FROM_PTR(ptr)->last_errno = clone->cached_errno;
+            LMC_STATE_FROM_PTR(ptr)->last_errno = memcached_last_error_errno(clone);
             memcached_free(clone);
             XSRETURN_NO;
         }
