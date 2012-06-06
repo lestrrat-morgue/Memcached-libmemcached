@@ -1,5 +1,4 @@
-*.1
-*.3
+src_inst/
 *.[ao]
 *.exe
 *.gcda
@@ -11,6 +10,7 @@
 *~
 .deps
 Makefile
+Makefile.old
 Memcached-libmemcached-*
 blib/
 const-xs.inc
@@ -69,5 +69,3 @@ src/libmemcached/tests/testapp
 src/libmemcached/tests/testhashkit
 src/libmemcached/tests/testplus
 src/libmemcached/tests/testudp
-src_inst/
-
