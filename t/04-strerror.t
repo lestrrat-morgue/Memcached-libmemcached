@@ -24,13 +24,14 @@ use libmemcached_test;
 my $memc = libmemcached_test_create();
 
 plan tests => 6;
+$| = 1;
 
 is memcached_strerror($memc, 0), 'SUCCESS';
 is memcached_strerror($memc, 1), 'FAILURE';
 
 # XXX also test dual-var nature of return codes here
 my $rc = memcached_server_add_unix_socket($memc, undef); # should fail
-ok !defined($rc), 'rc should not be defined';
+is $rc, undef, 'rc should not be defined';
 
 my $errstr = $memc->errstr;
 #use Devel::Peek; Dump($errstr);
