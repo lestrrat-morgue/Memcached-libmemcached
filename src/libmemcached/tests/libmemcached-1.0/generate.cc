@@ -35,7 +35,7 @@
  *
  */
 
-#include <config.h>
+#include <mem_config.h>
 #include <libtest/test.hpp>
 
 #include <libmemcachedutil-1.0/util.h>
@@ -92,7 +92,7 @@ test_return_t generate_large_pairs(memcached_st *memc)
   }
 
   memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS, true);
-  unsigned int check_execute= execute_set(memc, global_pairs, global_count);
+  unsigned int check_execute= execute_set(memc, global_pairs, (unsigned int)global_count);
 
   test_true(check_execute > (global_count / 2));
 
@@ -103,10 +103,12 @@ test_return_t generate_data(memcached_st *memc)
 {
   test_compare(TEST_SUCCESS, generate_pairs(memc));
 
-  unsigned int check_execute= execute_set(memc, global_pairs, global_count);
+  unsigned int check_execute= execute_set(memc, global_pairs, (unsigned int)global_count);
 
-  test_true_hint(check_execute > (global_count / 2),
-                 "Possible false, positive, memcached may have ejected key/value based on memory needs");
+  /* Possible false, positive, memcached may have ejected key/value based on
+   * memory needs. */
+
+  test_true(check_execute > (global_count / 2));
 
   return TEST_SUCCESS;
 }
@@ -115,7 +117,7 @@ test_return_t generate_data_with_stats(memcached_st *memc)
 {
   test_compare(TEST_SUCCESS, generate_pairs(memc));
 
-  unsigned int check_execute= execute_set(memc, global_pairs, global_count);
+  unsigned int check_execute= execute_set(memc, global_pairs, (unsigned int)global_count);
 
   test_compare(check_execute, global_count);
 
@@ -129,10 +131,14 @@ test_return_t generate_data_with_stats(memcached_st *memc)
     /* This test was changes so that "make test" would work properlly */
     if (DEBUG)
     {
-      memcached_server_instance_st instance=
+      const memcached_instance_st * instance=
         memcached_server_instance_by_position(memc, host_index);
 
-      printf("\nserver %u|%s|%u bytes: %llu\n", host_index, instance->hostname, instance->port, (unsigned long long)(stat_p + host_index)->bytes);
+      printf("\nserver %u|%s|%u bytes: %llu\n",
+             host_index,
+             memcached_server_name(instance),
+             memcached_server_port(instance),
+             (unsigned long long)(stat_p + host_index)->bytes);
     }
     test_true((unsigned long long)(stat_p + host_index)->bytes);
   }
@@ -204,8 +210,10 @@ test_return_t get_read(memcached_st *memc)
       free(return_value);
     }
   }
-  test_true_hint(keys_returned > (global_count / 2),
-                 "Possible false, positive, memcached may have ejected key/value based on memory needs");
+  /*
+    Possible false, positive, memcached may have ejected key/value based on memory needs.
+  */
+  test_true(keys_returned > (global_count / 2));
 
   return TEST_SUCCESS;
 }
@@ -330,8 +338,10 @@ test_return_t delete_generate(memcached_st *memc)
       total++;
     }
   }
-  test_true_hint(total > (global_count / 2),
-                 "Possible false, positive, memcached may have ejected key/value based on memory needs");
+  /*
+    Possible false, positive, memcached may have ejected key/value based on memory needs.
+  */
+  test_true(total > (global_count / 2));
 
   return TEST_SUCCESS;
 }
@@ -349,8 +359,10 @@ test_return_t delete_buffer_generate(memcached_st *memc)
     }
   }
 
-  test_true_hint(total > (global_count / 2),
-                 "Possible false, positive, memcached may have ejected key/value based on memory needs");
+  /*
+     Possible false, positive, memcached may have ejected key/value based on memory needs.
+  */
+  test_true(total > (global_count / 2));
 
   return TEST_SUCCESS;
 }

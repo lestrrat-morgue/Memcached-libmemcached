@@ -408,7 +408,7 @@ _fetch_all_into_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
 
 
 static memcached_return_t
-_walk_stats_cb(memcached_server_instance_st instance,
+_walk_stats_cb(const memcached_instance_st *instance,
     const char *key,   size_t key_length,
     const char *value, size_t value_length,
     void *cb)
@@ -431,6 +431,7 @@ _walk_stats_cb(memcached_server_instance_st instance,
 
     return MEMCACHED_SUCCESS;
 }
+
 
 
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached
@@ -990,7 +991,7 @@ walk_stats(Memcached__libmemcached ptr, SV *stats_args, CV *cb)
 SV * get_server_for_key(Memcached__libmemcached ptr, char *key)
     CODE:
         memcached_return_t err;
-        memcached_server_instance_st sp = memcached_server_by_key(ptr, key, strlen(key), &err);
+        const memcached_instance_st *sp = memcached_server_by_key(ptr, key, strlen(key), &err);
         if (sp == NULL)
             XSRETURN_UNDEF;
 
@@ -998,7 +999,7 @@ SV * get_server_for_key(Memcached__libmemcached ptr, char *key)
             memcached_server_name(sp),
             memcached_server_port(sp)
         );
-        memcached_server_free(sp);
+        /* memcached_instance_free(sp); ??? */
     
     OUTPUT:
         RETVAL

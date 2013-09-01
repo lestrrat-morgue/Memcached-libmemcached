@@ -34,11 +34,11 @@
  *
  */
 
-#include <config.h>
+#include "libtest/yatlcon.h"
 
 #include <libtest/common.h>
 
-#if defined(HAVE_CURL_CURL_H) && HAVE_CURL_CURL_H
+#if defined(HAVE_LIBCURL) && HAVE_LIBCURL
 #include <curl/curl.h>
 #else
 class CURL;
@@ -47,33 +47,33 @@ class CURL;
 
 static void cleanup_curl(void)
 {
-#if defined(HAVE_CURL_CURL_H) && HAVE_CURL_CURL_H
+#if defined(HAVE_LIBCURL) && HAVE_LIBCURL
   curl_global_cleanup();
 #endif
 }
 
 static void initialize_curl_startup()
 {
-#if defined(HAVE_CURL_CURL_H) && HAVE_CURL_CURL_H
+#if defined(HAVE_LIBCURL) && HAVE_LIBCURL
   if (curl_global_init(CURL_GLOBAL_ALL))
   {
-    fatal_message("curl_global_init(CURL_GLOBAL_ALL) failed");
+    FATAL("curl_global_init(CURL_GLOBAL_ALL) failed");
   }
 #endif
 
   if (atexit(cleanup_curl))
   {
-    fatal_message("atexit() failed");
+    FATAL("atexit() failed");
   }
 }
 
 static pthread_once_t start_key_once= PTHREAD_ONCE_INIT;
-void initialize_curl(void)
+static void initialize_curl(void)
 {
   int ret;
   if ((ret= pthread_once(&start_key_once, initialize_curl_startup)) != 0)
   {
-    fatal_message(strerror(ret));
+    FATAL(strerror(ret));
   }
 }
 
@@ -82,20 +82,21 @@ namespace http {
 
 #define YATL_USERAGENT "YATL/1.0"
 
-extern "C" size_t
-  http_get_result_callback(void *ptr, size_t size, size_t nmemb, void *data)
-  {
-    vchar_t *_body= (vchar_t*)data;
+static size_t http_get_result_callback(void *ptr, size_t size, size_t nmemb, void *data)
+{
+  vchar_t *_body= (vchar_t*)data;
 
-    _body->resize(size * nmemb);
-    memcpy(&_body[0], ptr, _body->size());
+  _body->resize(size * nmemb);
+  memcpy(&_body[0], ptr, _body->size());
 
-    return _body->size();
-  }
-
+  return _body->size();
+}
 
 static void init(CURL *curl, const std::string& url)
 {
+  (void)http_get_result_callback;
+  (void)curl;
+  (void)url;
   if (HAVE_LIBCURL)
   {
 #if defined(HAVE_LIBCURL) && HAVE_LIBCURL
@@ -132,7 +133,7 @@ bool GET::execute()
 
     curl_easy_cleanup(curl);
 
-    return retref == CURLE_OK;
+    return bool(retref == CURLE_OK);
 #endif
   }
 
@@ -155,6 +156,8 @@ bool POST::execute()
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, _response);
 
     curl_easy_cleanup(curl);
+
+    return bool(retref == CURLE_OK);
 #endif
   }
 

@@ -2,7 +2,7 @@
  * 
  *  Libmemcached library
  *
- *  Copyright (C) 2011 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2011-2012 Data Differential, http://datadifferential.com/
  *  Copyright (C) 2006-2009 Brian Aker All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,9 +36,10 @@
  */
 
 
-#include <config.h>
+#include <mem_config.h>
 
 #include <cassert>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -50,12 +51,11 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include <iostream>
 
-#include <libmemcached/memcached.h>
+#include <libmemcached-1.0/memcached.h>
 
 #include "client_options.h"
 #include "utilities.h"
@@ -159,7 +159,7 @@ test_t opt_test= SET_TEST;
 
 extern "C" {
 
-static void *run_task(void *p)
+static __attribute__((noreturn)) void *run_task(void *p)
 {
   thread_context_st *context= (thread_context_st *)p;
 
@@ -212,19 +212,33 @@ int main(int argc, char *argv[])
     {
       opt_servers= strdup(temp);
     }
-    else
+    
+    if (opt_servers == NULL)
     {
-      fprintf(stderr, "No Servers provided\n");
-      return EXIT_FAILURE;
+      std::cerr << "No Servers provided" << std::endl;
+      exit(EXIT_FAILURE);
     }
   }
 
   memcached_server_st *servers= memcached_servers_parse(opt_servers);
+  if (servers == NULL or memcached_server_list_count(servers) == 0)
+  {
+    std::cerr << "Invalid server list provided:" << opt_servers << std::endl;
+    return EXIT_FAILURE;
+  }
 
   pthread_mutex_init(&sleeper_mutex, NULL);
   pthread_cond_init(&sleep_threshhold, NULL);
 
-  scheduler(servers, &conclusion);
+  int error_code= EXIT_SUCCESS;
+  try {
+    scheduler(servers, &conclusion);
+  }
+  catch(std::exception& e)
+  {
+    std::cerr << "Died with exception: " << e.what() << std::endl;
+    error_code= EXIT_FAILURE;
+  }
 
   free(opt_servers);
 
@@ -233,7 +247,7 @@ int main(int argc, char *argv[])
   conclusions_print(&conclusion);
   memcached_server_list_free(servers);
 
-  return EXIT_SUCCESS;
+  return error_code;
 }
 
 void scheduler(memcached_server_st *servers, conclusions_st *conclusion)
@@ -305,7 +319,7 @@ void scheduler(memcached_server_st *servers, conclusions_st *conclusion)
 
   pthread_t *threads= new  (std::nothrow) pthread_t[opt_concurrency];
 
-  if (not threads)
+  if (threads == NULL)
   {
     exit(EXIT_FAILURE);
   }
@@ -460,15 +474,33 @@ void options_parse(int argc, char *argv[])
       break;
 
     case OPT_SLAP_CONCURRENCY:
+      errno= 0;
       opt_concurrency= (unsigned int)strtoul(optarg, (char **)NULL, 10);
+      if (errno != 0)
+      {
+        fprintf(stderr, "Invalid value for concurrency: %s\n", optarg);
+        exit(EXIT_FAILURE);
+      }
       break;
 
     case OPT_SLAP_EXECUTE_NUMBER:
+      errno= 0;
       opt_execute_number= (unsigned int)strtoul(optarg, (char **)NULL, 10);
+      if (errno != 0)
+      {
+        fprintf(stderr, "Invalid value for execute: %s\n", optarg);
+        exit(EXIT_FAILURE);
+      }
       break;
 
     case OPT_SLAP_INITIAL_LOAD:
+      errno= 0;
       opt_createial_load= (unsigned int)strtoul(optarg, (char **)NULL, 10);
+      if (errno != 0)
+      {
+        fprintf(stderr, "Invalid value for initial load: %s\n", optarg);
+        exit(EXIT_FAILURE);
+      }
       break;
 
     case OPT_QUIET:

@@ -35,6 +35,9 @@
  */
 
 
+#if defined(HAVE_UUID_UUID_H) && HAVE_UUID_UUID_H
+#include <uuid/uuid.h>
+#endif
 
 struct keys_st {
 public:
@@ -59,9 +62,9 @@ public:
       key_buffer.resize(padding +1);
       memset(&key_buffer[0], 'x', padding);
 
-      if (HAVE_LIBUUID)
+      if (HAVE_UUID_UUID_H)
       {
-#if defined(HAVE_LIBUUID) && HAVE_LIBUUID
+#if defined(HAVE_UUID_UUID_H) && HAVE_UUID_UUID_H
         uuid_t out;
         uuid_generate(out);
 
@@ -85,7 +88,7 @@ public:
   {
     for (libtest::vchar_ptr_t::iterator iter= _keys.begin();
          iter != _keys.end();
-         iter++)
+         ++iter)
     {
       ::free(*iter);
     }

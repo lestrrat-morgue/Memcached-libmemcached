@@ -105,6 +105,7 @@ Each constant can be imported individually by name. Groups of related constants,
   MEMCACHED_HASH_MAX
   MEMCACHED_HASH_MD5
   MEMCACHED_HASH_MURMUR
+  MEMCACHED_HASH_MURMUR3
 
 =head2 :memcached_return_t
 

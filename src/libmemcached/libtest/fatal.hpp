@@ -38,28 +38,19 @@
 
 #include <stdexcept>
 
-#ifndef __PRETTY_FUNCTION__
-#define __PRETTY_FUNCTION__ __func__
-#endif
-
-#define LIBYATL_DEFAULT_PARAM __FILE__, __LINE__, __PRETTY_FUNCTION__
-
 namespace libtest {
 
-class fatal : std::runtime_error
+class disconnected : public std::runtime_error
 {
 public:
-  fatal(const char *file, int line, const char *func, const char *format, ...);
+  disconnected(const char *file, int line, const char *func, const std::string&, const in_port_t port, ...);
 
   const char* what() const throw()
   {
     return _error_message;
   }
 
-  const char* mesg() const throw()
-  {
-    return _error_message;
-  }
+  disconnected(const disconnected&);
 
   // The following are just for unittesting the exception class
   static bool is_disabled();
@@ -68,54 +59,28 @@ public:
   static uint32_t disabled_counter();
   static void increment_disabled_counter();
 
-  int line()
+  int line() const
   {
     return _line;
   }
 
-  const char*  file()
+  const char* file() const
   {
     return _file;
   }
 
-  const char* func()
+  const char* func() const
   {
     return _func;
   }
 
 private:
   char _error_message[BUFSIZ];
-  char _mesg[BUFSIZ];
+  in_port_t _port;
+  char _instance[BUFSIZ];
   int _line;
   const char*  _file;
   const char* _func;
 };
 
-class disconnected : std::runtime_error
-{
-public:
-  disconnected(const char *file, int line, const char *func, const char *instance, const in_port_t port, const char *format, ...);
-
-  const char* what() const throw()
-  {
-    return _error_message;
-  }
-
-  // The following are just for unittesting the exception class
-  static bool is_disabled();
-  static void disable();
-  static void enable();
-  static uint32_t disabled_counter();
-  static void increment_disabled_counter();
-
-private:
-  char _error_message[BUFSIZ];
-  in_port_t _port;
-  char _instance[1024];
-};
-
-
 } // namespace libtest
-
-#define fatal_message(__mesg) throw libtest::fatal(LIBYATL_DEFAULT_PARAM, "%s", __mesg)
-#define fatal_assert(__assert) if((__assert)) {} else { throw libtest::fatal(LIBYATL_DEFAULT_PARAM, "%s", #__assert); }

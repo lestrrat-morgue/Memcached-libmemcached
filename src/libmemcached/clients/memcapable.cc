@@ -1,4 +1,5 @@
 /* LibMemcached
+ * Copyright (C) 2011-2012 Data Differential, http://datadifferential.com/
  * Copyright (C) 2006-2009 Brian Aker
  * All rights reserved.
  *
@@ -12,7 +13,7 @@
 /* -*- Mode: C; tab-width: 2; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #undef NDEBUG
 
-#include <config.h>
+#include <mem_config.h>
 
 #ifdef HAVE_POLL_H
 #include <poll.h>
@@ -34,10 +35,13 @@
 #include <unistd.h>
 
 #include <libmemcached-1.0/memcached.h>
-#include <libmemcached/socket.hpp>
-#include <libmemcached/memcached/protocol_binary.h>
-#include <libmemcached/byteorder.h>
-#include <clients/utilities.h>
+
+#include "libmemcached/socket.hpp"
+#include "libmemcached/memcached/protocol_binary.h"
+#include "libmemcached/byteorder.h"
+#include "clients/utilities.h"
+
+#include <vector>
 
 #ifdef linux
 /* /usr/include/netinet/in.h defines macros from ntohs() to _bswap_nn to
@@ -120,7 +124,7 @@ static struct addrinfo *lookuphost(const char *hostname, const char *port)
  */
 static memcached_socket_t set_noblock(void)
 {
-#ifdef WIN32
+#if defined(_WIN32)
   u_long arg = 1;
   if (ioctlsocket(sock, FIONBIO, &arg) == SOCKET_ERROR)
   {
@@ -1385,11 +1389,15 @@ static enum test_return ascii_get_unknown_value(char **key, char **value, ssize_
   verify(*key != NULL);
   char *ptr= end + 1;
 
+  errno= 0;
   unsigned long val= strtoul(ptr, &end, 10); /* flags */
+  verify(errno == 0);
   verify(ptr != end);
   verify(val == 0);
   verify(end != NULL);
+  errno= 0;
   *ndata = (ssize_t)strtoul(end, &end, 10); /* size */
+  verify(errno == 0);
   verify(ptr != end);
   verify(end != NULL);
   while (end and *end != '\n' and isspace(*end))
@@ -1420,11 +1428,16 @@ static enum test_return ascii_get_value(const char *key, const char *value)
   char *ptr= buffer + 6 + strlen(key) + 1;
   char *end;
 
+  errno= 0;
   unsigned long val= strtoul(ptr, &end, 10); /* flags */
+  verify(errno == 0);
   verify(ptr != end);
   verify(val == 0);
   verify(end != NULL);
+
+  errno= 0;
   val= strtoul(end, &end, 10); /* size */
+  verify(errno == 0);
   verify(ptr != end);
   verify(val == datasize);
   verify(end != NULL);
@@ -1482,15 +1495,23 @@ static enum test_return ascii_gets_value(const char *key, const char *value,
   char *ptr= buffer + 6 + strlen(key) + 1;
   char *end;
 
+  errno= 0;
   unsigned long val= strtoul(ptr, &end, 10); /* flags */
+  verify(errno == 0);
   verify(ptr != end);
   verify(val == 0);
   verify(end != NULL);
+
+  errno= 0;
   val= strtoul(end, &end, 10); /* size */
+  verify(errno == 0);
   verify(ptr != end);
   verify(val == datasize);
   verify(end != NULL);
+
+  errno= 0;
   *cas= strtoul(end, &end, 10); /* cas */
+  verify(errno == 0);
   verify(ptr != end);
   verify(val == datasize);
   verify(end != NULL);
@@ -1715,7 +1736,8 @@ static enum test_return test_ascii_mget(void)
                       "test_ascii_mget4 test_ascii_mget5 "
                       "test_ascii_mget6\r\n"));
 
-  char *returned[nkeys];
+  std::vector<char *> returned;
+  returned.resize(nkeys);
 
   for (uint32_t x= 0; x < nkeys; ++x)
   {

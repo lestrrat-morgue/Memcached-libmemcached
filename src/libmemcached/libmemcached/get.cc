@@ -2,7 +2,7 @@
  * 
  *  Libmemcached library
  *
- *  Copyright (C) 2011-2012 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2011-2013 Data Differential, http://datadifferential.com/
  *  Copyright (C) 2006-2009 Brian Aker All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -50,15 +50,14 @@ char *memcached_get(memcached_st *ptr, const char *key,
                               flags, error);
 }
 
-static memcached_return_t memcached_mget_by_key_real(memcached_st *ptr,
-                                                     const char *group_key,
-                                                     size_t group_key_length,
-                                                     const char * const *keys,
-                                                     const size_t *key_length,
-                                                     size_t number_of_keys,
-                                                     bool mget_mode);
-
-char *memcached_get_by_key(memcached_st *ptr,
+static memcached_return_t __mget_by_key_real(memcached_st *ptr,
+                                             const char *group_key,
+                                             size_t group_key_length,
+                                             const char * const *keys,
+                                             const size_t *key_length,
+                                             size_t number_of_keys,
+                                             const bool mget_mode);
+char *memcached_get_by_key(memcached_st *shell,
                            const char *group_key,
                            size_t group_key_length,
                            const char *key, size_t key_length,
@@ -66,6 +65,7 @@ char *memcached_get_by_key(memcached_st *ptr,
                            uint32_t *flags,
                            memcached_return_t *error)
 {
+  Memcached* ptr= memcached2Memcached(shell);
   memcached_return_t unused;
   if (error == NULL)
   {
@@ -79,9 +79,9 @@ char *memcached_get_by_key(memcached_st *ptr,
   }
 
   /* Request the key */
-  *error= memcached_mget_by_key_real(ptr, group_key, group_key_length,
-                                     (const char * const *)&key, &key_length, 
-                                     1, false);
+  *error= __mget_by_key_real(ptr, group_key, group_key_length,
+                             (const char * const *)&key, &key_length, 
+                             1, false);
   if (ptr)
   {
     assert_msg(ptr->query_id == query_id +1, "Programmer error, the query_id was not incremented.");
@@ -186,24 +186,24 @@ memcached_return_t memcached_mget(memcached_st *ptr,
 }
 
 static memcached_return_t binary_mget_by_key(memcached_st *ptr,
-                                             uint32_t master_server_key,
-                                             bool is_group_key_set,
+                                             const uint32_t master_server_key,
+                                             const bool is_group_key_set,
+                                             const char * const *keys,
+                                             const size_t *key_length,
+                                             const size_t number_of_keys,
+                                             const bool mget_mode);
+
+static memcached_return_t __mget_by_key_real(memcached_st *ptr,
+                                             const char *group_key,
+                                             const size_t group_key_length,
                                              const char * const *keys,
                                              const size_t *key_length,
                                              size_t number_of_keys,
-                                             bool mget_mode);
-
-static memcached_return_t memcached_mget_by_key_real(memcached_st *ptr,
-                                                     const char *group_key,
-                                                     size_t group_key_length,
-                                                     const char * const *keys,
-                                                     const size_t *key_length,
-                                                     size_t number_of_keys,
-                                                     bool mget_mode)
+                                             const bool mget_mode)
 {
   bool failures_occured_in_sending= false;
-  const char *get_command= "get ";
-  uint8_t get_command_length= 4;
+  const char *get_command= "get";
+  uint8_t get_command_length= 3;
   unsigned int master_server_key= (unsigned int)-1; /* 0 is a valid server id! */
 
   memcached_return_t rc;
@@ -244,9 +244,9 @@ static memcached_return_t memcached_mget_by_key_real(memcached_st *ptr,
   */
   for (uint32_t x= 0; x < memcached_server_count(ptr); x++)
   {
-    memcached_server_write_instance_st instance= memcached_server_instance_fetch(ptr, x);
+    memcached_instance_st* instance= memcached_instance_fetch(ptr, x);
 
-    if (memcached_server_response_count(instance))
+    if (instance->response_count())
     {
       char buffer[MEMCACHED_DEFAULT_COMMAND_SIZE];
 
@@ -255,7 +255,7 @@ static memcached_return_t memcached_mget_by_key_real(memcached_st *ptr,
         memcached_io_write(instance);
       }
 
-      while(memcached_server_response_count(instance))
+      while(instance->response_count())
       {
         (void)memcached_response(instance, buffer, MEMCACHED_DEFAULT_COMMAND_SIZE, &ptr->result);
       }
@@ -270,8 +270,8 @@ static memcached_return_t memcached_mget_by_key_real(memcached_st *ptr,
 
   if (ptr->flags.support_cas)
   {
-    get_command= "gets ";
-    get_command_length= 5;
+    get_command= "gets";
+    get_command_length= 4;
   }
 
   /*
@@ -282,7 +282,6 @@ static memcached_return_t memcached_mget_by_key_real(memcached_st *ptr,
   size_t hosts_connected= 0;
   for (uint32_t x= 0; x < number_of_keys; x++)
   {
-    memcached_server_write_instance_st instance;
     uint32_t server_key;
 
     if (is_group_key_set)
@@ -294,18 +293,18 @@ static memcached_return_t memcached_mget_by_key_real(memcached_st *ptr,
       server_key= memcached_generate_hash_with_redistribution(ptr, keys[x], key_length[x]);
     }
 
-    instance= memcached_server_instance_fetch(ptr, server_key);
+    memcached_instance_st* instance= memcached_instance_fetch(ptr, server_key);
 
     libmemcached_io_vector_st vector[]=
     {
       { get_command, get_command_length },
+      { memcached_literal_param(" ") },
       { memcached_array_string(ptr->_namespace), memcached_array_size(ptr->_namespace) },
-      { keys[x], key_length[x] },
-      { memcached_literal_param(" ") }
+      { keys[x], key_length[x] }
     };
 
 
-    if (memcached_server_response_count(instance) == 0)
+    if (instance->response_count() == 0)
     {
       rc= memcached_connect(instance);
 
@@ -316,20 +315,20 @@ static memcached_return_t memcached_mget_by_key_real(memcached_st *ptr,
       }
       hosts_connected++;
 
-      if ((memcached_io_writev(instance, vector, 4, false)) == false)
+      if ((memcached_io_writev(instance, vector, 1, false)) == false)
       {
         failures_occured_in_sending= true;
         continue;
       }
-      WATCHPOINT_ASSERT(instance->cursor_active == 0);
-      memcached_server_response_increment(instance);
-      WATCHPOINT_ASSERT(instance->cursor_active == 1);
+      WATCHPOINT_ASSERT(instance->cursor_active_ == 0);
+      memcached_instance_response_increment(instance);
+      WATCHPOINT_ASSERT(instance->cursor_active_ == 1);
     }
-    else
+
     {
       if ((memcached_io_writev(instance, (vector + 1), 3, false)) == false)
       {
-        memcached_server_response_reset(instance);
+        memcached_instance_response_reset(instance);
         failures_occured_in_sending= true;
         continue;
       }
@@ -355,10 +354,9 @@ static memcached_return_t memcached_mget_by_key_real(memcached_st *ptr,
   bool success_happened= false;
   for (uint32_t x= 0; x < memcached_server_count(ptr); x++)
   {
-    memcached_server_write_instance_st instance=
-      memcached_server_instance_fetch(ptr, x);
+    memcached_instance_st* instance= memcached_instance_fetch(ptr, x);
 
-    if (memcached_server_response_count(instance))
+    if (instance->response_count())
     {
       /* We need to do something about non-connnected hosts in the future */
       if ((memcached_io_write(instance, "\r\n", 2, true)) == -1)
@@ -387,15 +385,15 @@ static memcached_return_t memcached_mget_by_key_real(memcached_st *ptr,
   return MEMCACHED_FAILURE; // Complete failure occurred
 }
 
-memcached_return_t memcached_mget_by_key(memcached_st *ptr,
+memcached_return_t memcached_mget_by_key(memcached_st *shell,
                                          const char *group_key,
                                          size_t group_key_length,
                                          const char * const *keys,
                                          const size_t *key_length,
                                          size_t number_of_keys)
 {
-  return memcached_mget_by_key_real(ptr, group_key, group_key_length, keys,
-                                    key_length, number_of_keys, true);
+  Memcached* ptr= memcached2Memcached(shell);
+  return __mget_by_key_real(ptr, group_key, group_key_length, keys, key_length, number_of_keys, true);
 }
 
 memcached_return_t memcached_mget_execute(memcached_st *ptr,
@@ -411,7 +409,7 @@ memcached_return_t memcached_mget_execute(memcached_st *ptr,
                                        context, number_of_callbacks);
 }
 
-memcached_return_t memcached_mget_execute_by_key(memcached_st *ptr,
+memcached_return_t memcached_mget_execute_by_key(memcached_st *shell,
                                                  const char *group_key,
                                                  size_t group_key_length,
                                                  const char * const *keys,
@@ -421,6 +419,7 @@ memcached_return_t memcached_mget_execute_by_key(memcached_st *ptr,
                                                  void *context,
                                                  unsigned int number_of_callbacks)
 {
+  Memcached* ptr= memcached2Memcached(shell);
   memcached_return_t rc;
   if (memcached_failed(rc= initialize_query(ptr, false)))
   {
@@ -449,15 +448,16 @@ memcached_return_t memcached_mget_execute_by_key(memcached_st *ptr,
   rc= memcached_mget_by_key(ptr, group_key, group_key_length, keys,
                             key_length, number_of_keys);
   ptr->callbacks= original_callbacks;
+
   return rc;
 }
 
 static memcached_return_t simple_binary_mget(memcached_st *ptr,
-                                             uint32_t master_server_key,
+                                             const uint32_t master_server_key,
                                              bool is_group_key_set,
                                              const char * const *keys,
                                              const size_t *key_length,
-                                             size_t number_of_keys, bool mget_mode)
+                                             const size_t number_of_keys, const bool mget_mode)
 {
   memcached_return_t rc= MEMCACHED_NOTFOUND;
 
@@ -480,9 +480,9 @@ static memcached_return_t simple_binary_mget(memcached_st *ptr,
       server_key= memcached_generate_hash_with_redistribution(ptr, keys[x], key_length[x]);
     }
 
-    memcached_server_write_instance_st instance= memcached_server_instance_fetch(ptr, server_key);
+    memcached_instance_st* instance= memcached_instance_fetch(ptr, server_key);
 
-    if (memcached_server_response_count(instance) == 0)
+    if (instance->response_count() == 0)
     {
       rc= memcached_connect(instance);
       if (memcached_failed(rc))
@@ -492,7 +492,7 @@ static memcached_return_t simple_binary_mget(memcached_st *ptr,
     }
 
     protocol_binary_request_getk request= { }; //= {.bytes= {0}};
-    request.message.header.request.magic= PROTOCOL_BINARY_REQ;
+    initialize_binary_request(instance, request.message.header);
     if (mget_mode)
     {
       request.message.header.request.opcode= PROTOCOL_BINARY_CMD_GETKQ;
@@ -502,17 +502,17 @@ static memcached_return_t simple_binary_mget(memcached_st *ptr,
       request.message.header.request.opcode= PROTOCOL_BINARY_CMD_GETK;
     }
 
-    memcached_return_t vk;
-    vk= memcached_validate_key_length(key_length[x],
-                                      ptr->flags.binary_protocol);
-    if (vk != MEMCACHED_SUCCESS)
     {
-      if (x > 0)
+      memcached_return_t vk= memcached_validate_key_length(key_length[x], ptr->flags.binary_protocol);
+      if (vk != MEMCACHED_SUCCESS)
       {
-        memcached_io_reset(instance);
-      }
+        if (x > 0)
+        {
+          memcached_io_reset(instance);
+        }
 
-      return vk;
+        return vk;
+      }
     }
 
     request.message.header.request.keylen= htons((uint16_t)(key_length[x] + memcached_array_size(ptr->_namespace)));
@@ -548,34 +548,26 @@ static memcached_return_t simple_binary_mget(memcached_st *ptr,
       Send a noop command to flush the buffers
     */
     protocol_binary_request_noop request= {}; //= {.bytes= {0}};
-    request.message.header.request.magic= PROTOCOL_BINARY_REQ;
     request.message.header.request.opcode= PROTOCOL_BINARY_CMD_NOOP;
     request.message.header.request.datatype= PROTOCOL_BINARY_RAW_BYTES;
 
     for (uint32_t x= 0; x < memcached_server_count(ptr); ++x)
     {
-      memcached_server_write_instance_st instance= memcached_server_instance_fetch(ptr, x);
+      memcached_instance_st* instance= memcached_instance_fetch(ptr, x);
 
-      if (memcached_server_response_count(instance))
+      if (instance->response_count())
       {
-        if (memcached_io_write(instance) == false)
+        initialize_binary_request(instance, request.message.header);
+        if ((memcached_io_write(instance) == false) or
+            (memcached_io_write(instance, request.bytes, sizeof(request.bytes), true) == -1))
         {
-          memcached_server_response_reset(instance);
-          memcached_io_reset(instance);
-          rc= MEMCACHED_SOME_ERRORS;
-        }
-
-        if (memcached_io_write(instance, request.bytes,
-                               sizeof(request.bytes), true) == -1)
-        {
-          memcached_server_response_reset(instance);
+          memcached_instance_response_reset(instance);
           memcached_io_reset(instance);
           rc= MEMCACHED_SOME_ERRORS;
         }
       }
     }
   }
-
 
   return rc;
 }
@@ -585,7 +577,7 @@ static memcached_return_t replication_binary_mget(memcached_st *ptr,
                                                   bool* dead_servers,
                                                   const char *const *keys,
                                                   const size_t *key_length,
-                                                  size_t number_of_keys)
+                                                  const size_t number_of_keys)
 {
   memcached_return_t rc= MEMCACHED_NOTFOUND;
   uint32_t start= 0;
@@ -604,9 +596,11 @@ static memcached_return_t replication_binary_mget(memcached_st *ptr,
     for (uint32_t x= 0; x < number_of_keys; ++x)
     {
       if (hash[x] == memcached_server_count(ptr))
+      {
         continue; /* Already successfully sent */
+      }
 
-      uint32_t server= hash[x] + replica;
+      uint32_t server= hash[x] +replica;
 
       /* In case of randomized reads */
       if (randomize_read and ((server + start) <= (hash[x] + ptr->number_of_replicas)))
@@ -624,9 +618,9 @@ static memcached_return_t replication_binary_mget(memcached_st *ptr,
         continue;
       }
 
-      memcached_server_write_instance_st instance= memcached_server_instance_fetch(ptr, server);
+      memcached_instance_st* instance= memcached_instance_fetch(ptr, server);
 
-      if (memcached_server_response_count(instance) == 0)
+      if (instance->response_count() == 0)
       {
         rc= memcached_connect(instance);
 
@@ -640,7 +634,7 @@ static memcached_return_t replication_binary_mget(memcached_st *ptr,
       }
 
       protocol_binary_request_getk request= {};
-      request.message.header.request.magic= PROTOCOL_BINARY_REQ;
+      initialize_binary_request(instance, request.message.header);
       request.message.header.request.opcode= PROTOCOL_BINARY_CMD_GETK;
       request.message.header.request.keylen= htons((uint16_t)(key_length[x] + memcached_array_size(ptr->_namespace)));
       request.message.header.request.datatype= PROTOCOL_BINARY_RAW_BYTES;
@@ -685,12 +679,12 @@ static memcached_return_t replication_binary_mget(memcached_st *ptr,
 }
 
 static memcached_return_t binary_mget_by_key(memcached_st *ptr,
-                                             uint32_t master_server_key,
+                                             const uint32_t master_server_key,
                                              bool is_group_key_set,
                                              const char * const *keys,
                                              const size_t *key_length,
-                                             size_t number_of_keys,
-                                             bool mget_mode)
+                                             const size_t number_of_keys,
+                                             const bool mget_mode)
 {
   if (ptr->number_of_replicas == 0)
   {

@@ -188,6 +188,7 @@ sub build_libmemcached {
     mkdir $lmcd_inst, 0775 unless -d $lmcd_inst;
     run("cd $lmcd_src && make distclean") if -f "$lmcd_src/Makefile";
     my $configure_args = '--with-pic';# --disable-shared';
+    $configure_args .= ' --disable-sasl'; # please fix
     $configure_args .= ' --with-lib-prefix=/opt/local'
         if -d "/opt/local" and $^O eq 'darwin'; # macports
     $configure_args .= ' --enable-debug'

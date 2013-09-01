@@ -15,7 +15,7 @@ use Memcached::libmemcached
     #   other functions used by the tests
     qw(
         memcached_server_add_unix_socket
-        MEMCACHED_FAILURE
+        MEMCACHED_INVALID_ARGUMENTS
     );
 
 use lib 't/lib';
@@ -35,9 +35,9 @@ is $rc, undef, 'rc should not be defined';
 
 my $errstr = $memc->errstr;
 #use Devel::Peek; Dump($errstr);
-cmp_ok $errstr, '==', MEMCACHED_FAILURE(),
-    'should be MEMCACHED_FAILURE integer in numeric context';
-cmp_ok $errstr, 'eq', "FAILURE",
-    'should be "FAILURE" string in string context';
+cmp_ok $errstr, '==', MEMCACHED_INVALID_ARGUMENTS(),
+    'should be MEMCACHED_INVALID_ARGUMENTS integer in numeric context';
+cmp_ok $errstr, 'eq', "INVALID ARGUMENTS",
+    'should be "INVALID ARGUMENTS" string in string context';
 
 is $errstr, memcached_errstr($memc);

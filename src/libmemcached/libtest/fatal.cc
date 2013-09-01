@@ -34,70 +34,86 @@
  *
  */
 
-#include <config.h>
+#include "libtest/yatlcon.h"
 #include <libtest/common.h>
 #include <cstdarg>
 
 namespace libtest {
 
-fatal::fatal(const char *file_arg, int line_arg, const char *func_arg, const char *format, ...) :
-  std::runtime_error(func_arg),
-  _line(line_arg),
-  _file(file_arg),
-  _func(func_arg)
-  {
-    va_list args;
-    va_start(args, format);
-    char last_error[BUFSIZ];
-    int last_error_length= vsnprintf(last_error, sizeof(last_error), format, args);
-    va_end(args);
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
 
-    strncpy(_mesg, last_error, sizeof(_mesg));
+fatal::fatal(const char *file_arg, int line_arg, const char *func_arg, ...) :
+  __test_result(file_arg, line_arg, func_arg)
+{
+  va_list args;
+  va_start(args, func_arg);
+  init(args);
+  va_end(args);
+}
 
-    snprintf(_error_message, sizeof(_error_message), "%s:%d FATAL:%s (%s)", _file, int(_line), last_error, _func);
-  }
+fatal::fatal( const fatal& other ) :
+  __test_result(other)
+{
+}
 
 static bool _disabled= false;
 static uint32_t _counter= 0;
 
-bool fatal::is_disabled()
+bool fatal::is_disabled() throw()
 {
   return _disabled;
 }
 
-void fatal::disable()
+void fatal::disable() throw()
 {
+  _counter= 0;
   _disabled= true;
 }
 
-void fatal::enable()
+void fatal::enable() throw()
 {
+  _counter= 0;
   _disabled= false;
 }
 
-uint32_t fatal::disabled_counter()
+uint32_t fatal::disabled_counter() throw()
 {
   return _counter;
 }
 
-void fatal::increment_disabled_counter()
+void fatal::increment_disabled_counter() throw()
 {
   _counter++;
 }
 
-disconnected::disconnected(const char *file, int line, const char *func, const char *instance, const in_port_t port, const char *format, ...) :
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+disconnected::disconnected(const char *file_arg, int line_arg, const char *func_arg,
+                           const std::string& instance, const in_port_t port, ...) :
+  std::runtime_error(func_arg),
   _port(port),
-  std::runtime_error(func)
+  _line(line_arg),
+  _file(file_arg),
+  _func(func_arg)
 {
-  strncpy(_instance, instance, sizeof(_instance));
   va_list args;
-  va_start(args, format);
+  va_start(args, port);
+  const char *format= va_arg(args, const char *);
   char last_error[BUFSIZ];
   (void)vsnprintf(last_error, sizeof(last_error), format, args);
   va_end(args);
 
-  snprintf(_error_message, sizeof(_error_message), "%s:%d FATAL:%s (%s)", file, int(line), last_error, func);
+  snprintf(_error_message, sizeof(_error_message), "%s:%u %s", instance.c_str(), uint32_t(port), last_error);
+}
+
+disconnected::disconnected(const disconnected& other):
+  std::runtime_error(other._func),
+  _port(other._port),
+  _line(other._line),
+  _file(other._file),
+  _func(other._func)
+{
+  strncpy(_error_message, other._error_message, BUFSIZ);
+  strncpy(_instance, other._instance, BUFSIZ);
 }
 
 } // namespace libtest
-

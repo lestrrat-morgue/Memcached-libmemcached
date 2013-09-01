@@ -1,4 +1,5 @@
 /* LibMemcached
+ * Copyright (C) 2011-2012 Data Differential, http://datadifferential.com/
  * Copyright (C) 2006-2009 Brian Aker
  * All rights reserved.
  *
@@ -9,7 +10,7 @@
  *
  */
 
-#include "config.h"
+#include "mem_config.h"
 
 #include <cerrno>
 #include <climits>
@@ -30,7 +31,7 @@
 #include <unistd.h>
 
 
-#include <libmemcached/memcached.h>
+#include <libmemcached-1.0/memcached.h>
 
 #include "client_options.h"
 #include "utilities.h"
@@ -128,21 +129,23 @@ int main(int argc, char *argv[])
     {
       opt_servers= strdup(temp);
     }
-    else
+    else if (argc >= 1 and argv[--argc])
+    {
+      opt_servers= strdup(argv[--argc]);
+    }
+
+    if (opt_servers == NULL)
     {
       std::cerr << "No Servers provided" << std::endl;
       exit(EXIT_FAILURE);
     }
   }
 
-  memcached_server_st *servers;
-  if (opt_servers)
+  memcached_server_st* servers= memcached_servers_parse(opt_servers);
+  if (servers == NULL or memcached_server_list_count(servers) == 0)
   {
-    servers= memcached_servers_parse(opt_servers);
-  }
-  else
-  {
-    servers= memcached_servers_parse(argv[--argc]);
+    std::cerr << "Invalid server list provided:" << opt_servers << std::endl;
+    return EXIT_FAILURE;
   }
 
   memcached_server_push(memc, servers);
@@ -207,6 +210,7 @@ int main(int argc, char *argv[])
     if ((file_buffer_ptr= (char *)malloc(sizeof(char) * (size_t)sbuf.st_size)) == NULL)
     {
       std::cerr << "Error allocating file buffer(" << strerror(errno) << ")" << std::endl;
+      close(fd);
       exit(EXIT_FAILURE);
     }
 
@@ -214,12 +218,14 @@ int main(int argc, char *argv[])
     if ((read_length= ::read(fd, file_buffer_ptr, (size_t)sbuf.st_size)) == -1)
     {
       std::cerr << "Error while reading file " << file_buffer_ptr << " (" << strerror(errno) << ")" << std::endl;
+      close(fd);
       exit(EXIT_FAILURE);
     }
 
     if (read_length != sbuf.st_size)
     {
       std::cerr << "Failure while reading file. Read length was not equal to stat() length" << std::endl;
+      close(fd);
       exit(EXIT_FAILURE);
     }
 
@@ -246,6 +252,7 @@ int main(int argc, char *argv[])
     if (memcached_failed(rc))
     {
       std::cerr << "Error occrrured during memcached_set(): " << memcached_last_error_message(memc) << std::endl;
+      ::close(fd);
       exit_code= EXIT_FAILURE;
     }
 
