@@ -2,7 +2,7 @@ package Memcached::libmemcached::API;
 
 =head1 NAME
 
-Memcached::libmemcached::API - 
+Memcached::libmemcached::API - Private volitile module
 
 =head1 SYNOPSIS
 
