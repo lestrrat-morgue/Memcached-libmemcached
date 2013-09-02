@@ -68,7 +68,7 @@ This documentation provides summary of the functions, along with any issues
 specific to this perl interface, and references to the documentation for the
 corresponding functions in the underlying library.
 
-For more information on libmemcached, see L<http://libmemcached.org>
+For more information on libmemcached, see L<http://docs.libmemcached.org>
 
 =head1 CONVENTIONS
 
@@ -771,10 +771,10 @@ and Patrick Galbraith and Daisuke Maki for helping with the implementation.
 
 =head1 PORTABILITY
 
-See Slaven Rezic's excellent CPAN Testers Matrix at L<http://bbbike.radzeit.de/~slaven/cpantestersmatrix.cgi?dist=Memcached-libmemcached>
+See Slaven Rezic's excellent CPAN Testers Matrix at L<http://matrix.cpantesters.org/?dist=Memcached-libmemcached>
 
 Along with Dave Cantrell's excellent CPAN Dependency tracker at
-L<http://cpandeps.cantrell.org.uk/?module=Memcached%3A%3Alibmemcached&perl=any+version&os=any+OS>
+L<http://deps.cpantesters.org/?module=Memcached%3A%3Alibmemcached&perl=any+version&os=any+OS>
 
 =head1 BUGS
 
