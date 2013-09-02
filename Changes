@@ -11,6 +11,7 @@ Memcached::libmemcached::Changes - List of significant changes
   Note that get_server_for_key() may have a memory leak.
   Fixed links in docs, RT#66291
   Fixed whatis in pod of Memcached::libmemcached::API, RT#71172
+  Fixed undef warnings related to expiration, RT#69996
 
 =head2 Changes in 0.4406 4th Jan 2011
 

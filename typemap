@@ -129,8 +129,7 @@ T_FLAGS
 INPUT
 T_EXPIRATION
         /* T_EXPIRATION */
-        /* XXX add logic for default expiration */
-        $var = ($type)SvUV($arg)
+        $var = (SvOK($arg)) ? ($type)SvUV($arg) : 0;
 
 OUTPUT
 T_MEMCACHED
