@@ -2,6 +2,11 @@
 
 Memcached::libmemcached::Changes - List of significant changes
 
+=head2 Changes in 1.001702
+
+  Improve handling of case where last_return==MEMCACHED_ERRNO
+    but lmc_state->last_errno==0, RT#41299.
+
 =head2 Changes in 1.001701 - 2nd Sept 2013
 
   Sync with libmemcached 1.0.17

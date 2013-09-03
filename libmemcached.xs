@@ -859,8 +859,11 @@ errstr(Memcached__libmemcached ptr)
         /* setup return value as a dualvar with int err code and string error message */
         sv_setiv(RETVAL, lmc_state->last_return);
         sv_setpv(RETVAL, memcached_strerror(ptr, lmc_state->last_return));
-        if (lmc_state->last_return == MEMCACHED_ERRNO)
-            sv_catpvf(RETVAL, " %s", strerror(lmc_state->last_errno));
+        if (lmc_state->last_return == MEMCACHED_ERRNO) {
+            /* lmc_state->last_errno should be meaningful here but sometimes isn't */
+            /* See https://rt.cpan.org/Ticket/Display.html?id=41299 */
+            sv_catpvf(RETVAL, " %s", (lmc_state->last_errno) ? strerror(lmc_state->last_errno) : "(last_errno==0!)");
+        }
         SvIOK_on(RETVAL); /* set as dualvar */
     OUTPUT:
         RETVAL
