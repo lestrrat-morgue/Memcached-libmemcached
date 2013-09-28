@@ -7,3 +7,6 @@ perl:
   - "5.10"
 services:
   - memcached
+before_install:
+  - env | sort
+  - cpanm --verbose --installdeps --notest . || echo failed
