@@ -1,4 +1,6 @@
-Memcached-libmemcached
+# Memcached-libmemcached
+
+[![Build Status](https://secure.travis-ci.org/timbunce/Memcached-libmemcached.png)](http://travis-ci.org/timbunce/Memcached-libmemcached/)
 
 Memcached::libmemcached is a very thin, highly efficient, wrapper around the
 libmemcached library.
@@ -14,14 +16,14 @@ access to server side methods.
  - Man pages written up on entire API.
  - Implements both modulo and consistent hashing solutions. 
 
-INSTALLATION
+# INSTALLATION
 
 To install this module, run the following commands:
 
-	perl Makefile.PL
-	make
-	make test           (see TESTING below)
-	make install
+    perl Makefile.PL
+    make
+    make test           (see TESTING below)
+    make install
 
 Note that the "perl Makefile.PL" step will configure and build a private copy
 of libmemcached from source. So don't be surprised to see pages of output
@@ -34,7 +36,7 @@ If you'd like to have the commandline tools that come with libmemcached installe
 See http://libmemcached.org for details.
 
 
-TESTING
+# TESTING
 
 The "make test" command can run some tests without using a memcached server.
 Others are skipped unless a memcached server can be found.
@@ -45,7 +47,7 @@ environment variable to a comma separated list of hostname:port values.
 
 Most tests require just one server but some require at least 5 servers.
 
-SUPPORT AND DOCUMENTATION
+# SUPPORT AND DOCUMENTATION
 
 After installing, you can find documentation for this module with the
 perldoc command.
@@ -67,14 +69,14 @@ You can also look for information at:
         http://search.cpan.org/dist/Memcached-libmemcached
 
 
-COPYRIGHT AND LICENCE
+# COPYRIGHT AND LICENCE
 
 Copyright (C) 2008, 2013 Tim Bunce
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
-DEVELOPER TOOLS
+# DEVELOPER TOOLS
 
 Debugging
 
