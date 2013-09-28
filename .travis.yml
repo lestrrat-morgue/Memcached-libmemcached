@@ -9,4 +9,5 @@ services:
   - memcached
 before_install:
   - env | sort
+  - sudo apt-get install libcloog-ppl0
   - cpanm --verbose --installdeps --notest . || echo failed
