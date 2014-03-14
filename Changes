@@ -2,7 +2,7 @@
 
 Memcached::libmemcached::Changes - List of significant changes
 
-=head2 Changes in 1.001702
+=head2 Changes in 1.001702 - 14th March 2014
 
   Change bug tracker to GitHub
   Fix link to current repository, also add to META. Thanks to dsteinbrunner
