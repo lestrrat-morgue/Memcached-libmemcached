@@ -4,6 +4,8 @@ Memcached::libmemcached::Changes - List of significant changes
 
 =head2 Changes in 1.001702
 
+  Fix link to current repository, also add to META. Thanks to dsteinbrunner
+  Work around missing libcloog-ppl0 compilation issues, RT#88378
   Improve handling of case where last_return==MEMCACHED_ERRNO
     but lmc_state->last_errno==0, RT#41299.
 

@@ -89,6 +89,9 @@ WriteMakefile(
     },
     META_MERGE          => {
         resources => {
+            bugtracker => {
+                web  => 'https://github.com/timbunce/Memcached-libmemcached/issues/',
+            },
             repository => {
                 type => 'git',
                 url  => 'git://github.com/timbunce/Memcached-libmemcached.git',

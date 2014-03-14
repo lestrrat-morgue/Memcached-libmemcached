@@ -9,11 +9,11 @@ Memcached::libmemcached - Thin fast full interface to the libmemcached client AP
 
 =head1 VERSION
 
-Version 1.001701 (with libmemcached-1.0.17 embedded)
+Version 1.001702 (with libmemcached-1.0.17 embedded)
 
 =cut
 
-our $VERSION = '1.001701'; # also alter in pod above
+our $VERSION = '1.001702'; # also alter in pod above
 
 use Carp;
 use base qw(Exporter);
@@ -765,6 +765,8 @@ L<http://www.tim.bunce.name>
 
 =head1 CURRENT MAINTAINER
 
+Matthew Horsfall (alh) C<< <wolfsage@gmail.com> >>
+
 Daisuke Maki C<< <daisuke@endeworks.jp> >> with occasional bursts of input from Tim Bunce.
 
 =head1 ACKNOWLEDGEMENTS
@@ -781,11 +783,10 @@ L<http://deps.cpantesters.org/?module=Memcached%3A%3Alibmemcached&perl=any+versi
 
 =head1 BUGS
 
-Please report any bugs or feature requests to
-C<bug-memcached-libmemcached@rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Memcached-libmemcached>.
-I will be notified, and then you'll automatically be notified of progress on
-your bug as I make changes.
+Please report any bugs or feature requests to the GitHub issue tracker at
+L<https://github.com/timbunce/Memcached-libmemcached/issues>.
+We will be notified, and then you'll automatically be notified of progress on
+your bug as we make changes.
 
 =head1 CONTRIBUTING
 
