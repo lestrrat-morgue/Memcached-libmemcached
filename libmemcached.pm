@@ -789,7 +789,7 @@ your bug as I make changes.
 
 =head1 CONTRIBUTING
 
-The source is hosted at github: L<http://github.com/lestrrat/Memcached-libmemcached>
+The source is hosted at github: L<https://github.com/timbunce/Memcached-libmemcached>
 Patches and volunteers always welcome.
 
 =head1 COPYRIGHT & LICENSE
