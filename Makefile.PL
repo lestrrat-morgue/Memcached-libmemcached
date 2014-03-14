@@ -88,6 +88,9 @@ WriteMakefile(
         'Test::More' => 0,
     },
     META_MERGE          => {
+        'meta-spec' => {
+            version => 2,
+        },
         resources => {
             bugtracker => {
                 web  => 'https://github.com/timbunce/Memcached-libmemcached/issues/',
@@ -95,7 +98,7 @@ WriteMakefile(
             repository => {
                 type => 'git',
                 url  => 'git://github.com/timbunce/Memcached-libmemcached.git',
-                web  => 'https://github.com/timbunce/Memcached-libmemcache',
+                web  => 'https://github.com/timbunce/Memcached-libmemcached',
             },
         },
     },
