@@ -51,7 +51,7 @@
 # include <string.h>
 #endif
 
-#if defined(_WIN32)
+#if defined(WIN32)
 # include <malloc.h>
 #else
 # include <alloca.h>
@@ -77,15 +77,7 @@
 # define SKIP(__message_format, ...)
 #endif
 
-static inline bool valgrind_is_caller(void)
-{
-  if (getenv("TESTS_ENVIRONMENT")  && strstr(getenv("TESTS_ENVIRONMENT"), "valgrind"))
-  {
-    return true;
-  }
-
-  return false;
-}
+#include <libtest/valgrind.h>
 
 static inline size_t yatl_strlen(const char *s)
 {
@@ -136,6 +128,34 @@ do \
 do \
 { \
   if ((__expression)) { \
+    size_t ask= snprintf(0, 0, __VA_ARGS__); \
+    ask++; \
+    char *buffer= (char*)alloca(sizeof(char) * ask); \
+    snprintf(buffer, ask, __VA_ARGS__); \
+    if (YATL_FULL) { \
+      SKIP(#__expression, buffer); \
+    } \
+    fprintf(stdout, "\n%s:%d: %s SKIP '%s' [ %s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression, buffer); \
+    exit(EXIT_SKIP); \
+  } \
+} while (0)
+
+#define SKIP_UNLESS(__expression) \
+do \
+{ \
+  if (! (__expression)) { \
+    if (YATL_FULL) { \
+      SKIP(#__expression); \
+    } \
+    fprintf(stdout, "\n%s:%d: %s SKIP '(%s)'\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression); \
+    exit(EXIT_SKIP); \
+  } \
+} while (0)
+
+#define SKIP_UNLESS_(__expression, ...) \
+do \
+{ \
+  if (! (__expression)) { \
     size_t ask= snprintf(0, 0, __VA_ARGS__); \
     ask++; \
     char *buffer= (char*)alloca(sizeof(char) * ask); \

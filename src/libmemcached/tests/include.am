@@ -27,10 +27,10 @@ noinst_HEADERS+= tests/runner.h
 # Cycle should always run first
 tests_cycle_CFLAGS= $(AM_CFLAGS) $(NO_CONVERSION) $(NO_STRICT_ALIASING)
 tests_cycle_CXXFLAGS= $(AM_CXXFLAGS)
-tests_cycle_CXXFLAGS+= ${PTHREAD_CFLAGS}
+tests_cycle_CXXFLAGS+= @PTHREAD_CFLAGS@
 tests_cycle_SOURCES= tests/cycle.cc
 tests_cycle_LDADD= $(TESTS_LDADDS)
-tests_cycle_LDADD+= ${PTHREAD_LIBS}
+tests_cycle_LDADD+= @PTHREAD_LIBS@
 check_PROGRAMS+= tests/cycle
 noinst_PROGRAMS+= tests/cycle
 
@@ -98,6 +98,9 @@ valgrind-memcapable: tests/memcapable
 pahole-mem: tests/testapp
 	@$(PAHOLE_COMMAND)  tests/testapp
 
+pahole-hash: tests/testhashkit
+	@$(PAHOLE_COMMAND)  tests/testhashkit
+
 gdb-mem: tests/libmemcached-1.0/testapp
 	@$(GDB_COMMAND)  tests/libmemcached-1.0/testapp
 
@@ -148,3 +151,9 @@ helgrind-hash: tests/testhashkit
 
 helgrind-hashplus: tests/hash_plus
 	@$(HELGRIND_COMMAND) tests/hash_plus
+
+drd-mem: tests/libmemcached-1.0/testapp 
+	@$(DRD_COMMAND) tests/libmemcached-1.0/testapp
+
+drd-cycle: tests/cycle
+	@$(DRD_COMMAND) tests/cycle

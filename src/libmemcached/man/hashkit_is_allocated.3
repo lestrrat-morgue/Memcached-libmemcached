@@ -1,4 +1,6 @@
-.TH "HASHKIT_IS_ALLOCATED" "3" "April 03, 2013" "1.0.17" "libmemcached"
+.\" Man page generated from reStructuredText.
+.
+.TH "HASHKIT_IS_ALLOCATED" "3" "February 09, 2014" "1.0.18" "libmemcached"
 .SH NAME
 hashkit_is_allocated \- libhashkit Documentation
 .
@@ -28,8 +30,33 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.\" Man page generated from reStructuredText.
 .
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
 .SH SYNOPSIS
 .sp
 #include <libhashkit/hashkit.h>
@@ -67,7 +94,7 @@ The \fI\%hashkit_clone()\fP function initializes a hashkit object much like
 the settings of the ptr hashkit object.
 .sp
 The \fI\%hashkit_free()\fP frees any resources being consumed by the hashkit
-objects that were initialized with \fI\%hashkit_create()\fP or \fI\%hashkit_clone()\fP.
+objects that were initialized with \fI\%hashkit_create()\fP or \fI\%hashkit_clone()\fP\&.
 .sp
 The \fI\%hashkit_is_allocated()\fP reports where the memory was allocated
 for a hashkit object.

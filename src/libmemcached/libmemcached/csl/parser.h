@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 2.6.1.  */
+/* A Bison parser, made by GNU Bison 2.7.  */
 
 /* Bison interface for Yacc-like parsers in C
    
@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef CONFIG_LIBMEMCACHED_CSL_PARSER_H
-# define CONFIG_LIBMEMCACHED_CSL_PARSER_H
+#ifndef YY_CONFIG_LIBMEMCACHED_CSL_PARSER_H_INCLUDED
+# define YY_CONFIG_LIBMEMCACHED_CSL_PARSER_H_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 1
@@ -141,4 +141,4 @@ int config_parse ();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-#endif /* !CONFIG_LIBMEMCACHED_CSL_PARSER_H  */
+#endif /* !YY_CONFIG_LIBMEMCACHED_CSL_PARSER_H_INCLUDED  */

@@ -76,7 +76,7 @@ static memcached_return_t connect_poll(memcached_instance_st* server, const int 
   if (server->root->poll_timeout == 0)
   {
     return memcached_set_error(*server, MEMCACHED_TIMEOUT, MEMCACHED_AT,
-                               memcached_literal_param("The time to wait for a connection to be established was set to zero, which means it will always timeout (MEMCACHED_TIMEOUT)."));
+                               memcached_literal_param("The time to wait for a connection to be established was set to zero which produces a timeout to every call to poll()."));
   }
 
   while (--loop_max) // Should only loop on cases of ERESTART or EINTR
@@ -186,9 +186,10 @@ static memcached_return_t set_hostinfo(memcached_instance_st* server)
   assert(server->type != MEMCACHED_CONNECTION_UNIX_SOCKET);
   server->clear_addrinfo();
 
-  char str_port[MEMCACHED_NI_MAXSERV];
+  char str_port[MEMCACHED_NI_MAXSERV]= { 0 };
+  errno= 0;
   int length= snprintf(str_port, MEMCACHED_NI_MAXSERV, "%u", uint32_t(server->port()));
-  if (length >= MEMCACHED_NI_MAXSERV or length <= 0)
+  if (length >= MEMCACHED_NI_MAXSERV or length <= 0 or errno != 0)
   {
     return memcached_set_error(*server, MEMCACHED_MEMORY_ALLOCATION_FAILURE, MEMCACHED_AT, 
                                memcached_literal_param("snprintf(NI_MAXSERV)"));
@@ -197,7 +198,7 @@ static memcached_return_t set_hostinfo(memcached_instance_st* server)
   struct addrinfo hints;
   memset(&hints, 0, sizeof(struct addrinfo));
 
-  hints.ai_family= AF_INET;
+  hints.ai_family= AF_UNSPEC;
   if (memcached_is_udp(server->root))
   {
     hints.ai_protocol= IPPROTO_UDP;
@@ -712,6 +713,7 @@ static memcached_return_t backoff_handling(memcached_instance_st* server, bool& 
     if (_gettime_success and server->next_retry < curr_time.tv_sec)
     {
       server->state= MEMCACHED_SERVER_STATE_NEW;
+      server->server_timeout_counter= 0;
     }
     else
     {
@@ -759,6 +761,7 @@ static memcached_return_t _memcached_connect(memcached_instance_st* server, cons
   case MEMCACHED_CONNECTION_TCP:
     rc= network_connect(server);
 
+#if defined(LIBMEMCACHED_WITH_SASL_SUPPORT)
     if (LIBMEMCACHED_WITH_SASL_SUPPORT)
     {
       if (server->fd != INVALID_SOCKET and server->root->sasl.callbacks)
@@ -771,6 +774,7 @@ static memcached_return_t _memcached_connect(memcached_instance_st* server, cons
         }
       }
     }
+#endif
     break;
 
   case MEMCACHED_CONNECTION_UNIX_SOCKET:

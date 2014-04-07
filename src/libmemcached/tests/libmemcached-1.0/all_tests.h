@@ -70,9 +70,11 @@ test_st tests[] ={
   {"partial mget", false, (test_callback_fn*)get_test5 },
   {"stats_servername", false, (test_callback_fn*)stats_servername_test },
   {"increment", false, (test_callback_fn*)increment_test },
-  {"increment_with_initial", true, (test_callback_fn*)increment_with_initial_test },
+  {"memcached_increment_with_initial(0)", true, (test_callback_fn*)increment_with_initial_test },
+  {"memcached_increment_with_initial(999)", true, (test_callback_fn*)increment_with_initial_999_test },
   {"decrement", false, (test_callback_fn*)decrement_test },
-  {"decrement_with_initial", true, (test_callback_fn*)decrement_with_initial_test },
+  {"memcached_decrement_with_initial(3)", true, (test_callback_fn*)decrement_with_initial_test },
+  {"memcached_decrement_with_initial(999)", true, (test_callback_fn*)decrement_with_initial_999_test },
   {"increment_by_key", false, (test_callback_fn*)increment_by_key_test },
   {"increment_with_initial_by_key", true, (test_callback_fn*)increment_with_initial_by_key_test },
   {"decrement_by_key", false, (test_callback_fn*)decrement_by_key_test },
@@ -282,6 +284,7 @@ test_st regression_tests[]= {
   {"lp:1021819", true, (test_callback_fn*)regression_1021819_TEST },
   {"lp:1048945", true, (test_callback_fn*)regression_1048945_TEST },
   {"lp:1067242", true, (test_callback_fn*)regression_1067242_TEST },
+  {"lp:1251482", true, (test_callback_fn*)regression_bug_1251482 },
   {0, false, (test_callback_fn*)0}
 };
 

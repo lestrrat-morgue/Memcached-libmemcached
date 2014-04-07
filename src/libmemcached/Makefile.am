@@ -1,6 +1,7 @@
 # vim:ft=automake
 
-ACLOCAL_AMFLAGS = -I m4 -I libtest/m4
+ACLOCAL_AMFLAGS= -I m4 -I libtest/m4
+AM_YFLAGS= -d
 
 # includes append to these:
 SUFFIXES =
@@ -18,6 +19,7 @@ noinst_PROGRAMS =
 include_HEADERS =
 nobase_include_HEADERS =
 check_PROGRAMS =
+check_LTLIBRARIES=
 EXTRA_HEADERS =
 BUILT_SOURCES=
 EXTRA_DIST=
@@ -29,7 +31,6 @@ MAINTAINERCLEANFILES=
 
 DISTCLEANFILES+= aminclude.am
 
-EXTRA_DIST+= .quickly
 EXTRA_DIST+= README.FIRST
 EXTRA_DIST+= README.win32
 
@@ -73,7 +74,7 @@ endif
 
 include libmemcachedinternal/include.am
 include libmemcachedinternal/util/include.am
-include rpm/include.am
+include rpm/include.mk
 include support/include.am
 include tests/include.am
 include util/include.am
@@ -95,7 +96,6 @@ merge-clean:
 	@find ./ | $(GREP) \.moved | xargs rm -r -f
 	@find ./ | $(GREP) \\.orig | xargs rm -f
 	@find ./ | $(GREP) \.rej | xargs rm -f
-	@rm -f *\.rpm
 	@find ./ | $(GREP) \.THIS | xargs rm -f
 	@find ./ | $(GREP) \.OTHER | xargs rm -f
 	@find ./ | $(GREP) \.BASE | xargs rm -f
@@ -103,7 +103,7 @@ merge-clean:
 	@echo "Files that need to be either removed or checked in:"
 	@bzr unknowns
 
-clean-local: clean-libtest-check clean-docs-check
+clean-local: clean-libtest-check clean-docs-check clean-rpm
 
 
 lcov: lcov-clean check
@@ -125,8 +125,6 @@ DISTCLEANFILES+= config/top.h
 
 maintainer-clean-local:
 	find . -type f -name '*~' -exec rm -f '{}' \;
-	-rm -f @PACKAGE@-*.rpm
-	-rm -f @PACKAGE@-*.tar.gz
 	-rm -f man/*.1
 	-rm -f man/*.3
 	-rm -f man/*.8
@@ -140,6 +138,8 @@ maintainer-clean-local:
 	-rm -f build-aux/install-sh
 	-rm -f build-aux/ltmain.sh
 	-rm -f build-aux/missing
+	-rm -f build-aux/test-driver
+	-rm -f build-aux/ylwrap
 	-rm -f mem_config.in
 	-rm -f config.log
 	-rm -f config.status
@@ -149,5 +149,7 @@ maintainer-clean-local:
 	-rm -f m4/ltsugar.m4
 	-rm -f m4/ltversion.m4
 	-rm -f m4/lt~obsolete.m4
+	-rm -f m4/test-driver
 	-rmdir build-aux
 	-rm -rf ${top_builddir}/html
+	-rm -f $(DIST_ARCHIVES)

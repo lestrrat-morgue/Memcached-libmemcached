@@ -1,4 +1,6 @@
-.TH "MEMASLAP" "1" "April 03, 2013" "1.0.17" "libmemcached"
+.\" Man page generated from reStructuredText.
+.
+.TH "MEMASLAP" "1" "February 09, 2014" "1.0.18" "libmemcached"
 .SH NAME
 memaslap \- libmemcached Documentation
 .
@@ -28,8 +30,33 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.\" Man page generated from reStructuredText.
 .
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
 .SH SYNOPSIS
 .sp
 memaslap [options]
@@ -57,7 +84,7 @@ connections in each thread. Each connection keeps key size distribution,
 value size distribution, and command distribution by itself.
 .sp
 You can specify servers via the \fImemslap \-\-servers\fP option or via the
-environment variable \fI\%MEMCACHED_SERVERS\fP.
+environment variable \fI\%MEMCACHED_SERVERS\fP\&.
 .SH FEATURES
 .sp
 Memslap is developed to for the following purposes:
@@ -1098,17 +1125,17 @@ Default never overwrite object.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-R,  \-\-reconnect
+.B \-R\fP,\fB  \-\-reconnect
 Reconnect tests, when connection is closed it will be reconnected.
 .TP
-.B \-U,  \-\-udp
+.B \-U\fP,\fB  \-\-udp
 UDP tests, default memaslap uses TCP, TCP port and UDP port of
 server must be same.
 .TP
-.B \-a,  \-\-facebook
+.B \-a\fP,\fB  \-\-facebook
 Whether it enables facebook test feature, set with TCP and multi\-get with UDP.
 .TP
-.B \-B,  \-\-binary
+.B \-B\fP,\fB  \-\-binary
 Whether it enables binary protocol. Default with ASCII protocol.
 .UNINDENT
 .INDENT 0.0
@@ -1121,13 +1148,13 @@ The first nth servers can write data, e.g.: \-\-rep_write=2.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-b,  \-\-verbose
+.B \-b\fP,\fB  \-\-verbose
 Whether it outputs detailed information when verification fails.
 .TP
-.B \-h,  \-\-help
+.B \-h\fP,\fB  \-\-help
 Display this message and then exit.
 .TP
-.B \-V,  \-\-version
+.B \-V\fP,\fB  \-\-version
 Display the version of the application and then exit.
 .UNINDENT
 .SH EXAMPLES

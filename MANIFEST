@@ -34,7 +34,6 @@ ppport.h
 README.md
 responses.csv
 responses.txt
-src/libmemcached/.quickly
 src/libmemcached/aclocal.m4
 src/libmemcached/AUTHORS
 src/libmemcached/build-aux/config.guess
@@ -43,6 +42,7 @@ src/libmemcached/build-aux/depcomp
 src/libmemcached/build-aux/install-sh
 src/libmemcached/build-aux/ltmain.sh
 src/libmemcached/build-aux/missing
+src/libmemcached/build-aux/test-driver
 src/libmemcached/ChangeLog
 src/libmemcached/clients/client_options.h
 src/libmemcached/clients/execute.cc
@@ -96,6 +96,7 @@ src/libmemcached/example/storage.cc
 src/libmemcached/example/storage.h
 src/libmemcached/libhashkit-1.0/algorithm.h
 src/libmemcached/libhashkit-1.0/behavior.h
+src/libmemcached/libhashkit-1.0/configure.h
 src/libmemcached/libhashkit-1.0/configure.h.in
 src/libmemcached/libhashkit-1.0/digest.h
 src/libmemcached/libhashkit-1.0/function.h
@@ -151,6 +152,7 @@ src/libmemcached/libmemcached-1.0/basic_string.h
 src/libmemcached/libmemcached-1.0/behavior.h
 src/libmemcached/libmemcached-1.0/callback.h
 src/libmemcached/libmemcached-1.0/callbacks.h
+src/libmemcached/libmemcached-1.0/configure.h
 src/libmemcached/libmemcached-1.0/configure.h.in
 src/libmemcached/libmemcached-1.0/defaults.h
 src/libmemcached/libmemcached-1.0/delete.h
@@ -377,9 +379,11 @@ src/libmemcached/libtest/dream.h
 src/libmemcached/libtest/drizzled.cc
 src/libmemcached/libtest/drizzled.h
 src/libmemcached/libtest/error.h
-src/libmemcached/libtest/failed.h
-src/libmemcached/libtest/fatal.cc
-src/libmemcached/libtest/fatal.hpp
+src/libmemcached/libtest/exception.cc
+src/libmemcached/libtest/exception.hpp
+src/libmemcached/libtest/exception/disconnected.hpp
+src/libmemcached/libtest/exception/fatal.cc
+src/libmemcached/libtest/exception/fatal.hpp
 src/libmemcached/libtest/formatter.cc
 src/libmemcached/libtest/formatter.hpp
 src/libmemcached/libtest/framework.cc
@@ -414,7 +418,6 @@ src/libmemcached/libtest/result.cc
 src/libmemcached/libtest/result.hpp
 src/libmemcached/libtest/result/base.hpp
 src/libmemcached/libtest/result/fail.hpp
-src/libmemcached/libtest/result/fatal.hpp
 src/libmemcached/libtest/result/skip.hpp
 src/libmemcached/libtest/result/success.hpp
 src/libmemcached/libtest/run.gdb
@@ -441,8 +444,10 @@ src/libmemcached/libtest/timer.hpp
 src/libmemcached/libtest/tmpfile.cc
 src/libmemcached/libtest/tmpfile.hpp
 src/libmemcached/libtest/unittest.cc
+src/libmemcached/libtest/valgrind.h
 src/libmemcached/libtest/vchar.cc
 src/libmemcached/libtest/vchar.hpp
+src/libmemcached/libtest/version.h
 src/libmemcached/libtest/version.h.in
 src/libmemcached/libtest/visibility.h
 src/libmemcached/libtest/wait.cc
@@ -465,9 +470,7 @@ src/libmemcached/m4/ax_compiler_vendor.m4
 src/libmemcached/m4/ax_compiler_version.m4
 src/libmemcached/m4/ax_count_cpus.m4
 src/libmemcached/m4/ax_cxx_gcc_abi_demangle.m4
-src/libmemcached/m4/ax_cxx_header_stdcxx_98.m4
 src/libmemcached/m4/ax_debug.m4
-src/libmemcached/m4/ax_dlopen.m4
 src/libmemcached/m4/ax_endian.m4
 src/libmemcached/m4/ax_file_escapes.m4
 src/libmemcached/m4/ax_gcc_atomic_builtins.m4
@@ -634,9 +637,10 @@ src/libmemcached/NEWS
 src/libmemcached/README
 src/libmemcached/README.FIRST
 src/libmemcached/README.win32
-src/libmemcached/rpm/include.am
+src/libmemcached/rpm/include.mk
 src/libmemcached/support/include.am
 src/libmemcached/support/libmemcached.pc.in
+src/libmemcached/support/libmemcached.spec
 src/libmemcached/support/libmemcached.spec.in
 src/libmemcached/support/set_benchmark.sh
 src/libmemcached/tests/basic.h
@@ -743,6 +747,7 @@ src/libmemcached/util/pidfile.cc
 src/libmemcached/util/pidfile.hpp
 src/libmemcached/util/signal.hpp
 src/libmemcached/util/string.hpp
+src/libmemcached/version.m4
 src/libmemcached/win32/include.am
 src/libmemcached/win32/wrappers.h
 src/README

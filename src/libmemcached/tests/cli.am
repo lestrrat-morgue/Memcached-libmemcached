@@ -99,6 +99,12 @@ tests_memdump_LDADD=  libtest/libtest.la $(TESTS_LDADDS)
 check_PROGRAMS+= tests/memdump
 noinst_PROGRAMS+= tests/memdump
 
+test-memcp: tests/memcp
+	tests/memcp
+
+gdb-memcp: tests/memcp
+	@$(GDB_COMMAND) tests/memcp
+
 test-memstat: tests/memstat
 	tests/memstat
 
@@ -116,3 +122,12 @@ valgrind-memerror: tests/memerror
 
 valgrind-memtouch: tests/memtouch
 	 @$(VALGRIND_COMMAND) tests/memtouch
+
+test-memdump: tests/memdump
+	tests/memdump
+
+gdb-memdump: tests/memdump
+	@$(GDB_COMMAND) tests/memdump
+
+valgrind-memdump: tests/memdump
+	 @$(VALGRIND_COMMAND) tests/memdump

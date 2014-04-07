@@ -389,8 +389,8 @@ _fetch_all_into_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
 
     /* rc is the return code from the preceeding mget */
     if (!LMC_RETURN_OK(rc)) {
-        if (rc == MEMCACHED_NOTFOUND) {
-            /* when number_of_keys==0 memcached_mget returns MEMCACHED_NOTFOUND
+        if (rc == MEMCACHED_INVALID_ARGUMENTS) {
+            /* when number_of_keys==0 memcached_mget returns MEMCACHED_INVALID_ARGUMENTS
             * which we'd normally translate into a false return value
             * but that's not really appropriate here
             */

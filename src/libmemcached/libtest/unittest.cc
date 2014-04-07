@@ -142,6 +142,25 @@ static test_return_t test_throw_skip_macro_TEST(void *)
   return TEST_FAILURE;
 }
 
+static test_return_t test_throw_skip_unless_macro_TEST(void *)
+{
+  try {
+    SKIP_UNLESS(false);
+  }
+  catch (const libtest::__skipped&)
+  {
+    return TEST_SUCCESS;
+  }
+  catch (...)
+  {
+    FAIL("SLIP_UNLESS() failed to throw libtest::_skipped");
+  }
+
+  FAIL("SLIP_UNLESS() failed to throw");
+
+  return TEST_FAILURE;
+}
+
 static test_return_t test_throw_skip_TEST(void *)
 {
   try {
@@ -181,6 +200,11 @@ static test_return_t test_throw_fail_TEST(void *)
 }
 #pragma GCC diagnostic ignored "-Wstack-protector"
 
+#ifdef __clang__
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wformat-security"
+#endif
+
 static test_return_t ASSERT_FALSE__TEST(void *)
 {
   try {
@@ -198,6 +222,10 @@ static test_return_t ASSERT_FALSE__TEST(void *)
 
   return TEST_FAILURE;
 }
+
+#ifdef __clang__
+# pragma GCC diagnostic pop
+#endif
 
 static test_return_t ASSERT_NEQ_FAIL_TEST(void *)
 {
@@ -512,7 +540,7 @@ static test_return_t memcached_sasl_test(void *object)
   server_startup_st *servers= (server_startup_st*)object;
   test_true(servers);
 
-  test_skip(false, bool(getenv("TESTS_ENVIRONMENT")));
+  test_skip(false, bool(getenv("LOG_COMPILER")));
 
   if (MEMCACHED_SASL_BINARY)
   {
@@ -590,9 +618,9 @@ static test_return_t application_doesnotexist_BINARY(void *)
   true_app.will_fail();
 
   const char *args[]= { "--fubar", 0 };
-#if defined(TARGET_OS_OSX) && TARGET_OS_OSX
+#if defined(__APPLE__) && __APPLE__
   ASSERT_EQ(Application::INVALID_POSIX_SPAWN, true_app.run(args));
-#elif defined(TARGET_OS_FREEBSD) && TARGET_OS_FREEBSD
+#elif defined(__FreeBSD__) && __FreeBSD__
   ASSERT_EQ(Application::INVALID_POSIX_SPAWN, true_app.run(args));
 #else
   ASSERT_EQ(Application::SUCCESS, true_app.run(args));
@@ -790,8 +818,8 @@ static test_return_t wait_services_appliction_TEST(void *)
 static test_return_t gdb_wait_services_appliction_TEST(void *)
 {
   test_skip(true, false);
-#if defined(TARGET_OS_OSX) && TARGET_OS_OSX
-  test_skip(0, TARGET_OS_OSX);
+#if defined(__APPLE__) && __APPLE__
+  test_skip(0, __APPLE__);
 #endif
 
   test_skip(0, access("/etc/services", R_OK ));
@@ -814,8 +842,8 @@ static test_return_t gdb_abort_services_appliction_TEST(void *)
   test_skip(0, access("libtest/abort", X_OK ));
   test_skip(true, false);
 
-#if defined(TARGET_OS_OSX) && TARGET_OS_OSX
-  test_skip(0, TARGET_OS_OSX);
+#if defined(__APPLE__) && __APPLE__
+  test_skip(0, __APPLE__);
 #endif
 
   libtest::Application abort_app("libtest/abort", true);
@@ -932,6 +960,12 @@ static test_return_t default_port_TEST(void *)
   return TEST_SUCCESS;
 }
 
+static test_return_t check_for_VALGRIND(void *)
+{
+  test_skip_valgrind();
+  return TEST_SUCCESS;
+}
+
 static test_return_t check_for_gearman(void *)
 {
   test_skip(true, HAVE_LIBGEARMAN);
@@ -1034,6 +1068,7 @@ test_st tests_log[] ={
   {"SUCCESS", false, test_throw_success_TEST },
   {"libtest::__skipped", false, test_throw_skip_TEST },
   {"SKIP_IF", false, test_throw_skip_macro_TEST },
+  {"SKIP_UNLESS", false, test_throw_skip_unless_macro_TEST },
   {"FAIL", false, test_throw_fail_TEST },
   {"ASSERT_FALSE_", false, ASSERT_FALSE__TEST },
   {"ASSERT_FALSE", false, ASSERT_FALSE_TEST },
@@ -1177,7 +1212,7 @@ collection_st collection[] ={
   {"fatal", disable_fatal_exception, enable_fatal_exception, fatal_message_TESTS },
   {"number_of_cpus()", 0, 0, number_of_cpus_TESTS },
   {"create_tmpfile()", 0, 0, create_tmpfile_TESTS },
-  {"dns", 0, 0, dns_TESTS },
+  {"dns", check_for_VALGRIND, 0, dns_TESTS },
   {"libtest::Timer", 0, 0, timer_TESTS },
   {0, 0, 0, 0}
 };

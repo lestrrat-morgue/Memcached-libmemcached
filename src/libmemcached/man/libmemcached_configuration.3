@@ -1,4 +1,6 @@
-.TH "LIBMEMCACHED_CONFIGURATION" "3" "April 03, 2013" "1.0.17" "libmemcached"
+.\" Man page generated from reStructuredText.
+.
+.TH "LIBMEMCACHED_CONFIGURATION" "3" "February 09, 2014" "1.0.18" "libmemcached"
 .SH NAME
 libmemcached_configuration \- libmemcached Documentation
 .
@@ -28,8 +30,33 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.\" Man page generated from reStructuredText.
 .
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
 .SH SYNOPSIS
 .sp
 #include <libmemcached\-1.0/memcached.h>
@@ -75,7 +102,7 @@ Verify that keys that are being used fit within the design of the protocol being
 .B \-\-REMOVE_FAILED_SERVERS
 .UNINDENT
 .sp
-Enable the behavior \fBMEMCACHED_BEHAVIOR_REMOVE_FAILED_SERVERS\fP.
+Enable the behavior \fBMEMCACHED_BEHAVIOR_REMOVE_FAILED_SERVERS\fP\&.
 .INDENT 0.0
 .TP
 .B \-\-BINARY\-PROTOCOL
@@ -87,7 +114,7 @@ Force all connections to use the binary protocol.
 .B \-\-BUFFER\-REQUESTS
 .UNINDENT
 .sp
-Please see \fBMEMCACHED_BEHAVIOR_BUFFER_REQUESTS\fP.
+Please see \fBMEMCACHED_BEHAVIOR_BUFFER_REQUESTS\fP\&.
 .INDENT 0.0
 .TP
 .B \-\-CONFIGURE\-FILE=
@@ -99,7 +126,7 @@ Provide a configuration file to be used to load requests. Beware that by using a
 .B \-\-CONNECT\-TIMEOUT=
 .UNINDENT
 .sp
-Please see \fBMEMCACHED_BEHAVIOR_CONNECT_TIMEOUT\fP.
+Please see \fBMEMCACHED_BEHAVIOR_CONNECT_TIMEOUT\fP\&.
 .INDENT 0.0
 .TP
 .B \-\-DISTRIBUTION=
@@ -225,7 +252,7 @@ See \fImemcached_behavior_set(3)\fP for MEMCACHED_BEHAVIOR_SOCKET_SEND_SIZE
 .B \-\-POLL\-TIMEOUT=
 .UNINDENT
 .sp
-That sets the value of the timeout used by :manpage: \fIpoll()\fP.
+That sets the value of the timeout used by :manpage: \fIpoll()\fP\&.
 .INDENT 0.0
 .TP
 .B \-\-IO\-BYTES\-WATERMARK=

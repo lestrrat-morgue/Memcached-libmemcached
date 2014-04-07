@@ -5,10 +5,12 @@
 #
 
 LIBTOOL_COMMAND= ${abs_top_builddir}/libtool --mode=execute
-VALGRIND_EXEC_COMMAND= $(LIBTOOL_COMMAND) valgrind --error-exitcode=1 --leak-check=yes --track-fds=yes --malloc-fill=A5 --free-fill=DE
-VALGRIND_COMMAND= TESTS_ENVIRONMENT="valgrind" $(VALGRIND_EXEC_COMMAND)
+VALGRIND_EXEC_COMMAND= $(LIBTOOL_COMMAND) valgrind --tool=memcheck --error-exitcode=1 --leak-check=yes --track-fds=yes --malloc-fill=A5 --free-fill=DE
+SGCHECK_EXEC_COMMAND= $(LIBTOOL_COMMAND) valgrind --tool=exp-sgcheck --error-exitcode=1
+VALGRIND_COMMAND= LOG_COMPILER="valgrind" $(VALGRIND_EXEC_COMMAND)
 HELGRIND_COMMAND= $(LIBTOOL_COMMAND) valgrind --tool=helgrind --read-var-info=yes --error-exitcode=1 --read-var-info=yes
-DRD_COMMAND= $(LIBTOOL_COMMAND) valgrind --tool=drd
+DRD_COMMAND= $(LIBTOOL_COMMAND) valgrind --tool=drd --free-is-write=yes --error-exitcode=1
+SGCHECK_COMMAND= $(LIBTOOL_COMMAND) valgrind --tool=exp-sgcheck --error-exitcode=1
 MASSIF_COMMAND= $(LIBTOOL_COMMAND) valgrind --tool=massif
 GDB_COMMAND= $(LIBTOOL_COMMAND) gdb -f -x libtest/run.gdb
 PTRCHECK_COMMAND= $(LIBTOOL_COMMAND) valgrind --tool=exp-ptrcheck --error-exitcode=1
@@ -19,22 +21,26 @@ export LIBTOOL_COMMAND
 export VALGRIND_COMMAND
 export HELGRIND_COMMAND
 export DRD_COMMAND
+export SGCHECK_COMMAND
 export GDB_COMMAND
 
 valgrind:
-	@echo make check TESTS_ENVIRONMENT="\"$(VALGRIND_EXEC_COMMAND)\""
+	@echo make check LOG_COMPILER="\"$(VALGRIND_EXEC_COMMAND)\""
+
+sgcheck:
+	@echo make check LOG_COMPILER="\"$(SGCHECK_EXEC_COMMAND)\""
 
 valgrind-supressions:
-	@echo make check TESTS_ENVIRONMENT="\"$(VALGRIND_SUPRESSION)\""
+	@echo make check LOG_COMPILER="\"$(VALGRIND_SUPRESSION)\""
 
 gdb:
-	@echo make check TESTS_ENVIRONMENT="\"$(GDB_COMMAND)\""
+	@echo make check LOG_COMPILER="\"$(GDB_COMMAND)\""
 
 helgrind:
-	@echo make check TESTS_ENVIRONMENT="\"$(HELGRIND_COMMAND)\""
+	@echo make check LOG_COMPILER="\"$(HELGRIND_COMMAND)\""
 
 drd:
-	@echo make check TESTS_ENVIRONMENT="\"$(DRD_COMMAND)\""
+	@echo make check LOG_COMPILER="\"$(DRD_COMMAND)\""
 
 EXTRA_DIST+= libtest/run.gdb
 EXTRA_DIST+= libtest/version.h
@@ -61,8 +67,9 @@ noinst_HEADERS+= libtest/comparison.hpp
 noinst_HEADERS+= libtest/core.h
 noinst_HEADERS+= libtest/dream.h
 noinst_HEADERS+= libtest/error.h
-noinst_HEADERS+= libtest/failed.h
-noinst_HEADERS+= libtest/fatal.hpp
+noinst_HEADERS+= libtest/exception.hpp
+noinst_HEADERS+= libtest/exception/disconnected.hpp
+noinst_HEADERS+= libtest/exception/fatal.hpp
 noinst_HEADERS+= libtest/framework.h
 noinst_HEADERS+= libtest/gearmand.h
 noinst_HEADERS+= libtest/drizzled.h
@@ -80,7 +87,6 @@ noinst_HEADERS+= libtest/port.h
 noinst_HEADERS+= libtest/result.hpp
 noinst_HEADERS+= libtest/result/base.hpp
 noinst_HEADERS+= libtest/result/fail.hpp
-noinst_HEADERS+= libtest/result/fatal.hpp
 noinst_HEADERS+= libtest/result/skip.hpp
 noinst_HEADERS+= libtest/result/success.hpp
 noinst_HEADERS+= libtest/runner.h
@@ -96,24 +102,19 @@ noinst_HEADERS+= libtest/test.hpp
 noinst_HEADERS+= libtest/thread.hpp
 noinst_HEADERS+= libtest/tmpfile.hpp
 noinst_HEADERS+= libtest/lite.h
+noinst_HEADERS+= libtest/valgrind.h
 noinst_HEADERS+= libtest/vchar.hpp
 noinst_HEADERS+= libtest/version.h
 noinst_HEADERS+= libtest/visibility.h
 noinst_HEADERS+= libtest/wait.h
 noinst_HEADERS+= libtest/yatl.h
 
-noinst_LTLIBRARIES+= libtest/libtest.la
+check_LTLIBRARIES+= libtest/libtest.la
 
 libtest_libtest_la_CXXFLAGS=
 EXTRA_libtest_libtest_la_DEPENDENCIES=
 libtest_libtest_la_LIBADD=
 libtest_libtest_la_SOURCES=
-if BUILDING_LIBMEMCACHED
-libtest_libtest_la_LIBADD+= libmemcached/libmemcached.la
-else
-libtest_libtest_la_CXXFLAGS+= @LIBMEMCACHED_CFLAGS@
-libtest_libtest_la_LIBADD+= @LIBMEMCACHED_LIB@
-endif
 
 libtest_libtest_la_SOURCES+= libtest/alarm.cc
 libtest_libtest_la_SOURCES+= libtest/binaries.cc
@@ -125,7 +126,8 @@ libtest_libtest_la_SOURCES+= libtest/cpu.cc
 libtest_libtest_la_SOURCES+= libtest/dns.cc
 libtest_libtest_la_SOURCES+= libtest/dream.cc
 libtest_libtest_la_SOURCES+= libtest/drizzled.cc
-libtest_libtest_la_SOURCES+= libtest/fatal.cc
+libtest_libtest_la_SOURCES+= libtest/exception.cc
+libtest_libtest_la_SOURCES+= libtest/exception/fatal.cc
 libtest_libtest_la_SOURCES+= libtest/formatter.cc
 libtest_libtest_la_SOURCES+= libtest/client.cc
 libtest_libtest_la_SOURCES+= libtest/framework.cc
@@ -168,8 +170,10 @@ libtest_libtest_la_LDFLAGS=
 # We are either building in tree, or with
 libtest_libtest_la_SOURCES+= libtest/memcached.cc
 
+if HAVE_LIBDRIZZLE
 libtest_libtest_la_LDFLAGS+= @LIBDRIZZLE_LDFLAGS@
 libtest_libtest_la_LIBADD+= @LIBDRIZZLE_LIB@
+endif
 
 libtest_libtest_la_SOURCES+= libtest/gearmand.cc
 
@@ -204,10 +208,26 @@ helgrind-unittest: libtest/unittest
 drd-unittest: libtest/unittest
 	@$(DRD_COMMAND) libtest/unittest
 
+sgcheck-unittest: libtest/unittest
+	echo $(SGCHECK_COMMAND)
+	@$(SGCHECK_COMMAND) libtest/unittest
+
 libtest_skiptest_LDADD= libtest/libtest.la
 libtest_skiptest_SOURCES= libtest/skiptest.cc
 check_PROGRAMS+= libtest/skiptest
 noinst_PROGRAMS+= libtest/skiptest
+
+test-skiptest: libtest/skiptest
+	@libtest/skiptest
+
+valgrind-skiptest: libtest/skiptest
+	@$(VALGRIND_COMMAND) libtest/skiptest
+
+helgrind-skiptest: libtest/skiptest
+	@$(HELGRIND_COMMAND) libtest/skiptest
+
+drd-skiptest: libtest/skiptest
+	@$(DRD_COMMAND) libtest/skiptest
 
 libtest_wait_SOURCES=
 libtest_wait_SOURCES+= libtest/wait.cc
@@ -226,7 +246,7 @@ libtest_backtrace_SOURCES=
 libtest_backtrace_LDADD=
 libtest_backtrace_SOURCES+= libtest/backtrace_test.cc
 libtest_backtrace_SOURCES+= libmemcached/backtrace.cc
-libtest_backtrace_LDADD+= @DL_LIB@
+libtest_backtrace_LDADD+= @lt_cv_dlopen_libs@
 noinst_PROGRAMS+= libtest/backtrace
 test-backtrace: libtest/backtrace
 	@libtest/backtrace

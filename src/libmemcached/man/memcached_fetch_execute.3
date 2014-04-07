@@ -1,4 +1,6 @@
-.TH "MEMCACHED_FETCH_EXECUTE" "3" "April 03, 2013" "1.0.17" "libmemcached"
+.\" Man page generated from reStructuredText.
+.
+.TH "MEMCACHED_FETCH_EXECUTE" "3" "February 09, 2014" "1.0.18" "libmemcached"
 .SH NAME
 memcached_fetch_execute \- Retrieving data from the server
 .
@@ -28,8 +30,33 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.\" Man page generated from reStructuredText.
 .
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
 .SH SYNOPSIS
 .sp
 #include <libmemcached/memcached.h>
@@ -86,7 +113,7 @@ application.
 multiple key operations it is always faster to use this function. This function always works asynchronously.
 .sp
 To retrieve data after a successful execution of \fI\%memcached_mget()\fP, you will need to
-call \fI\%memcached_fetch_result()\fP.  You should continue to call this function until
+call \fI\%memcached_fetch_result()\fP\&.  You should continue to call this function until
 it returns a NULL (i.e. no more values). If you need to quit in the middle of a
 \fI\%memcached_mget()\fP call, you can execute a \fBmemcached_quit()\fP, those this is not required.
 .sp
@@ -123,16 +150,16 @@ sending out requests. Please note that this function is only available in
 the binary protocol.
 .sp
 \fI\%memcached_get_by_key()\fP and \fI\%memcached_mget_by_key()\fP behave
-in a similar nature as \fI\%memcached_get()\fP and \fI\%memcached_mget()\fP.
+in a similar nature as \fI\%memcached_get()\fP and \fI\%memcached_mget()\fP\&.
 The difference is that they take a master key that is used for determining
 which server an object was stored if key partitioning was used for storage.
 .sp
 All of the above functions are not tested when the
 \fBMEMCACHED_BEHAVIOR_USE_UDP\fP has been set. Executing any of these
-functions with this behavior on will result in \fBMEMCACHED_NOT_SUPPORTED\fP being returned, or for those functions which do not return a \fBmemcached_return_t\fP, the error function parameter will be set to \fBMEMCACHED_NOT_SUPPORTED\fP.
+functions with this behavior on will result in \fBMEMCACHED_NOT_SUPPORTED\fP being returned, or for those functions which do not return a \fBmemcached_return_t\fP, the error function parameter will be set to \fBMEMCACHED_NOT_SUPPORTED\fP\&.
 .SH RETURN
 .sp
-All objects retrieved via \fI\%memcached_get()\fP or \fI\%memcached_get_by_key()\fP must be freed with \fIfree(3)\fP.
+All objects retrieved via \fI\%memcached_get()\fP or \fI\%memcached_get_by_key()\fP must be freed with \fIfree(3)\fP\&.
 .sp
 \fI\%memcached_get()\fP will return NULL on
 error. You must look at the value of error to determine what the actual error

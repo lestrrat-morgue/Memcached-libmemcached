@@ -1,4 +1,6 @@
-.TH "MEMCACHED_CALLBACK_SET" "3" "April 03, 2013" "1.0.17" "libmemcached"
+.\" Man page generated from reStructuredText.
+.
+.TH "MEMCACHED_CALLBACK_SET" "3" "February 09, 2014" "1.0.18" "libmemcached"
 .SH NAME
 memcached_callback_set \- libmemcached Documentation
 .
@@ -28,8 +30,33 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.\" Man page generated from reStructuredText.
 .
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
 .sp
 Get and set a callback
 .SH SYNOPSIS
@@ -56,7 +83,7 @@ provide function calls at points in the code, or return pointers to
 structures for particular usages.
 .sp
 \fI\%memcached_callback_get()\fP takes a callback flag and returns the
-structure or function set by \fI\%memcached_callback_set()\fP.
+structure or function set by \fI\%memcached_callback_set()\fP\&.
 .sp
 \fI\%memcached_callback_set()\fP changes the function/structure assigned by a
 callback flag. No connections are reset.
@@ -103,7 +130,7 @@ If you set a value with the value being NULL then the prefix key is disabled.
 .UNINDENT
 .sp
 This allows you to store a pointer to a specifc piece of data. This can be
-retrieved from inside of \fBmemcached_fetch_execute()\fP. Cloning a
+retrieved from inside of \fBmemcached_fetch_execute()\fP\&. Cloning a
 \fBmemcached_st\fP will copy the pointer to the clone.
 .INDENT 0.0
 .TP
@@ -134,7 +161,7 @@ You are responsible for populating the result object provided. This result objec
 .sp
 You must clone the \fBmemcached_st\fP in order to
 make use of it. The value will be stored only if you return
-\fBMEMCACHED_SUCCESS\fP or \fBMEMCACHED_BUFFERED\fP. Returning
+\fBMEMCACHED_SUCCESS\fP or \fBMEMCACHED_BUFFERED\fP\&. Returning
 \fBMEMCACHED_BUFFERED\fP will cause the object to be buffered and not sent
 immediatly (if this is the default behavior based on your connection setup
 this will happen automatically).
@@ -160,7 +187,7 @@ The prototype for this is:
 .sp
 \fI\%memcached_callback_get()\fP return the function or structure that was
 provided. Upon error, nothing is set, null is returned, and the
-\fBmemcached_return_t\fP argument is set to \fBMEMCACHED_FAILURE\fP.
+\fBmemcached_return_t\fP argument is set to \fBMEMCACHED_FAILURE\fP\&.
 .sp
 \fI\%memcached_callback_set()\fP returns \fBMEMCACHED_SUCCESS\fP upon
 successful setting, otherwise \fBMEMCACHED_FAILURE\fP on error.

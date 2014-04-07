@@ -1,4 +1,6 @@
-.TH "MEMCACHED_SET" "3" "April 03, 2013" "1.0.17" "libmemcached"
+.\" Man page generated from reStructuredText.
+.
+.TH "MEMCACHED_SET" "3" "February 09, 2014" "1.0.18" "libmemcached"
 .SH NAME
 memcached_set \- Storing and Replacing Data
 .
@@ -28,8 +30,33 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.\" Man page generated from reStructuredText.
 .
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
 .SH SYNOPSIS
 .sp
 #include <libmemcached/memcached.h>
@@ -100,8 +127,8 @@ ASCII operations there are at least 1318 bytes available to split among the key,
 exceeds 1400 bytes, a \fBMEMCACHED_WRITE_FAILURE\fP will be returned.
 .SH RETURN
 .sp
-All methods return a value of type \fBmemcached_return_t\fP.
-On success the value will be \fBMEMCACHED_SUCCESS\fP.
+All methods return a value of type \fBmemcached_return_t\fP\&.
+On success the value will be \fBMEMCACHED_SUCCESS\fP\&.
 Use \fBmemcached_strerror()\fP to translate this value to a printable string.
 .sp
 For \fI\%memcached_replace()\fP and \fI\%memcached_add()\fP, \fBMEMCACHED_NOTSTORED\fP is a legitmate error in the case of a collision.

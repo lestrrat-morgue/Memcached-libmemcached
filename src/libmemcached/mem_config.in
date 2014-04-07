@@ -80,17 +80,8 @@
    don't. */
 #undef HAVE_DECL_STRERROR_R
 
-/* Define to 1 if DL is found */
-#undef HAVE_DL
-
-/* Have dladdr */
-#undef HAVE_DLADDR
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
-
-/* Have dlopen */
-#undef HAVE_DLOPEN
 
 /* Support for DrizzleD */
 #undef HAVE_DRIZZLED_BINARY
@@ -166,9 +157,6 @@
 
 /* Support for libcurl */
 #undef HAVE_LIBCURL
-
-/* Have dlopen */
-#undef HAVE_LIBDL
 
 /* Support for libdrizzle */
 #undef HAVE_LIBDRIZZLE
@@ -429,6 +417,18 @@
 /* OS of Build System */
 #undef HOST_OS
 
+/* Whether we are building for FreeBSD */
+#undef HOST_OS_FREEBSD
+
+/* Whether we build for Linux */
+#undef HOST_OS_LINUX
+
+/* Whether we are building for Solaris */
+#undef HOST_OS_SOLARIS
+
+/* Whether we are building for Windows */
+#undef HOST_OS_WINDOWS
+
 /* Vendor of Build System */
 #undef HOST_VENDOR
 
@@ -481,35 +481,11 @@
 	STACK_DIRECTION = 0 => direction of growth unknown */
 #undef STACK_DIRECTION
 
-/* Define if ISO C++ 1998 header files are present. */
-#undef STDCXX_98_HEADERS
-
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
 /* Define to 1 if strerror_r returns char *. */
 #undef STRERROR_R_CHAR_P
-
-/* CPU of Target System */
-#undef TARGET_CPU
-
-/* OS of Target System */
-#undef TARGET_OS
-
-/* Whether we are building for FreeBSD */
-#undef TARGET_OS_FREEBSD
-
-/* Whether we build for Linux */
-#undef TARGET_OS_LINUX
-
-/* Whether we are building for Solaris */
-#undef TARGET_OS_SOLARIS
-
-/* Whether we are building for Windows */
-#undef TARGET_OS_WINDOWS
-
-/* Vendor of Target System */
-#undef TARGET_VENDOR
 
 /* Define to true if you want to use functions from atomic.h */
 #undef USE_ATOMIC_H

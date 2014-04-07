@@ -2,7 +2,7 @@
  *
  *  Data Differential YATL (i.e. libtest)  library
  *
- *  Copyright (C) 2012 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2012-2013 Data Differential, http://datadifferential.com/
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -59,6 +59,7 @@ using namespace libtest;
 #include <unistd.h>
 
 #include <algorithm>
+#include <stdexcept>
 
 #ifndef __USE_GNU
 static char **environ= NULL;
@@ -78,7 +79,10 @@ namespace {
          iter != built_argv.end();
          ++iter)
     {
-      arg_buffer << *iter << " ";
+      if (*iter)
+      {
+        arg_buffer << *iter << " ";
+      }
     }
 
     return arg_buffer.str();
@@ -358,7 +362,7 @@ bool Application::slurp()
     int error;
     switch ((error= errno))
     {
-#ifdef TARGET_OS_LINUX
+#ifdef __linux
     case ERESTART:
 #endif
     case EINTR:
@@ -408,11 +412,10 @@ bool Application::slurp()
 
 Application::error_t Application::join()
 {
-  pid_t waited_pid= waitpid(_pid, &_status, 0);
+  pid_t waited_pid= waitpid(_pid, &_status, WUNTRACED);
   slurp();
   if (waited_pid == _pid and WIFEXITED(_status) == false)
   {
-
     /*
       What we are looking for here is how the exit status happened.
       - 127 means that posix_spawn() itself had an error.
@@ -437,15 +440,18 @@ Application::error_t Application::join()
     {
       if (WTERMSIG(_status) != SIGTERM and WTERMSIG(_status) != SIGHUP)
       {
+        slurp();
         _app_exit_state= Application::INVALID_POSIX_SPAWN;
         std::string error_string(print_argv(built_argv));
         error_string+= " was killed by signal ";
         error_string+= strsignal(WTERMSIG(_status));
+
         if (stdout_result_length())
         {
           error_string+= " stdout: ";
           error_string+= stdout_c_str();
         }
+
         if (stderr_result_length())
         {
           error_string+= " stderr: ";
@@ -479,8 +485,20 @@ Application::error_t Application::join()
   }
   else if (waited_pid == -1)
   {
+    std::string error_string;
+    if (stdout_result_length())
+    {
+      error_string+= " stdout: ";
+      error_string+= stdout_c_str();
+    }
+
+    if (stderr_result_length())
+    {
+      error_string+= " stderr: ";
+      error_string+= stderr_c_str();
+    }
+    Error << "waitpid() returned errno:" << strerror(errno) << " " << error_string;
     _app_exit_state= Application::UNKNOWN;
-    Error << "waitpid() returned errno:" << strerror(errno);
   }
   else
   {
@@ -573,6 +591,7 @@ bool Application::Pipe::read(libtest::vchar_t& arg)
 void Application::Pipe::nonblock()
 {
   int flags;
+  do 
   {
     flags= fcntl(_pipe_fd[READ], F_GETFL, 0);
   } while (flags == -1 and (errno == EINTR or errno == EAGAIN));
@@ -601,23 +620,21 @@ void Application::Pipe::reset()
   close(READ);
   close(WRITE);
 
-#if defined(HAVE_PIPE2) && HAVE_PIPE2
+#ifdef HAVE_PIPE2
   if (pipe2(_pipe_fd, O_NONBLOCK|O_CLOEXEC) == -1)
-#else
-  if (pipe(_pipe_fd) == -1)
 #endif
   {
-    FATAL(strerror(errno));
-  }
-  _open[0]= true;
-  _open[1]= true;
+    if (pipe(_pipe_fd) == -1)
+    {
+      FATAL(strerror(errno));
+    }
 
-#if defined(HAVE_PIPE2) && HAVE_PIPE2
-  {
+    // Since either pipe2() was not found/called we set the pipe directly
     nonblock();
     cloexec();
   }
-#endif
+  _open[0]= true;
+  _open[1]= true;
 }
 
 void Application::Pipe::cloexec()
@@ -815,16 +832,6 @@ int exec_cmdline(const std::string& command, const char *args[], bool use_libtoo
   }
 
   return int(app.join());
-}
-
-const char *gearmand_binary() 
-{
-  return GEARMAND_BINARY;
-}
-
-const char *drizzled_binary() 
-{
-  return DRIZZLED_BINARY;
 }
 
 } // namespace exec_cmdline

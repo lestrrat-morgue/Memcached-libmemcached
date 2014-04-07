@@ -1,4 +1,6 @@
-.TH "MEMCACHED_BEHAVIOR_GET" "3" "April 03, 2013" "1.0.17" "libmemcached"
+.\" Man page generated from reStructuredText.
+.
+.TH "MEMCACHED_BEHAVIOR_GET" "3" "February 09, 2014" "1.0.18" "libmemcached"
 .SH NAME
 memcached_behavior_get \- libmemcached Documentation
 .
@@ -28,8 +30,33 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.\" Man page generated from reStructuredText.
 .
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
 .sp
 Manipulate the behavior of a memcached_st structure.
 .SH SYNOPSIS
@@ -51,7 +78,7 @@ Manipulate the behavior of a memcached_st structure.
 Compile and link with \-lmemcached
 .SH DESCRIPTION
 .sp
-\fIlibmemcached(3)\fP behavior can be modified by using \fI\%memcached_behavior_set()\fP. Default behavior is the library strives to be quick and
+\fIlibmemcached(3)\fP behavior can be modified by using \fI\%memcached_behavior_set()\fP\&. Default behavior is the library strives to be quick and
 accurate. Some behavior, while being faster, can also result in not entirely
 accurate behavior (for instance, \fBmemcached_set()\fP will always respond
 with \fBMEMCACHED_SUCCESS\fP).
@@ -75,7 +102,7 @@ when this behavior is enababled. The following operations will return
 \fBmemcached_stat()\fP, \fBmemcached_get()\fP,
 \fBmemcached_get_by_key()\fP, \fBmemcached_mget()\fP,
 \fBmemcached_mget_by_key()\fP, \fBmemcached_fetch()\fP,
-\fBmemcached_fetch_result()\fP, \fBmemcached_fetch_execute()\fP.
+\fBmemcached_fetch_result()\fP, \fBmemcached_fetch_execute()\fP\&.
 .sp
 All other operations are testsed but are executed in a \(aqfire\-and\-forget\(aq
 mode, in which once the client has executed the operation, no attempt
@@ -119,7 +146,7 @@ environments).
 .B MEMCACHED_BEHAVIOR_HASH
 .UNINDENT
 .sp
-Makes the default hashing algorithm for keys use MD5. The value can be set to either \fBMEMCACHED_HASH_DEFAULT\fP, \fBMEMCACHED_HASH_MD5\fP, \fBMEMCACHED_HASH_CRC\fP, \fBMEMCACHED_HASH_FNV1_64\fP, \fBMEMCACHED_HASH_FNV1A_64\fP, \fBMEMCACHED_HASH_FNV1_32\fP, \fBMEMCACHED_HASH_FNV1A_32\fP, \fBMEMCACHED_HASH_JENKINS\fP, \fBMEMCACHED_HASH_HSIEH\fP, and \fBMEMCACHED_HASH_MURMUR\fP.
+Makes the default hashing algorithm for keys use MD5. The value can be set to either \fBMEMCACHED_HASH_DEFAULT\fP, \fBMEMCACHED_HASH_MD5\fP, \fBMEMCACHED_HASH_CRC\fP, \fBMEMCACHED_HASH_FNV1_64\fP, \fBMEMCACHED_HASH_FNV1A_64\fP, \fBMEMCACHED_HASH_FNV1_32\fP, \fBMEMCACHED_HASH_FNV1A_32\fP, \fBMEMCACHED_HASH_JENKINS\fP, \fBMEMCACHED_HASH_HSIEH\fP, and \fBMEMCACHED_HASH_MURMUR\fP\&.
 .sp
 Each hash has it\(aqs advantages and it\(aqs weaknesses. If you don\(aqt know or don\(aqt
 care, just go with the default.
@@ -154,7 +181,7 @@ Support CAS operations (this is not enabled by default at this point in the serv
 .UNINDENT
 .sp
 Sets the default distribution to MEMCACHED_DISTRIBUTION_CONSISTENT_KETAMA and
-the hash to \fBMEMCACHED_HASH_MD5\fP.
+the hash to \fBMEMCACHED_HASH_MD5\fP\&.
 .INDENT 0.0
 .TP
 .B MEMCACHED_BEHAVIOR_KETAMA_WEIGHTED
@@ -169,7 +196,7 @@ Sets the hashing algorithm for host mapping on continuum. The value can be set
 to either \fBMEMCACHED_HASH_DEFAULT\fP, \fBMEMCACHED_HASH_MD5\fP,
 \fBMEMCACHED_HASH_CRC\fP, \fBMEMCACHED_HASH_FNV1_64\fP,
 \fBMEMCACHED_HASH_FNV1A_64\fP, \fBMEMCACHED_HASH_FNV1_32\fP, and
-\fBMEMCACHED_HASH_FNV1A_32\fP.
+\fBMEMCACHED_HASH_FNV1A_32\fP\&.
 .INDENT 0.0
 .TP
 .B MEMCACHED_BEHAVIOR_KETAMA_COMPAT

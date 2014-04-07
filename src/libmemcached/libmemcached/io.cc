@@ -99,7 +99,7 @@ static bool repack_input_buffer(memcached_instance_st* instance)
           case EWOULDBLOCK:
 #endif
           case EAGAIN:
-#ifdef TARGET_OS_LINUX
+#ifdef __linux
           case ERESTART:
 #endif
             break; // No IO is fine, we can just move on
@@ -177,7 +177,7 @@ static bool process_input_buffer(memcached_instance_st* instance)
 }
 
 static memcached_return_t io_wait(memcached_instance_st* instance,
-                                  const memc_read_or_write read_or_write)
+                                  const short events)
 {
   /*
    ** We are going to block on write, but at least on Solaris we might block
@@ -187,7 +187,7 @@ static memcached_return_t io_wait(memcached_instance_st* instance,
    ** The test is moved down in the purge function to avoid duplication of
    ** the test.
  */
-  if (read_or_write == MEM_WRITE)
+  if (events & POLLOUT)
   {
     if (memcached_purge(instance) == false)
     {
@@ -197,12 +197,11 @@ static memcached_return_t io_wait(memcached_instance_st* instance,
 
   struct pollfd fds;
   fds.fd= instance->fd;
-  fds.events= POLLIN;
+  fds.events= events;
   fds.revents= 0;
 
-  if (read_or_write == MEM_WRITE) /* write */
+  if (fds.events & POLLOUT) /* write */
   {
-    fds.events= POLLOUT;
     instance->io_wait_count.write++;
   }
   else
@@ -265,7 +264,7 @@ static memcached_return_t io_wait(memcached_instance_st* instance,
     assert_msg(active_fd == -1 , "poll() returned an unexpected value");
     switch (local_errno)
     {
-#ifdef TARGET_OS_LINUX
+#ifdef __linux
     case ERESTART:
 #endif
     case EINTR:
@@ -343,6 +342,7 @@ static bool io_flush(memcached_instance_st* instance,
     }
 
     ssize_t sent_length= ::send(instance->fd, local_write_ptr, write_length, flags);
+    int local_errno= get_socket_errno(); // We cache in case memcached_quit_server() modifies errno
 
     if (sent_length == SOCKET_ERROR)
     {
@@ -371,7 +371,7 @@ static bool io_flush(memcached_instance_st* instance,
             continue;
           }
 
-          memcached_return_t rc= io_wait(instance, MEM_WRITE);
+          memcached_return_t rc= io_wait(instance, POLLOUT);
           if (memcached_success(rc))
           {
             continue;
@@ -382,14 +382,14 @@ static bool io_flush(memcached_instance_st* instance,
           }
 
           memcached_quit_server(instance, true);
-          error= memcached_set_errno(*instance, get_socket_errno(), MEMCACHED_AT);
+          error= memcached_set_errno(*instance, local_errno, MEMCACHED_AT);
           return false;
         }
       case ENOTCONN:
       case EPIPE:
       default:
         memcached_quit_server(instance, true);
-        error= memcached_set_errno(*instance, get_socket_errno(), MEMCACHED_AT);
+        error= memcached_set_errno(*instance, local_errno, MEMCACHED_AT);
         WATCHPOINT_ASSERT(instance->fd == INVALID_SOCKET);
         return false;
       }
@@ -409,7 +409,12 @@ static bool io_flush(memcached_instance_st* instance,
 
 memcached_return_t memcached_io_wait_for_write(memcached_instance_st* instance)
 {
-  return io_wait(instance, MEM_WRITE);
+  return io_wait(instance, POLLOUT);
+}
+
+memcached_return_t memcached_io_wait_for_read(memcached_instance_st* instance)
+{
+  return io_wait(instance, POLLIN);
 }
 
 static memcached_return_t _io_fill(memcached_instance_st* instance)
@@ -418,6 +423,8 @@ static memcached_return_t _io_fill(memcached_instance_st* instance)
   do
   {
     data_read= ::recv(instance->fd, instance->read_buffer, MEMCACHED_MAX_BUFFER, MSG_NOSIGNAL);
+    int local_errno= get_socket_errno(); // We cache in case memcached_quit_server() modifies errno
+
     if (data_read == SOCKET_ERROR)
     {
       switch (get_socket_errno())
@@ -430,12 +437,12 @@ static memcached_return_t _io_fill(memcached_instance_st* instance)
       case EWOULDBLOCK:
 #endif
       case EAGAIN:
-#ifdef TARGET_OS_LINUX
+#ifdef __linux
       case ERESTART:
 #endif
         {
           memcached_return_t io_wait_ret;
-          if (memcached_success(io_wait_ret= io_wait(instance, MEM_READ)))
+          if (memcached_success(io_wait_ret= io_wait(instance, POLLIN)))
           {
             continue;
           }
@@ -456,7 +463,7 @@ static memcached_return_t _io_fill(memcached_instance_st* instance)
       case ECONNREFUSED:
       default:
         memcached_quit_server(instance, true);
-        memcached_set_errno(*instance, get_socket_errno(), MEMCACHED_AT);
+        memcached_set_errno(*instance, local_errno, MEMCACHED_AT);
         break;
       }
 
@@ -568,10 +575,10 @@ memcached_return_t memcached_io_slurp(memcached_instance_st* instance)
       case EWOULDBLOCK:
 #endif
       case EAGAIN:
-#ifdef TARGET_OS_LINUX
+#ifdef __linux
       case ERESTART:
 #endif
-        if (memcached_success(io_wait(instance, MEM_READ)))
+        if (memcached_success(io_wait(instance, POLLIN)))
         {
           continue;
         }

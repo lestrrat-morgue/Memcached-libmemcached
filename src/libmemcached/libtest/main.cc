@@ -2,7 +2,7 @@
  *
  *  Data Differential YATL (i.e. libtest)  library
  *
- *  Copyright (C) 2012 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2012-2013 Data Differential, http://datadifferential.com/
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -43,6 +43,9 @@
 #include <ctime>
 #include <fnmatch.h>
 #include <iostream>
+#ifdef HAVE_STRINGS_H
+# include <strings.h>
+#endif
 #include <fstream>
 #include <memory>
 #include <sys/stat.h>
@@ -110,7 +113,7 @@ int main(int argc, char *argv[])
     Valgrind does not currently work reliably, or sometimes at all, on OSX
     - Fri Jun 15 11:24:07 EDT 2012
   */
-#if defined(TARGET_OS_OSX) && TARGET_OS_OSX
+#if defined(__APPLE__) && __APPLE__
   if (valgrind_is_caller())
   {
     return EXIT_SKIP;
@@ -165,7 +168,6 @@ int main(int argc, char *argv[])
           Error << "unknown value passed to --repeat: `" << optarg << "`";
           exit(EXIT_FAILURE);
         }
-
         break;
 
       case OPT_LIBYATL_MATCH_COLLECTION:
@@ -298,7 +300,6 @@ int main(int argc, char *argv[])
       std::auto_ptr<libtest::Framework> frame(new libtest::Framework(signal, binary_name, collection_to_run, wildcard));
 
       // Run create(), bail on error.
-      try
       {
         switch (frame->create())
         {
@@ -306,16 +307,13 @@ int main(int argc, char *argv[])
           break;
 
         case TEST_SKIPPED:
-          return EXIT_SKIP;
+          SKIP("SKIP was returned from framework create()");
+          break;
 
         case TEST_FAILURE:
           std::cerr << "Could not call frame->create()" << std::endl;
           return EXIT_FAILURE;
         }
-      }
-      catch (const libtest::__skipped& e)
-      {
-        return EXIT_SKIP;
       }
 
       frame->exec();
@@ -383,9 +381,9 @@ int main(int argc, char *argv[])
     std::cerr << "std::exception:" << e.what() << std::endl;
     exit_code= EXIT_FAILURE;
   }
-  catch (char const*)
+  catch (char const* s)
   {
-    std::cerr << "Exception:" << std::endl;
+    std::cerr << "Exception:" << s << std::endl;
     exit_code= EXIT_FAILURE;
   }
   catch (...)
