@@ -2,6 +2,10 @@
 
 Memcached::libmemcached::Changes - List of significant changes
 
+=head2 Changes in 1.001800 - 7th April 2014
+
+  Sync with libmemcached 1.0.18
+
 =head2 Changes in 1.001702 - 14th March 2014
 
   Change bug tracker to GitHub
