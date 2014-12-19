@@ -14,6 +14,13 @@ wget --no-check-certificate https://launchpad.net/libmemcached/1.0/$v/+download/
 rm -rf libmemcached
 tar xfz libmemcached-$v.tar.gz
 mv libmemcached-$v libmemcached
+#
+# Note that libmemcached.patch is targeted to libmemcached version 1.0.18.
+# The patches to memflush.cc and byteorder.cc fixed compilation failures
+# on MacOSX, and may not apply to future releases of libmemcached.
+#
+patch -p2 < libmemcached.patch
+#
 git add -u libmemcached # notice deleted files
 git add libmemcached    # notice added files
 (cd .. && perl -MExtUtils::Manifest=mkmanifest -e mkmanifest)
