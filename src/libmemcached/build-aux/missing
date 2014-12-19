@@ -1,7 +1,7 @@
 #! /bin/sh
 # Common wrapper for a few potentially missing GNU programs.
 
-scriptversion=2012-06-26.16; # UTC
+scriptversion=2014-12-17.19; # UTC
 
 # Copyright (C) 1996-2013 Free Software Foundation, Inc.
 # Originally written by Fran,cois Pinard <pinard@iro.umontreal.ca>, 1996.
@@ -96,6 +96,7 @@ if test $st -eq 63; then
 elif test $st -eq 127; then
   # Program was missing.
   msg="missing on your system"
+  exit 0 # Added for Memcached::libmemcached 1.001800 - ignore missing programs.
 else
   # Program was found and executed, but failed.  Give up.
   exit $st
