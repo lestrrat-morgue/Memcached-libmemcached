@@ -43,8 +43,7 @@
 #endif
 
 #ifdef __cplusplus
-#  include <mem_config.h> /* for CINTTYPES_H */
-#  include CINTTYPES_H
+#  include CINTTYPES_H	/* defined in libmemcached/mem_config.h */
 #  include <cstddef>
 #  include <cstdlib>
 #else
