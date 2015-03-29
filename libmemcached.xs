@@ -821,7 +821,7 @@ memcached_flush(Memcached__libmemcached ptr, lmc_expiration expiration=0)
 void
 memcached_quit(Memcached__libmemcached ptr)
 
-char *
+const char *
 memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 
 const char *
