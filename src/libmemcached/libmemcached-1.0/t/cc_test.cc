@@ -37,6 +37,7 @@
 /*
  * @file @brief C dummy test, aka testing C linking, etc
  */
+#include <mem_config.h>
 
 #include <cstdlib>
 

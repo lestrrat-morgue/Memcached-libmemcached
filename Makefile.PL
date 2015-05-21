@@ -212,6 +212,7 @@ sub build_libmemcached {
         if $opt_pg;
     if ($is_developer) {    # XXX make a Makefile.PL argument/option
     }
+    $configure_args .= ' --disable-jobserver';
     run("cd $lmcd_src && ./configure --prefix=$lmcd_inst $configure_args");
     #run("cd $lmcd_src && make test") if $is_developer; # XXX
     run("cd $lmcd_src && make install");

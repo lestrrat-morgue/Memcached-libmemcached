@@ -750,6 +750,7 @@ src/libmemcached/util/string.hpp
 src/libmemcached/version.m4
 src/libmemcached/win32/include.am
 src/libmemcached/win32/wrappers.h
+src/libmemcached.patch
 src/README
 t/00-load.t
 t/01-import.t

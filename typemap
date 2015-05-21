@@ -140,7 +140,7 @@ T_MEMCACHED
             /* setup $arg as a ref to a blessed hash hv */
             lmc_state_st *lmc_state;
             HV *hv = newHV();
-            char *classname = \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\";
+            const char *classname = \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\";
             /* take (sub)class name to use from class_sv if appropriate */
             if (class_sv && SvOK(class_sv) && sv_derived_from(class_sv, classname))
                 classname = (SvROK(class_sv)) ? sv_reftype(class_sv, 0) : SvPV_nolen(class_sv);
