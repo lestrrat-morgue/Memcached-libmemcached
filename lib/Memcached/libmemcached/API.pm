@@ -2,7 +2,7 @@ package Memcached::libmemcached::API;
 
 =head1 NAME
 
-Memcached::libmemcached::API - 
+Memcached::libmemcached::API - Private volitile module
 
 =head1 SYNOPSIS
 
@@ -42,9 +42,6 @@ my %libmemcached_extra_functions = (
 
 # functions we don't provide an API for
 my %libmemcached_unimplemented_functions = (
-    # inappropriate for perl
-    memcached_callback_get => 0,
-    memcached_callback_set => 0,
     # memcached_server_st
     memcached_server_push => 0,
     memcached_servers_parse => 0,

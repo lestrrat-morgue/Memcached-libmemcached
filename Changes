@@ -2,6 +2,62 @@
 
 Memcached::libmemcached::Changes - List of significant changes
 
+=head2 Changes in 1.001800 - 7th April 2014
+
+  Sync with libmemcached 1.0.18
+
+=head2 Changes in 1.001702 - 14th March 2014
+
+  Change bug tracker to GitHub
+  Fix link to current repository, also add to META. Thanks to dsteinbrunner
+  Work around missing libcloog-ppl0 compilation issues, RT#88378
+  Improve handling of case where last_return==MEMCACHED_ERRNO
+    but lmc_state->last_errno==0, RT#41299.
+
+=head2 Changes in 1.001701 - 2nd Sept 2013
+
+  Sync with libmemcached 1.0.17
+  Fixed links in docs, RT#66291
+  Fixed whatis in pod of Memcached::libmemcached::API, RT#71172
+  Fixed undef warnings related to expiration, RT#69996
+  Don't let DESTDIR env var upset libmemcached build (Chip Salzenberg).
+
+  Note that get_server_for_key() may have a memory leak.
+
+=head2 Changes in 0.4406 4th Jan 2011
+
+  Added get_server_for_key() thanks to Roy Hooper.
+
+=head2 Changes in 0.4405 29th Oct 2010
+
+  Fix crash if memcached_callback_get(MEMCACHED_CALLBACK_PREFIX_KEY) returns NULL.
+
+=head2 Changes in 0.4404 28th Oct 2010
+
+  Added memcached_callback_set() to enable MEMCACHED_CALLBACK_PREFIX_KEY.
+  Added memcached_callback_get()
+  Made test timing more robust.
+
+=head2 Changes in 0.4403 28th Oct 2010
+
+  Changed memcached_version() to return the lowest server version seen.
+  Added new memcached_{inc,dec}rement{_with_initial,}{_by_key,} methods.
+  Added new methods memcached_server_add_with_weight() and
+    memcached_server_add_unix_socket_with_weight().
+  Added new trace_level() method.
+
+=head2 Changes in 0.4402 26th Oct 2010
+
+  Changed walk_stats() API. Now uses the memcached_stat_execute() function
+    and no longer passes $stats_arg as the forth argument to the callback.
+  Minor updates to docs.
+
+=head2 Changes in 0.4401 21st Oct 2010
+
+  Sync with libmemcached 0.44
+  Fixed core dump in stats function.
+  Fixed memory leak in stats function. RT#41496
+  Improved error reporting in trace log.
 
 =head2 Changes in 0.4202  2nd Aug 2010
 

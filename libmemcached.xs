@@ -8,11 +8,12 @@
 #include "ppport.h"
 
 #include <libmemcached/memcached.h>
-#include <libmemcached/constants.h>
 
 #define MEMCACHED_CALLBACK_MALLOC_FUNCTION 4
 #define MEMCACHED_CALLBACK_REALLOC_FUNCTION 5
 #define MEMCACHED_CALLBACK_FREE_FUNCTION 6
+
+/* See also the typemap as most of the interesting glue is there */
 
 /* mapping C types to perl classes - keep typemap file in sync */
 typedef memcached_st*        Memcached__libmemcached;
@@ -49,11 +50,18 @@ typedef time_t               lmc_expiration;
     (ret==MEMCACHED_SUCCESS || ret==MEMCACHED_STORED || ret==MEMCACHED_DELETED || ret==MEMCACHED_END || ret==MEMCACHED_BUFFERED)
 
 /* store memcached_return value in our lmc_state structure */
-#define LMC_RECORD_RETURN_ERR(ptr, ret) \
+#define LMC_RECORD_RETURN_ERR(what, ptr, ret) \
     STMT_START {    \
         lmc_state_st* lmc_state = LMC_STATE_FROM_PTR(ptr); \
-        lmc_state->last_return = ret;   \
-        lmc_state->last_errno  = ptr->cached_errno; /* if MEMCACHED_ERRNO */ \
+        if (lmc_state) { \
+            if (lmc_state->trace_level > 1 || (lmc_state->trace_level && !LMC_RETURN_OK(ret))) \
+                warn("\t<= %s return %d %s", what, ret, memcached_strerror(ptr, ret)); \
+            lmc_state->last_return = ret;   \
+            lmc_state->last_errno  = memcached_last_error_errno(ptr); /* if MEMCACHED_ERRNO */ \
+        } else { /* should never happen */ \
+            warn("LMC_RECORD_RETURN_ERR(%d %s): no lmc_state structure in memcached_st so error not recorded!", \
+                ret, memcached_strerror(ptr, ret)); \
+        } \
     } STMT_END
 
 
@@ -83,7 +91,7 @@ struct lmc_cb_context_st {
 struct lmc_state_st {
     memcached_st    *ptr;
     HV              *hv;    /* pointer back to HV (not refcntd) */
-    int              trace_level;
+    IV               trace_level;
     int              options;
     memcached_return last_return;
     int              last_errno;
@@ -105,7 +113,7 @@ lmc_state_new(memcached_st *ptr, HV *memc_hv)
     lmc_state->cb_context->set_cb = newSV(0);
     lmc_state->cb_context->get_cb = newSV(0);
     if (trace) {
-        lmc_state->trace_level = atoi(trace);
+        lmc_state->trace_level = (IV)atoi(trace);
     }
     return lmc_state;
 }
@@ -117,7 +125,7 @@ lmc_state_new(memcached_st *ptr, HV *memc_hv)
 static void
 _prep_keys_buffer(lmc_cb_context_st *lmc_cb_context, int keys_needed)
 {
-    int trace_level = lmc_cb_context->lmc_state->trace_level;
+    IV trace_level = lmc_cb_context->lmc_state->trace_level;
     if (keys_needed <= lmc_cb_context->key_alloc_count) {
         if (trace_level >= 9)
             warn("reusing keys buffer");
@@ -381,8 +389,8 @@ _fetch_all_into_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
 
     /* rc is the return code from the preceeding mget */
     if (!LMC_RETURN_OK(rc)) {
-        if (rc == MEMCACHED_NOTFOUND) {
-            /* when number_of_keys==0 memcached_mget returns MEMCACHED_NOTFOUND
+        if (rc == MEMCACHED_INVALID_ARGUMENTS) {
+            /* when number_of_keys==0 memcached_mget returns MEMCACHED_INVALID_ARGUMENTS
             * which we'd normally translate into a false return value
             * but that's not really appropriate here
             */
@@ -397,6 +405,33 @@ _fetch_all_into_hashref(memcached_st *ptr, memcached_return rc, HV *dest_ref)
     }
     return rc;
 }
+
+
+static memcached_return_t
+_walk_stats_cb(const memcached_instance_st *instance,
+    const char *key,   size_t key_length,
+    const char *value, size_t value_length,
+    void *cb)
+{
+    dSP;
+    int items;
+
+    /* callback is called with key, value, hostname, typename */
+    PUSHMARK(SP);
+    XPUSHs(sv_2mortal(newSVpv(key, key_length)));
+    XPUSHs(sv_2mortal(newSVpv(value, value_length)));
+    XPUSHs(sv_2mortal(newSVpvf("%s:%d",
+        memcached_server_name(instance), memcached_server_port(instance))));
+    XPUSHs(DEFSV); /* XXX deprecated $stats_arg in $_ */
+    PUTBACK;
+    items = call_sv((SV*)cb, G_ARRAY);
+    SPAGAIN;
+    if (items) /* XXX may use returned items for signalling later */
+        croak("walk_stats callback returned non-empty list");
+
+    return MEMCACHED_SUCCESS;
+}
+
 
 
 MODULE=Memcached::libmemcached  PACKAGE=Memcached::libmemcached
@@ -436,7 +471,13 @@ memcached_return
 memcached_server_add(Memcached__libmemcached ptr, char *hostname, unsigned int port=0)
 
 memcached_return
+memcached_server_add_with_weight(Memcached__libmemcached ptr, char *hostname, unsigned int port=0, unsigned int weight)
+
+memcached_return
 memcached_server_add_unix_socket(Memcached__libmemcached ptr, char *socket)
+
+memcached_return
+memcached_server_add_unix_socket_with_weight(Memcached__libmemcached ptr, char *socket, unsigned int weight)
 
 void
 memcached_free(Memcached__libmemcached ptr)
@@ -475,6 +516,42 @@ memcached_behavior_get(Memcached__libmemcached ptr, memcached_behavior flag)
 
 memcached_return
 memcached_behavior_set(Memcached__libmemcached ptr, memcached_behavior flag, uint64_t data)
+
+memcached_return
+memcached_callback_set(Memcached__libmemcached ptr, memcached_callback flag, SV *data)
+    CODE:
+    /* we only allow setting of known-safe flags */
+    switch (flag) {
+    case MEMCACHED_CALLBACK_PREFIX_KEY:
+        RETVAL = memcached_callback_set(ptr, flag, SvPV_nolen(data));
+        break;
+    default:
+        RETVAL = MEMCACHED_FAILURE;
+        break;
+    }
+    OUTPUT:
+        RETVAL
+
+SV *
+memcached_callback_get(Memcached__libmemcached ptr, memcached_callback flag, IN_OUT memcached_return ret=NO_INIT)
+    PREINIT:
+        void *data = NULL;
+    CODE:
+    RETVAL = &PL_sv_undef;
+    /* we only allow setting of known-safe flags */
+    switch (flag) {
+    case MEMCACHED_CALLBACK_PREFIX_KEY:
+        data = memcached_callback_get(ptr, flag, &ret);
+        /* libmemcached treats empty prefix as an error */
+        /* we treat it more pragmatically */
+        RETVAL = newSVpv((data) ? data : "", 0);
+        break;
+    default:
+        ret = MEMCACHED_FAILURE;
+        break;
+    }
+    OUTPUT:
+        RETVAL
 
 
 =head2 Functions for Setting Values in memcached
@@ -574,8 +651,51 @@ memcached_decrement(Memcached__libmemcached ptr, \
         lmc_key key, size_t length(key), \
         unsigned int offset, IN_OUT uint64_t value=NO_INIT)
 
+memcached_return
+memcached_increment_by_key(Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, IN_OUT uint64_t value=NO_INIT)
 
+memcached_return
+memcached_decrement_by_key(Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, IN_OUT uint64_t value=NO_INIT)
 
+memcached_return
+memcached_increment_with_initial (Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, \
+        uint64_t initial, \
+        lmc_expiration expiration= 0, \
+        IN_OUT uint64_t value=NO_INIT)
+
+memcached_return
+memcached_decrement_with_initial (Memcached__libmemcached ptr, \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, \
+        uint64_t initial, \
+        lmc_expiration expiration= 0, \
+        IN_OUT uint64_t value=NO_INIT)
+
+memcached_return
+memcached_increment_with_initial_by_key (Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, \
+        uint64_t initial, \
+        lmc_expiration expiration= 0, \
+        IN_OUT uint64_t value=NO_INIT)
+
+memcached_return
+memcached_decrement_with_initial_by_key (Memcached__libmemcached ptr, \
+        lmc_key master_key, size_t length(master_key), \
+        lmc_key key, size_t length(key), \
+        unsigned int offset, \
+        uint64_t initial, \
+        lmc_expiration expiration= 0, \
+        IN_OUT uint64_t value=NO_INIT)
 
 
 =head2 Functions for Fetching Values from memcached
@@ -701,79 +821,28 @@ memcached_flush(Memcached__libmemcached ptr, lmc_expiration expiration=0)
 void
 memcached_quit(Memcached__libmemcached ptr)
 
-char *
+const char *
 memcached_strerror(Memcached__libmemcached ptr, memcached_return rc)
 
 const char *
 memcached_lib_version()
 
-void
-memcached_version(Memcached__libmemcached ptr)
-    PREINIT:
-        memcached_stat_st *stat;
-        memcached_return  rc;
-        lmc_state_st* lmc_state;
-        int i;
-        size_t server_count;
-    PPCODE:
-        server_count = memcached_server_count(ptr);
-        lmc_state = LMC_STATE_FROM_PTR(ptr);
-        stat = memcached_stat(ptr, NULL, &rc);
-        if (!stat || !LMC_RETURN_OK(rc)) {
-            if (lmc_state->trace_level >= 2)
-                warn("memcached_stat returned stat %p rc %d\n", stat, rc);
-            LMC_RECORD_RETURN_ERR(ptr, rc);
-            XSRETURN_NO;
-        }
-
-        for (i = 0; i < server_count; i++) {
-            char **keys;
-            char *val;
-
-            keys = memcached_stat_get_keys(ptr, &stat[i], &rc);
-            while (keys && *keys) {
-                val = memcached_stat_get_value(ptr, stat, *keys, &rc);
-                if (! val) {
-                    keys++;
-                    continue;
-                }
-
-                if ( strNE(*keys, "version") ) {
-                    keys++;
-                    continue;
-                }
-                if (GIMME_V == G_SCALAR) {
-                    SV *version_sv;
-                    version_sv = sv_newmortal();
-                    sv_setpvf(version_sv, "%s", val);
-                    XPUSHs(version_sv);
-                    XSRETURN(1);
-                } else {
-                    SV *version_sv;
-                    char *p = val;
-                    char *c = val;
-                    int count = 0;
-                    while (count < 3 && *c != '\0') {
-                        while (*c != '\0' && *c != '.') {
-                            c++;
-                        }
-                        version_sv = sv_newmortal();
-                        sv_setpvn(version_sv, p, c - p);
-                        XPUSHs(version_sv);
-                        c++;
-                        p = c;
-                        count++;
-                    }
-                    XSRETURN(count);
-                }
-                keys++;
-            }
-        }
-
-
 =head2 Memcached::libmemcached Methods
 
 =cut
+
+IV
+trace_level(Memcached__libmemcached ptr, IV level = IV_MIN)
+    PREINIT:
+        lmc_state_st* lmc_state;
+    CODE:
+        lmc_state = LMC_STATE_FROM_PTR(ptr);
+        RETVAL = LMC_TRACE_LEVEL_FROM_PTR(ptr); /* return previous level */
+        if (level != IV_MIN && lmc_state)
+            lmc_state->trace_level = level;
+    OUTPUT:
+        RETVAL
+
 
 SV *
 errstr(Memcached__libmemcached ptr)
@@ -790,8 +859,11 @@ errstr(Memcached__libmemcached ptr)
         /* setup return value as a dualvar with int err code and string error message */
         sv_setiv(RETVAL, lmc_state->last_return);
         sv_setpv(RETVAL, memcached_strerror(ptr, lmc_state->last_return));
-        if (lmc_state->last_return == MEMCACHED_ERRNO)
-            sv_catpvf(RETVAL, " %s", strerror(lmc_state->last_errno));
+        if (lmc_state->last_return == MEMCACHED_ERRNO) {
+            /* lmc_state->last_errno should be meaningful here but sometimes isn't */
+            /* See https://rt.cpan.org/Ticket/Display.html?id=41299 */
+            sv_catpvf(RETVAL, " %s", (lmc_state->last_errno) ? strerror(lmc_state->last_errno) : "(last_errno==0!)");
+        }
         SvIOK_on(RETVAL); /* set as dualvar */
     OUTPUT:
         RETVAL
@@ -888,83 +960,49 @@ set_callback_coderefs(Memcached__libmemcached ptr, SV *set_cb, SV *get_cb)
 
 
 memcached_return
-walk_stats(Memcached__libmemcached ptr, char *stats_args, CV *cb)
+walk_stats(Memcached__libmemcached ptr, SV *stats_args, CV *cb)
     PREINIT:
-        lmc_state_st *lmc_state;
-        memcached_return rc;
-        memcached_stat_st *stat;
-        size_t i;
-        memcached_server_st *servers;
-        size_t server_count;
-        SV *stats_args_sv;
         Memcached__libmemcached clone;
     CODE:
-        clone = memcached_create(NULL);
-        memcached_clone(clone, ptr);
+        if (LMC_TRACE_LEVEL_FROM_PTR(ptr) >= 2)
+            warn("walk_stats(%s, %s)\n", SvPV_nolen(stats_args), SvPV_nolen((SV*)CvGV(cb)));
+
+        clone = memcached_clone(NULL, ptr);
         memcached_behavior_set(clone, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 0);
 
-        lmc_state     = LMC_STATE_FROM_PTR(ptr);
-        servers       = memcached_server_list(ptr);
-        server_count  = memcached_server_count(ptr);
-        for(i = 0; i < server_count; i++) {
-            memcached_server_add(clone, servers[i].hostname, servers[i].port);
-        }
+        ENTER;
+        SAVETMPS;
 
-        stats_args_sv = sv_2mortal(newSVpv(stats_args, 0));
+        /* this local($_) assignment is to aid migration from the old api */
+        SAVE_DEFSV; /* local($_) */
+        DEFSV = sv_mortalcopy(stats_args);
 
-        stat = memcached_stat(clone, stats_args, &RETVAL);
-        if (!stat || !LMC_RETURN_OK(RETVAL)) {
-            if (lmc_state->trace_level >= 2)
-                warn("memcached_stat returned stat %p rc %d\n", stat, rc);
-            LMC_RECORD_RETURN_ERR(clone, RETVAL);
+        RETVAL = memcached_stat_execute(clone, SvPV_nolen(stats_args), _walk_stats_cb, cb);
+        if (!LMC_RETURN_OK(RETVAL)) {
+            LMC_RECORD_RETURN_ERR("memcached_stat_execute", ptr, RETVAL);
+            LMC_STATE_FROM_PTR(ptr)->last_errno = memcached_last_error_errno(clone);
+            memcached_free(clone);
             XSRETURN_NO;
         }
-
-        for (i = 0; i < server_count; i++) {
-            SV *hostport_sv;
-            char **keys;
-            char *val;
-
-            hostport_sv = sv_2mortal(newSVpvf("%s:%d",
-                memcached_server_name((memcached_server_instance_st)ptr),
-                memcached_server_port((memcached_server_instance_st)ptr)
-            ));
-
-            keys = memcached_stat_get_keys(clone, &stat[i], &rc);
-            while (keys && *keys) {
-                int items;
-                dSP;
-                val = memcached_stat_get_value(clone, stat, *keys, &rc);
-                if (! val) {
-                    continue;
-                }
-
-                ENTER;
-                SAVETMPS;
-
-                /* callback is called with key, value, hostname, typename */
-                PUSHMARK(SP);
-                XPUSHs(sv_2mortal(newSVpv(*keys, 0)));
-                XPUSHs(sv_2mortal(newSVpv(val, 0)));
-                XPUSHs(hostport_sv);
-                XPUSHs(stats_args_sv);
-                PUTBACK;
-
-                items = call_sv((SV*)cb, G_ARRAY);
-                SPAGAIN;
-
-                if (items) /* XXX may use returned items for signalling later */
-                    croak("walk_stats callback returned non-empty list");
-
-                FREETMPS;
-                LEAVE;
-
-                keys++;
-            }
-            memcached_stat_free(clone, stat);
-
-        }
         memcached_free(clone);
+
+        FREETMPS;
+        LEAVE;
     OUTPUT:
         RETVAL
 
+SV * get_server_for_key(Memcached__libmemcached ptr, char *key)
+    CODE:
+        memcached_return_t err;
+        const memcached_instance_st *sp = memcached_server_by_key(ptr, key, strlen(key), &err);
+        if (sp == NULL)
+            XSRETURN_UNDEF;
+
+        RETVAL = newSVpvf("%s:%d",
+            memcached_server_name(sp),
+            memcached_server_port(sp)
+        );
+        /* memcached_instance_free(sp); ??? */
+    
+    OUTPUT:
+        RETVAL

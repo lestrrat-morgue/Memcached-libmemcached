@@ -55,7 +55,7 @@ if ($flags == 0 && not libmemcached_version_ge($memc, "1.2.4")) {
 }
 is sprintf("0x%X",$flags), '0xDEADCAFE', 'flags should be unchanged';
 
-sleep 1;
+sleep 2; # 1 second expiry plus 1 for safety margin
 
 ok not defined memcached_get($memc, $k1, $flags=0, $rc=0);
 ok !$rc;

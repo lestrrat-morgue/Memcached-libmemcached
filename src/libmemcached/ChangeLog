@@ -1,3 +1,152 @@
+1.0.18 Sun Feb  9 01:49:56 PST 2014
+* MEMCACHED_BEHAVIOR_RETRY_TIMEOUT can now be set to zero.
+* Numerous bug fixes.
+
+1.0.17 Tue Apr  2 14:02:01 HST 2013
+* Remove c++ namespace that was being exposed (the API should be plug compatible)..
+* Fix cases where --servers wasn't behaving the same in all clients.
+
+1.0.16 Thu Jan 31 19:14:32 EST 2013
+* Added support to do two part shutdown of socket.
+* Fixes for Fedora 18.
+* Fix for binary memcached_touch()
+
+1.0.15 Mon Dec 17 07:25:44 EST 2012
+* Added support for Murmur3 (HASHKIT_HASH_MURMUR3)
+* Portability fixes.
+
+1.0.14 Wed Nov 14 04:56:25 EST 2012
+* CLIENT_ERROR fixed to not be treated as a fatal error.
+* Compiler fixes for older Ubuntu releases.
+
+1.0.13 Fri Oct 19 00:09:28 EDT 2012
+* Fix bug that caused version string to not be exported correctly.
+
+1.0.12 Tue Oct  9 03:30:20 EDT 2012
+* Added memcached_result_take_value().
+* Added ax_libmemcached.m4
+
+1.0.11 Sun Sep 16 20:32:13 EDT 2012
+* Removed custom version of memcached.
+* Updated hardening rules.
+* Fixed a case where the return error from a socket connection differred from that of a TCP/IP socket.
+
+1.0.10 Sun Jul 29 21:50:15 PDT 2012
+* --disable-assert has been removed from configure, and --enable-assert has been added in its place.
+* Compiling fixes for Clang on OSX Mountain Lion.
+
+1.0.9 Wed Jul  4 22:46:19 EDT 2012
+* Faster close on socket.
+* Instance allocation is now seperated from server interface. This should allow for a better preservation of ABI compliance from now on.
+* Fix close on exec bug.
+* Numerous other bug fixes.
+
+1.0.8 Tue May 22 15:06:04 EDT 2012
+* Added support for setting options via ENV variable LIBMEMCACHED
+* Fix corner case on last used result.
+
+1.0.7 Sat Apr 28 00:48:29 PDT 2012
+* Add API call for exist calls.
+* Update all license files to be BSD.
+
+1.0.6 Sat Apr  7 18:26:49 PDT 2012
+* Fixes for gcc 4.7, lp:961812
+* Fix for restart issue that happens under testing.
+* Fix for lp:962815.
+* Support for transparent AES encryption.
+
+1.0.5 Tue Mar 13 22:56:47 PDT 2012
+* Fixes for OSX.
+* Version is now parsed directly in the parser, which makes buffered operations now work with it..
+* memstat has been extended so that it can be used to find the version of the server.
+* Update documentation.
+* Fixes for compile issues on Debian and Ubuntu
+
+1.0.4 Thu Jan 26 22:33:54 PST 2012
+* Fix for memcached_dump().
+* Additional testing for memcached_stat_execute().
+
+1.0.3 Sun Jan  8 18:11:36 PST 2012
+* Increased size of sort buffer used during Ketama.
+* Added support for new behavior to handle dead servers.
+* Overall haul of UDP IO.
+* Fixed C compile issue with memcached_exist()
+* Numerous bug fixes.
+* Clang support for OSX.
+* All commands now using vector send support.
+
+1.0.2 Mon Oct 24 08:00:48 PDT 2011
+* Dropped libmemcached/memcached_util.h (undocumented header file)
+* Added memcached_touch() and memcached_touch_by_key()
+* UDP support restructured to toggle on a complete memcached_st structure.
+
+0.53 Mon Sep 26 20:50:33 PDT 2011
+  * Fix for FreeBSD/OpenBSD and -lm
+  * Added memcached_exist()
+  * Fix for memory when using config test.
+  * CLI gained --quiet
+
+0.52 Sun Sep 11 22:16:08 PDT 2011
+  * Build fixes for Ubuntu/Suse.
+  * Fixes for OSX Lion.
+  * Bug fix for looping back through dns lookups under certain failures.
+  * Fixes related to dead server failures.
+
+0.51 Thu Jul 21 11:08:58 PDT 2011
+  * memcached_callback_set() now takes its data argument as const
+  * Update to tests.
+  * Fix in parser for port number.
+
+0.50 Mon Jun 20 10:36:57 PDT 2011
+ * Updates to C++ interface 
+ * Custom free allocators need to now check for value before calling free.
+ * memcached_fetch_result() now uses the internal result when available (about 25 to 50% faster).
+ * Fix for stats structure.
+ * Updates to documentation.
+ * memcached_fetch_result() now uses the internal result when available (about 25 to 50% faster).
+
+0.49 Thu Apr 14 08:43:37 PDT 2011
+  * Fix calls to auto methods so that if value is not passed in nothing bad happens.
+  * New parser calls for generating memcached_st objects.
+  * New error system.
+  * New flow control for messages means faster get/set calls.
+  * Added new documentation system.
+  * A behavior change has been now made that if you specify a weight for any server, we enable the weight flag and do weight balancing.  
+  * Added MEMCACHED_BEHAVIOR_REMOVE_FAILED_SERVERS to simplify the setting of AUTO REJECT for servers.
+
+0.48 Tue Mar 15 23:05:18 PDT 2011
+  * Fix memory leak in server parse.
+  * Move test framework out to be its own library (easier to work with Gearman).
+
+
+0.47 Wed Feb 23 18:46:48 PST 2011
+  * Additional fixes for OpenBSD.
+  * Bug fix 677609, 456080.
+  * SIGPIPE fix for Linux send(). 
+  * memcapable can now test ascii or binary based on flags.
+  * Additional build fixes for SASL.
+
+
+0.46 Mon Feb 14 10:28:01 PST 2011
+  * Fixes a number of corner case bugs.
+  * Fixes related to OpenBSD.
+  * Better testing for protocol version.
+  * Removes special case infinite wait on blocking setup.
+
+0.45 Tue Feb  8 16:02:06 PST 2011
+  * Add support for systemtap
+
+0.44 Wed Sep 22 21:57:57 PDT 2010
+  * Windows bug fixes.
+  * Hudson port support in test harness.
+  * Improved portability of test hanrness.
+  * SASL fixes.
+
+0.43 Wed Jul 28 16:29:47 PDT 2010
+  * Added --args to memstat so that a greater range of values can be returned.
+  * Prelimanary support for Windows.
+  * memcached_stat_execute() merged. 
+
 0.42 Tue Jul  6 12:29:50 PDT 2010
   * Mistake in libtool caused issue with library version
 

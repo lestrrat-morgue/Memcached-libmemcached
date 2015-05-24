@@ -9,18 +9,16 @@
  *
  */
 
-#include "config.h"
+#include "mem_config.h"
 
-#if TIME_WITH_SYS_TIME
+#if defined(HAVE_SYS_TIME_H)
 # include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
 #endif
+
+#if defined(HAVE_TIME_H)
+# include <time.h>
+#endif
+
 #include "ms_thread.h"
 #include "ms_setting.h"
 #include "ms_atomic.h"
@@ -146,7 +144,7 @@ static void ms_clock_handler(const int fd, const short which, void *arg)
  *
  * @param cpu, cpu index
  *
- * @return if success, return 0, else return -1
+ * @return if success, return EXIT_SUCCESS, else return -1
  */
 static uint32_t ms_set_thread_cpu_affinity(uint32_t cpu)
 {
@@ -175,7 +173,7 @@ static uint32_t ms_set_thread_cpu_affinity(uint32_t cpu)
  *
  * @param thread_ctx, pointer of the thread context structure
  *
- * @return if success, return 0, else return -1
+ * @return if success, return EXIT_SUCCESS, else return -1
  */
 static int ms_setup_thread(ms_thread_ctx_t *thread_ctx)
 {
@@ -231,7 +229,7 @@ static int ms_setup_thread(ms_thread_ctx_t *thread_ctx)
     }
   }
 
-  return 0;
+  return EXIT_SUCCESS;
 } /* ms_setup_thread */
 
 

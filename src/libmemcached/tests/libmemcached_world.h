@@ -1,196 +1,106 @@
-/* libMemcached Functions Test
- * Copyright (C) 2006-2009 Brian Aker
- * All rights reserved.
+/*  vim:expandtab:shiftwidth=2:tabstop=2:smarttab:
+ * 
+ *  Libmemcached Client and Server 
  *
- * Use and distribution licensed under the BSD license.  See
- * the COPYING file in the parent directory for full text.
+ *  Copyright (C) 2012 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2006-2009 Brian Aker
+ *  All rights reserved.
  *
- * Description: This is the startup bits for any libmemcached test.
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are
+ *  met:
+ *
+ *      * Redistributions of source code must retain the above copyright
+ *  notice, this list of conditions and the following disclaimer.
+ *
+ *      * Redistributions in binary form must reproduce the above
+ *  copyright notice, this list of conditions and the following disclaimer
+ *  in the documentation and/or other materials provided with the
+ *  distribution.
+ *
+ *      * The names of its contributors may not be used to endorse or
+ *  promote products derived from this software without specific prior
+ *  written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-#ifdef	__cplusplus
-extern "C" {
+
+#pragma once
+
+#include "tests/libmemcached_test_container.h"
+
+static void *world_create(libtest::server_startup_st& servers, test_return_t& error)
+{
+  SKIP_UNLESS(libtest::has_libmemcached());
+
+  if (servers.sasl())
+  {
+    SKIP_UNLESS(libtest::has_libmemcached_sasl());
+
+    // Assume we are running under valgrind, and bail
+    if (getenv("LOG_COMPILER"))
+    {
+      error= TEST_SKIPPED;
+      return NULL;
+    }
+  }
+
+  for (uint32_t x= 0; x < servers.servers_to_run(); x++)
+  {
+    in_port_t port= libtest::get_free_port();
+
+    if (servers.sasl())
+    {
+      if (server_startup(servers, "memcached-sasl", port, NULL) == false)
+      {
+        error= TEST_SKIPPED;
+        return NULL;
+      }
+    }
+    else
+    {
+      if (server_startup(servers, "memcached", port, NULL) == false)
+      {
+        error= TEST_SKIPPED;
+        return NULL;
+      }
+    }
+  }
+
+  libmemcached_test_container_st *global_container= new libmemcached_test_container_st(servers);
+
+  return global_container;
+}
+
+static bool world_destroy(void *object)
+{
+  libmemcached_test_container_st *container= (libmemcached_test_container_st *)object;
+#if 0
+#if defined(LIBMEMCACHED_WITH_SASL_SUPPORT) && LIBMEMCACHED_WITH_SASL_SUPPORT
+  if (LIBMEMCACHED_WITH_SASL_SUPPORT)
+  {
+    sasl_done();
+  }
+#endif
 #endif
 
-/* The structure we use for the test system */
-typedef struct
-{
-  server_startup_st construct;
-  memcached_st *parent;
-  memcached_st *memc;
-} libmemcached_test_container_st;
-
-/* Prototypes for functions we will pass to test framework */
-libmemcached_test_container_st *world_create(test_return_t *error);
-test_return_t world_test_startup(libmemcached_test_container_st *);
-test_return_t world_flush(libmemcached_test_container_st *container);
-test_return_t world_pre_run(libmemcached_test_container_st *);
-
-test_return_t world_post_run(libmemcached_test_container_st *);
-test_return_t world_on_error(test_return_t, libmemcached_test_container_st *);
-test_return_t world_destroy(libmemcached_test_container_st *);
-
-static libmemcached_test_container_st global_container;
-
-/**
-  @note generic shutdown/startup for libmemcached tests.
-*/
-test_return_t world_container_startup(libmemcached_test_container_st *container);
-test_return_t world_container_shutdown(libmemcached_test_container_st *container);
-
-libmemcached_test_container_st *world_create(test_return_t *error)
-{
-  memset(&global_container, 0, sizeof(global_container));
-  global_container.construct.count= SERVERS_TO_CREATE;
-  global_container.construct.udp= 0;
-  server_startup(&global_container.construct);
-
-  if (! global_container.construct.servers)
-  {
-    *error= TEST_FAILURE;
-    server_shutdown(&global_container.construct);
-    return NULL;
-  }
-
-  *error= TEST_SUCCESS;
-
-  return &global_container;
-}
-
-test_return_t world_container_startup(libmemcached_test_container_st *container)
-{
-  memcached_return_t rc;
-  container->parent= memcached_create(NULL);
-  test_true((container->parent != NULL));
-
-  rc= memcached_server_push(container->parent, container->construct.servers);
-  test_true(rc == MEMCACHED_SUCCESS);
-
-  return TEST_SUCCESS;
-}
-
-test_return_t world_container_shutdown(libmemcached_test_container_st *container)
-{
-  memcached_free(container->parent);
-  container->parent= NULL;
-
-  return TEST_SUCCESS;
-}
-
-test_return_t world_test_startup(libmemcached_test_container_st *container)
-{
-  container->memc= memcached_clone(NULL, container->parent);
-  test_true((container->memc != NULL));
-
-  return TEST_SUCCESS;
-}
-
-test_return_t world_flush(libmemcached_test_container_st *container)
-{
-  memcached_flush(container->memc, 0);
-  memcached_quit(container->memc);
-
-  return TEST_SUCCESS;
-}
-
-test_return_t world_pre_run(libmemcached_test_container_st *container)
-{
-  for (uint32_t loop= 0; loop < memcached_server_list_count(container->memc->servers); loop++)
-  {
-    memcached_server_instance_st instance=
-      memcached_server_instance_by_position(container->memc, loop);
-
-    test_true(instance->fd == -1);
-    test_true(instance->cursor_active == 0);
-  }
-
-  return TEST_SUCCESS;
-}
-
-
-test_return_t world_post_run(libmemcached_test_container_st *container)
-{
-  test_true(container->memc);
-
-  return TEST_SUCCESS;
-}
-
-test_return_t world_on_error(test_return_t test_state, libmemcached_test_container_st *container)
-{
-  (void)test_state;
-  memcached_free(container->memc);
-  container->memc= NULL;
-
-  return TEST_SUCCESS;
-}
-
-test_return_t world_destroy(libmemcached_test_container_st *container)
-{
-  server_startup_st *construct= &container->construct;
-  memcached_server_st *servers= container->construct.servers;
-  memcached_server_list_free(servers);
-
-  server_shutdown(construct);
+  delete container;
 
   return TEST_SUCCESS;
 }
 
 typedef test_return_t (*libmemcached_test_callback_fn)(memcached_st *);
-static test_return_t _runner_default(libmemcached_test_callback_fn func, libmemcached_test_container_st *container)
-{
-  if (func)
-  {
-    return func(container->memc);
-  }
-  else
-  {
-    return TEST_SUCCESS;
-  }
-}
 
-static test_return_t _pre_runner_default(libmemcached_test_callback_fn func, libmemcached_test_container_st *container)
-{
-  if (func)
-  {
-    return func(container->parent);
-  }
-  else
-  {
-    return TEST_SUCCESS;
-  }
-}
-
-static test_return_t _post_runner_default(libmemcached_test_callback_fn func, libmemcached_test_container_st *container)
-{
-  if (func)
-  {
-    return func(container->parent);
-  }
-  else
-  {
-    return TEST_SUCCESS;
-  }
-}
-
-#ifdef	__cplusplus
-}
-#endif
-
-#ifdef	__cplusplus
-
-static world_runner_st defualt_libmemcached_runner= {
-  reinterpret_cast<test_callback_runner_fn>(_pre_runner_default),
-  reinterpret_cast<test_callback_runner_fn>(_runner_default),
-  reinterpret_cast<test_callback_runner_fn>(_post_runner_default)
-};
-
-#else
-
-static world_runner_st defualt_libmemcached_runner= {
-  (test_callback_runner_fn)_pre_runner_default,
-  (test_callback_runner_fn)_runner_default,
-  (test_callback_runner_fn)_post_runner_default
-};
-
-#endif
+#include "tests/runner.h"

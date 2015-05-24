@@ -9,7 +9,7 @@
  *
  */
 
-#include "config.h"
+#include "mem_config.h"
 
 #include <libmemcached/memcached.h>
 
@@ -18,7 +18,6 @@
 #include <limits.h>
 #include <pwd.h>
 #include <strings.h>
-#include <sys/types.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -196,7 +195,7 @@ static void ms_get_serverlist(char *str)
 /**
  * used to get the CPU count of the current system
  *
- * @return return the cpu count if get, else return 1
+ * @return return the cpu count if get, else return EXIT_FAILURE
  */
 static uint32_t ms_get_cpu_count()
 {
@@ -224,7 +223,7 @@ static uint32_t ms_get_cpu_count()
 #endif
 
   /* the system with one cpu at least */
-  return 1;
+  return EXIT_FAILURE;
 } /* ms_get_cpu_count */
 
 
@@ -263,7 +262,7 @@ ms_conf_type_t ms_get_conf_type(char *line)
  *
  * @param line, string of one line
  *
- * @return if success, return 1, else return 0
+ * @return if success, return EXIT_FAILURE, else return EXIT_SUCCESS
  */
 static int ms_is_line_data(char *line)
 {
@@ -276,9 +275,9 @@ static int ms_is_line_data(char *line)
     begin_ptr++;
   }
   if ((begin_ptr[0] == '\0') || (begin_ptr[0] == '#'))
-    return 0;
+    return EXIT_SUCCESS;
 
-  return 1;
+  return EXIT_FAILURE;
 } /* ms_is_line_data */
 
 
@@ -288,14 +287,14 @@ static int ms_is_line_data(char *line)
  * @param line, string of one line
  * @param nread, length of the line
  *
- * @return if it's EOF or not line data, return 0, else return 1
+ * @return if it's EOF or not line data, return EXIT_SUCCESS, else return EXIT_FAILURE
  */
 static int ms_read_is_data(char *line, ssize_t nread)
 {
   if ((nread == EOF) || ! ms_is_line_data(line))
-    return 0;
+    return EXIT_SUCCESS;
 
-  return 1;
+  return EXIT_FAILURE;
 } /* ms_read_is_data */
 
 
@@ -576,7 +575,7 @@ static void ms_calc_avg_size()
  * @param distr, pointer of distribution structure array
  * @param length, length of the array
  *
- * @return always return 0
+ * @return always return EXIT_SUCCESS
  */
 static int ms_shuffle_distr(ms_distr_t *distr, int length)
 {
@@ -615,7 +614,7 @@ static int ms_shuffle_distr(ms_distr_t *distr, int length)
     } /* switch */
   }
 
-  return 0;
+  return EXIT_SUCCESS;
 } /* ms_shuffle_distr */
 
 
@@ -684,7 +683,7 @@ static void ms_build_distr()
         exit(1);
       }
 
-      if (! ms_setting.binary_prot
+      if (! ms_setting.binary_prot_
           && ((start_len > MAX_KEY_SIZE) || (end_len > MAX_KEY_SIZE)))
       {
         fprintf(stderr, "key length must be less than 250 bytes.\n");
@@ -881,7 +880,7 @@ static void ms_setting_slapmode_init_pre()
   ms_setting.reconnect= false;
   ms_setting.verbose= false;
   ms_setting.facebook_test= false;
-  ms_setting.binary_prot= false;
+  ms_setting.binary_prot_= false;
   ms_setting.stat_freq= 0;
   ms_setting.srv_str= NULL;
   ms_setting.cfg_file= NULL;

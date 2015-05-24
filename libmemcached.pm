@@ -9,11 +9,11 @@ Memcached::libmemcached - Thin fast full interface to the libmemcached client AP
 
 =head1 VERSION
 
-Version 0.4202 (with libmemcached-0.42 embedded)
+Version 1.001801 (with libmemcached-1.0.18 embedded)
 
 =cut
 
-our $VERSION = '0.4202';
+our $VERSION = '1.001801'; # also alter in pod above
 
 use Carp;
 use base qw(Exporter);
@@ -56,11 +56,10 @@ access to server side methods.
  - Man pages written up on entire API.
  - Implements both modulo and consistent hashing solutions. 
 
-(At the moment Memcached::libmemcached is very new and not all the functions in
-libmemcached have perl interfaces yet. We're focussing on the core
-infrastructure and the most common functions. It's usually trivial to add
-functions - just a few lines in libmemcached.xs, a few lines of documentation,
-and a few lines of testing.  Volunteers welcome!)
+(Memcached::libmemcached is fairly new and not all the functions in
+libmemcached have perl interfaces yet.  It's usually trivial to add functions -
+just a few lines in libmemcached.xs, a few lines of documentation, and a few
+lines of testing.  Volunteers welcome!)
 
 The libmemcached library documentation (which is bundled with this module)
 serves as the primary reference for the functionality.
@@ -69,7 +68,7 @@ This documentation provides summary of the functions, along with any issues
 specific to this perl interface, and references to the documentation for the
 corresponding functions in the underlying library.
 
-For more information on libmemcached, see L<http://tangent.org/552/libmemcached.html>
+For more information on libmemcached, see L<http://docs.libmemcached.org>
 
 =head1 CONVENTIONS
 
@@ -142,14 +141,12 @@ L</errstr> method.
 =head2 Unimplemented Functions
 
 Functions relating to managing lists of servers (memcached_server_push, and
-memcached_server_list) have not been implemenetd because they're not needed and
+memcached_server_list) have not been implemented because they're not needed and
 likely to be deprecated by libmemcached.
 
 Functions relating to iterating through results (memcached_result_*) have not
 been implemented yet. They're not a priority because similar functionality is
 available via the callbacks. See L</set_callback_coderefs>.
-
-Functions relating to stats should be implemented soonish. Patches welcome!
 
 =cut
 
@@ -172,7 +169,10 @@ functions, for example, you can use:
   use Memcached::libmemcached qw(/^memcached/);
 
 Refer to L<Memcached::libmemcached::constants> for a full list of the available
-constants and the tags they are grouped by.
+constants and the tags they are grouped by. To see a list of all available
+functions and constants you can execute:
+
+  perl -MMemcached::libmemcached -le 'print $_ for @Memcached::libmemcached::EXPORT_OK'
 
 =head1 FUNCTIONS
 
@@ -211,17 +211,23 @@ See L<Memcached::libmemcached::memcached_servers>.
 
 =head3 memcached_server_add
 
+=head3 memcached_server_add_with_weight
+
   memcached_server_add($memc, $hostname, $port);
+  memcached_server_add_with_weight($memc, $hostname, $port, $weight);
 
 Adds details of a single memcached server (accessed via TCP/IP) to $memc.
-See L<Memcached::libmemcached::memcached_servers>.
+See L<Memcached::libmemcached::memcached_servers>. The default weight is 0.
 
 =head3 memcached_server_add_unix_socket
 
+=head3 memcached_server_add_unix_socket_with_weight
+
   memcached_server_add_unix_socket($memc, $socket_path);
+  memcached_server_add_unix_socket_with_weight($memc, $socket_path);
 
 Adds details of a single memcached server (accessed via a UNIX domain socket) to $memc.
-See L<Memcached::libmemcached::memcached_servers>.
+See L<Memcached::libmemcached::memcached_servers>. The default weight is 0.
 
 =head3 memcached_behavior_set
 
@@ -236,6 +242,24 @@ See L<Memcached::libmemcached::memcached_behavior>.
 
 Get the value of a particular option.
 See L<Memcached::libmemcached::memcached_behavior>.
+
+=head3 memcached_callback_set
+
+  memcached_callback_set($memc, $flag, $value);
+
+Set callback flag value.
+
+The only flag currently supported is C<MEMCACHED_CALLBACK_PREFIX_KEY>.
+The $value must be less than MEMCACHED_PREFIX_KEY_MAX_SIZE  (eg 128) bytes.
+It also can't be empty L<https://bugs.launchpad.net/libmemcached/+bug/667878>
+
+=head3 memcached_callback_get
+
+  $value = memcached_callback_set($memc, $flag, $return_status);
+
+Get callback flag value. Sets return status in $return_status.
+The only flag currently supported is C<MEMCACHED_CALLBACK_PREFIX_KEY>.
+Returns undef on error.
 
 =cut
 
@@ -348,21 +372,62 @@ Usually you'd just use the L</mget_into_hashref> method instead.
 
 =head2 Functions for Incrementing and Decrementing Values
 
+memcached servers have the ability to increment and decrement unsigned integer keys
+(overflow and underflow are not detected). This gives you the ability to use
+memcached to generate shared sequences of values.  
+
+See L<Memcached::libmemcached::memcached_auto>.
+
 =head3 memcached_increment
 
   memcached_increment( $key, $offset, $new_value_out );
 
-Increments the integer value associated with $key by $offset and returns the new value in $new_value_out.
-See also L<Memcached::libmemcached::memcached_auto>.
+Increments the integer value associated with $key by $offset and returns the
+new value in $new_value_out.
 
 =head3 memcached_decrement 
 
   memcached_decrement( $key, $offset, $new_value_out );
 
-Decrements the integer value associated with $key by $offset and returns the new value in $new_value_out.
-See also L<Memcached::libmemcached::memcached_auto>.
+Decrements the integer value associated with $key by $offset and returns the
+new value in $new_value_out.
 
-=cut
+=head3 memcached_increment_with_initial
+
+  memcached_increment_with_initial( $key, $offset, $initial, $expiration, $new_value_out );
+
+Increments the integer value associated with $key by $offset and returns the
+new value in $new_value_out.
+
+If the object specified by key does not exist, one of two things may happen:
+If the expiration value is MEMCACHED_EXPIRATION_NOT_ADD, the operation will fail.
+For all other expiration values, the operation will succeed by seeding the
+value for that key with a initial value to expire with the provided expiration time.
+The flags will be set to zero.
+
+=head3 memcached_decrement_with_initial
+
+  memcached_decrement_with_initial( $key, $offset, $initial, $expiration, $new_value_out );
+
+Decrements the integer value associated with $key by $offset and returns the
+new value in $new_value_out.
+
+If the object specified by key does not exist, one of two things may happen:
+If the expiration value is MEMCACHED_EXPIRATION_NOT_ADD, the operation will fail.
+For all other expiration values, the operation will succeed by seeding the
+value for that key with a initial value to expire with the provided expiration time.
+The flags will be set to zero.
+
+=head3 memcached_increment_by_key
+
+=head3 memcached_decrement_by_key
+
+=head3 memcached_increment_with_initial_by_key
+
+=head3 memcached_decrement_with_initial_by_key
+
+These are the master key equivalents of the above. They all take an extra
+initial $master_key parameter.
 
 
 =head2 Functions for Deleting Values from memcached
@@ -382,9 +447,9 @@ memcached after that many seconds.
 
 =head2 Functions for Accessing Statistics from memcached
 
-Not yet implemented.
+Not yet implemented. See L<Memcached::libmemcached::memcached_stats>.
 
-See L<Memcached::libmemcached::memcached_stats>.
+See L<walk_stats>.
 
 =cut
 
@@ -395,7 +460,7 @@ See L<Memcached::libmemcached::memcached_stats>.
 
   $version = memcached_lib_version()
 
-Returns a simple version string, like "0.15", representing the libmemcached
+Returns a simple version string, like "1.0.17", representing the libmemcached
 version (version of the client library, not server).
 
 =head2 memcached_version
@@ -403,7 +468,7 @@ version (version of the client library, not server).
   $version = memcached_version($memc)
   ($version1, $version2, $version3) = memcached_version($memc)
 
-Returns the version of all memcached servers to respond to the version request.
+Returns the I<lowest> version of all the memcached servers.
 
 In scalar context returns a simple version string, like "1.2.3".
 In list context returns the individual version component numbers.
@@ -411,6 +476,29 @@ Returns an empty list if there was an error.
 
 Note that the return value differs from that of the underlying libmemcached
 library memcached_version() function.
+
+=cut
+
+sub memcached_version {
+    my $self = shift;
+
+    my @versions;
+    # XXX should be rewritten to use underlying memcached_version then
+    # return the lowest cached version from the server structures
+    $self->walk_stats('', sub {
+        my ($key, $value, $hostport) = @_;
+        push @versions, [ split /\./, $value ] if $key eq 'version';
+        return;
+    });
+
+    my $lowest = (sort {
+        $a->[0] <=> $b->[0] or $a->[1] <=> $b->[1] or $a->[2] <=> $b->[2]
+    } @versions)[0];
+
+    return join '.', @$lowest unless wantarray;
+    return @$lowest;
+}
+
 
 =head2 memcached_verbosity
 
@@ -445,11 +533,6 @@ See also L<Memcached::libmemcached::memcached_strerror>.
 This function is rarely needed in the Perl interface because the return code is
 a I<dualvar> that already contains the error string.
 
-=cut
-
-=head2 Unsupported Functions
-
-=head3 (stats)   
 =cut
 
 =head2 Grouping Keys On Servers
@@ -599,32 +682,55 @@ warning and then cease to exist in future versions.
 
 This interface is I<experimental> and I<likely to change>.
 
-Calls the memcached_stat() function to issue a "STAT $stats_args" command to
+Calls the memcached_stat_execute() function to issue a "STAT $stats_args" command to
 the connected memcached servers. The $stats_args argument is usually an empty string.
 
 The callback function is called for each return value from each server.
-The callback will be passed 4 parameters:
+The callback will be passed at least these parameters:
 
   sub my_stats_callback {
-    my ($key, $value, $hostport, $stats_args) = @_;
+    my ($key, $value, $hostport) = @_;
     # Do what you like with the above!
     return;
   }
 
 Currently the callback I<must> return an empty list.
 
+Prior to version 0.4402 the callback was passed a fourth argument which was a
+copy of the $stats_args value. That is no longer the case. As a I<temporary> aid
+to migration, the C<walk_stats> method does C<local $_ = $stats_args> and
+passes C<$_> as the forth argument. That will work so long as the code in the
+callback doesn't alter C<$_>. If your callback code requires $stats_args you
+should change it to be a closure instead.
+
+=head2 trace_level
+
+    $memc->trace_level($trace_level);
+    $trace_level = $memc->trace_level;
+
+Sets the trace level (see L</Tracing Execution>). Returns the previous trace level.
+
+=head3 get_server_for_key
+
+  $memc->get_server_for_key( $key )
+
+This method uses I<memcached_server_by_key> to get information about which server should contain
+the specified $key.
+
+It returns a string containing the hostname:port of the appropriate server, or undef on failure.
+
 =head1 EXTRA INFORMATION
 
 =head2 Tracing Execution
 
-The C<PERL_LIBMEMCACHED_TRACE> environment variable can be used to control
-tracing. The value is read when L<memcached_create> is called.
+    $memc->trace_level($trace_level);
 
 If set >= 1 then any non-success memcached_return value will be logged via warn().
 
 If set >= 2 or more then some data types will list conversions of input and output values for function calls.
 
-More flexible mechanisms will be added later.
+The C<PERL_LIBMEMCACHED_TRACE> environment variable provides a default.
+The value is read when L<memcached_create> is called.
 
 =head2 Type Mapping
 
@@ -659,7 +765,9 @@ L<http://www.tim.bunce.name>
 
 =head1 CURRENT MAINTAINER
 
-Daisuke Maki C<< <daisuke@endeworks.jp> >>
+Matthew Horsfall (alh) C<< <wolfsage@gmail.com> >>
+
+Daisuke Maki C<< <daisuke@endeworks.jp> >> with occasional bursts of input from Tim Bunce.
 
 =head1 ACKNOWLEDGEMENTS
 
@@ -668,22 +776,21 @@ and Patrick Galbraith and Daisuke Maki for helping with the implementation.
 
 =head1 PORTABILITY
 
-See Slaven Rezic's excellent CPAN Testers Matrix at L<http://bbbike.radzeit.de/~slaven/cpantestersmatrix.cgi?dist=Memcached-libmemcached>
+See Slaven Rezic's excellent CPAN Testers Matrix at L<http://matrix.cpantesters.org/?dist=Memcached-libmemcached>
 
 Along with Dave Cantrell's excellent CPAN Dependency tracker at
-L<http://cpandeps.cantrell.org.uk/?module=Memcached%3A%3Alibmemcached&perl=any+version&os=any+OS>
+L<http://deps.cpantesters.org/?module=Memcached%3A%3Alibmemcached&perl=any+version&os=any+OS>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to
-C<bug-memcached-libmemcached@rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Memcached-libmemcached>.
-I will be notified, and then you'll automatically be notified of progress on
-your bug as I make changes.
+Please report any bugs or feature requests to the GitHub issue tracker at
+L<https://github.com/timbunce/Memcached-libmemcached/issues>.
+We will be notified, and then you'll automatically be notified of progress on
+your bug as we make changes.
 
 =head1 CONTRIBUTING
 
-The source is hosted at github: L<http://github.com/lestrrat/Memcached-libmemcached>
+The source is hosted at github: L<https://github.com/timbunce/Memcached-libmemcached>
 Patches and volunteers always welcome.
 
 =head1 COPYRIGHT & LICENSE

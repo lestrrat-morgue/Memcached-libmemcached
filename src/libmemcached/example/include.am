@@ -3,25 +3,24 @@
 # All paths should be given relative to the root
 
 if HAVE_LIBEVENT
-noinst_PROGRAMS += example/memcached_light
+noinst_PROGRAMS+= example/memcached_light
 endif
 
-example_memcached_light_SOURCES= \
-				 example/interface_v0.c \
-				 example/interface_v1.c \
-				 example/memcached_light.c \
-				 example/memcached_light.h \
-				 example/storage.h
+noinst_HEADERS+= example/byteorder.h
+noinst_HEADERS+= example/memcached_light.h
+noinst_HEADERS+= example/storage.h
 
-example_memcached_light_LDADD= libmemcached/libmemcachedprotocol.la \
-                               $(LIBINNODB) $(LTLIBEVENT)
+example_memcached_light_SOURCES=
+example_memcached_light_LDADD= 
+example_memcached_light_LDFLAGS=
 
-if BUILD_BYTEORDER
-example_memcached_light_LDADD+= libmemcached/libbyteorder.la
-endif
+example_memcached_light_SOURCES+= example/byteorder.cc
+example_memcached_light_SOURCES+= example/interface_v0.cc
+example_memcached_light_SOURCES+= example/interface_v1.cc
+example_memcached_light_SOURCES+= example/memcached_light.cc
+example_memcached_light_SOURCES+= example/storage.cc
+example_memcached_light_SOURCES+= util/daemon.cc
+example_memcached_light_SOURCES+= util/pidfile.cc
 
-if HAVE_LIBINNODB
-example_memcached_light_SOURCES+= example/storage_innodb.c
-else
-example_memcached_light_SOURCES+= example/storage.c
-endif
+example_memcached_light_LDADD+= libmemcached/libmemcachedprotocol.la
+example_memcached_light_LDADD+= @LIBEVENT_LIB@

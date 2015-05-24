@@ -9,18 +9,14 @@
  *
  */
 
-#include "config.h"
+#include "mem_config.h"
 
-#include <inttypes.h>
-#if TIME_WITH_SYS_TIME
+#if defined(HAVE_SYS_TIME_H)
 # include <sys/time.h>
+#endif
+
+#if defined(HAVE_TIME_H)
 # include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
 #endif
 
 #include "ms_thread.h"
@@ -1053,7 +1049,7 @@ static void ms_update_task_result(ms_conn_t *c)
  *
  * @param c, pointer of the concurrency
  *
- * @return int, if success, return 0, else return -1
+ * @return int, if success, return EXIT_SUCCESS, else return -1
  */
 static int ms_run_getset_task(ms_conn_t *c)
 {
@@ -1085,7 +1081,7 @@ static int ms_run_getset_task(ms_conn_t *c)
     return -1;
   }
 
-  return 0;
+  return EXIT_SUCCESS;
 } /* ms_run_getset_task */
 
 
@@ -1094,7 +1090,7 @@ static int ms_run_getset_task(ms_conn_t *c)
  *
  * @param c, pointer of the concurrency
  *
- * @return int, if success, return 0, else return -1
+ * @return int, if success, return EXIT_SUCCESS, else return -1
  */
 int ms_exec_task(struct conn *c)
 {
@@ -1110,5 +1106,5 @@ int ms_exec_task(struct conn *c)
     }
   }
 
-  return 0;
+  return EXIT_SUCCESS;
 } /* ms_exec_task */

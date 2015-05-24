@@ -9,12 +9,11 @@
  *
  */
 
-#ifndef __CLIENT_OPTIONS_H__
-#define __CLIENT_OPTIONS_H__
+#pragma once
 
 typedef struct memcached_help_text_st memcached_help_text_st;
 
-typedef enum {
+enum memcached_options {
   OPT_SERVERS= 's',
   OPT_VERSION= 'V',
   OPT_HELP= 'h',
@@ -36,9 +35,11 @@ typedef enum {
   OPT_HASH,
   OPT_BINARY,
   OPT_UDP,
+  OPT_BUFFER,
   OPT_USERNAME,
   OPT_PASSWD,
+  OPT_STAT_ARGS,
+  OPT_SERVER_VERSION,
+  OPT_QUIET,
   OPT_FILE= 'f'
-} memcached_options;
-
-#endif /* CLIENT_OPTIONS */
+};
